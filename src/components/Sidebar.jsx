@@ -9,7 +9,8 @@ import {
   FileSpreadsheet,
   PlusCircle,
   FolderOpen,
-  X
+  X,
+  LayoutDashboard
 } from 'lucide-react';
 
 export default function Sidebar({
@@ -92,6 +93,14 @@ export default function Sidebar({
           Phân hệ chức năng
         </div>
         
+        <div 
+          className={`menu-item ${currentTab === 'dashboard' ? 'active' : ''}`}
+          onClick={() => setCurrentTab('dashboard')}
+        >
+          <LayoutDashboard size={18} />
+          <span>Dashboard Dự án</span>
+        </div>
+
         <div 
           className={`menu-item ${currentTab === 'nktc' ? 'active' : ''}`}
           onClick={() => setCurrentTab('nktc')}

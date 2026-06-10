@@ -387,7 +387,7 @@ export default function NKTCForm({
         </div>
 
         {/* Right Side: Preview / JSON tab */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', minWidth: 0 }}>
           <div className="tabs" style={{ marginBottom: '0' }}>
             <div 
               className={`tab ${activeTab === 'preview' ? 'active' : ''}`}

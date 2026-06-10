@@ -92,6 +92,7 @@ body {
   flex-direction: column;
   height: 100vh;
   overflow-y: auto;
+  overflow-x: hidden;
   position: relative;
   padding-bottom: 24px;
 }

@@ -23,13 +23,14 @@ import NKTCForm from './components/NKTCForm';
 import NKTCParser from './components/NKTCParser';
 import BBPSForm from './components/BBPSForm';
 import FirebaseConfigModal from './components/FirebaseConfigModal';
+import Dashboard from './components/Dashboard';
 
 import { Menu, X, User } from 'lucide-react';
 
 export default function App() {
   const [user, setUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
-  const [currentTab, setCurrentTab] = useState('nktc'); // 'nktc', 'bbps', 'settings'
+  const [currentTab, setCurrentTab] = useState('dashboard'); // 'dashboard', 'nktc', 'bbps', 'settings'
   const [settingsSubTab, setSettingsSubTab] = useState('project'); // 'project', 'user'
   const [theme, setTheme] = useState('dark');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -422,6 +423,22 @@ export default function App() {
         </header>
 
         {/* Tab switcher renderer */}
+        {currentTab === 'dashboard' && (
+          <Dashboard
+            user={user}
+            projects={projects}
+            activeProjectId={activeProjectId}
+            setActiveProjectId={setActiveProjectId}
+            diaries={diaries}
+            minutes={minutes}
+            setCurrentTab={setCurrentTab}
+            setSettingsSubTab={setSettingsSubTab}
+            onSelectDiary={setActiveDiary}
+            onSelectMinute={setActiveMinute}
+            onToast={showToast}
+          />
+        )}
+
         {currentTab === 'nktc' && (
           <div className="container-fluid" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             <NKTCParser 

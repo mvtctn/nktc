@@ -269,7 +269,7 @@ export default function BBPSForm({
         </div>
 
         {/* Right Side: Paper preview */}
-        <div>
+        <div style={{ minWidth: 0 }}>
           <div className="tabs" style={{ marginBottom: '0' }}>
             <div className="tab active" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
               <FileSpreadsheet size={16} /> Biểu mẫu in thử (Biên bản)
