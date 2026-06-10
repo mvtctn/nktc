@@ -8,7 +8,8 @@ import {
   Database,
   FileSpreadsheet,
   PlusCircle,
-  FolderOpen
+  FolderOpen,
+  X
 } from 'lucide-react';
 
 export default function Sidebar({
@@ -29,12 +30,14 @@ export default function Sidebar({
   activeMinuteId,
   onSelectMinute,
   onNewMinute,
-  onOpenConfig
+  onOpenConfig,
+  mobileOpen,
+  onCloseMobile
 }) {
   const activeProject = projects.find(p => p.id === activeProjectId);
 
   return (
-    <aside className="sidebar">
+    <aside className={`sidebar ${mobileOpen ? 'open' : ''}`}>
       {/* Sidebar Header */}
       <div className="sidebar-header">
         <svg className="sidebar-logo" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -47,7 +50,15 @@ export default function Sidebar({
           <circle cx="256" cy="256" r="230" stroke="url(#logoS)" strokeWidth="20" opacity="0.3" />
           <path d="M256,120 C256,120 330,220 330,280 A74,74 0 1,1 182,280 C182,220 256,120 256,120 Z" fill="url(#logoS)" />
         </svg>
-        <div className="sidebar-logo-text">HYDROTECH</div>
+        <div className="sidebar-logo-text" style={{ flexGrow: 1 }}>HYDROTECH</div>
+        <button 
+          onClick={onCloseMobile} 
+          className="sidebar-close-mobile-btn"
+          style={{ background: 'transparent', border: 'none', color: 'white', cursor: 'pointer', display: 'none', padding: '4px' }}
+          title="Đóng menu"
+        >
+          <X size={20} />
+        </button>
       </div>
 
       {/* Project Selector */}

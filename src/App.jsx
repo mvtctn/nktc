@@ -364,35 +364,17 @@ export default function App() {
         onSelectMinute={(minute) => { setActiveMinute(minute); setMobileMenuOpen(false); }}
         onNewMinute={() => { setActiveMinute(null); setMobileMenuOpen(false); }}
         onOpenConfig={() => setConfigModalOpen(true)}
+        mobileOpen={mobileMenuOpen}
+        onCloseMobile={() => setMobileMenuOpen(false)}
       />
 
-      {/* Mobile Sidebar overlay */}
-      <div className={`sidebar ${mobileMenuOpen ? 'open' : ''}`} style={{ position: 'fixed', left: 0, top: 0, bottom: 0, zIndex: 200 }}>
-        {/* Render same sidebar internal structure (simple overlay copy) */}
-        <Sidebar
-          user={user}
-          onLogout={handleLogout}
-          currentTab={currentTab}
-          setCurrentTab={setCurrentTab}
-          theme={theme}
-          toggleTheme={toggleTheme}
-          projects={projects}
-          activeProjectId={activeProjectId}
-          setActiveProjectId={setActiveProjectId}
-          diaries={diaries}
-          activeDiaryId={activeDiary ? activeDiary.id : null}
-          onSelectDiary={(diary) => { setActiveDiary(diary); setMobileMenuOpen(false); }}
-          onNewDiary={() => { setActiveDiary(null); setMobileMenuOpen(false); }}
-          minutes={minutes}
-          activeMinuteId={activeMinute ? activeMinute.id : null}
-          onSelectMinute={(minute) => { setActiveMinute(minute); setMobileMenuOpen(false); }}
-          onNewMinute={() => { setActiveMinute(null); setMobileMenuOpen(false); }}
-          onOpenConfig={() => { setConfigModalOpen(true); setMobileMenuOpen(false); }}
-        />
-        <button onClick={() => setMobileMenuOpen(false)} style={{ position: 'absolute', top: '16px', right: '-40px', background: 'var(--primary)', color: 'white', border: 'none', padding: '6px', borderRadius: '0 6px 6px 0', cursor: 'pointer' }}>
-          <X size={20} />
-        </button>
-      </div>
+      {/* Backdrop overlay for mobile menu */}
+      {mobileMenuOpen && (
+        <div 
+          className="sidebar-backdrop" 
+          onClick={() => setMobileMenuOpen(false)}
+        ></div>
+      )}
 
       {/* Main Panel Area */}
       <div className="main-content">
