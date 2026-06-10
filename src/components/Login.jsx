@@ -128,16 +128,6 @@ export default function Login({ onLoginSuccess, onOpenConfig }) {
             Hiện tại các biến môi trường cấu hình Firebase chưa được thiết lập. Bạn có thể sử dụng ứng dụng ở chế độ offline cục bộ (lưu trữ trên trình duyệt) hoặc bấm cấu hình dự án Firebase của bạn.
           </div>
         )}
-
-        <div style={{ display: 'flex', gap: '10px', marginTop: '24px' }}>
-          <button onClick={handleOfflineMode} className="btn btn-secondary btn-block" style={{ border: '1px solid rgba(255,255,255,0.15)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-            <WifiOff size={16} /> Chế độ Ngoại tuyến (Local)
-          </button>
-          
-          <button onClick={onOpenConfig} className="btn btn-secondary" style={{ border: '1px solid rgba(255,255,255,0.15)', color: 'white', padding: '10px' }} title="Cấu hình Firebase">
-            <Settings size={18} />
-          </button>
-        </div>
       </div>
     </div>
   );

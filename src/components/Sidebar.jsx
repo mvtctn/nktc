@@ -31,7 +31,6 @@ export default function Sidebar({
   activeMinuteId,
   onSelectMinute,
   onNewMinute,
-  onOpenConfig,
   mobileOpen,
   onCloseMobile
 }) {
@@ -198,14 +197,6 @@ export default function Sidebar({
               title={theme === 'dark' ? 'Chế độ sáng' : 'Chế độ tối'}
             >
               {theme === 'dark' ? <Sun size={15} /> : <Moon size={15} />}
-            </button>
-            
-            <button 
-              onClick={onOpenConfig} 
-              style={{ background: 'transparent', border: 'none', color: 'white', cursor: 'pointer', padding: '4px' }}
-              title="Cấu hình Firebase"
-            >
-              <Database size={15} />
             </button>
           </div>
         </div>

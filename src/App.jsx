@@ -22,7 +22,6 @@ import UserSettings from './components/UserSettings';
 import NKTCForm from './components/NKTCForm';
 import NKTCParser from './components/NKTCParser';
 import BBPSForm from './components/BBPSForm';
-import FirebaseConfigModal from './components/FirebaseConfigModal';
 import Dashboard from './components/Dashboard';
 
 import { Menu, X, User } from 'lucide-react';
@@ -35,9 +34,6 @@ export default function App() {
   const [theme, setTheme] = useState('dark');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  // Modal State
-  const [configModalOpen, setConfigModalOpen] = useState(false);
-  
   // Toast Alert State
   const [toast, setToast] = useState({ show: false, message: '', isError: false });
 
@@ -323,16 +319,9 @@ export default function App() {
 
   if (!user) {
     return (
-      <>
-        <Login 
-          onLoginSuccess={handleLoginSuccess} 
-          onOpenConfig={() => setConfigModalOpen(true)} 
-        />
-        <FirebaseConfigModal 
-          isOpen={configModalOpen} 
-          onClose={() => setConfigModalOpen(false)} 
-        />
-      </>
+      <Login 
+        onLoginSuccess={handleLoginSuccess} 
+      />
     );
   }
 
@@ -366,7 +355,6 @@ export default function App() {
         activeMinuteId={activeMinute ? activeMinute.id : null}
         onSelectMinute={(minute) => { setActiveMinute(minute); setMobileMenuOpen(false); }}
         onNewMinute={() => { setActiveMinute(null); setMobileMenuOpen(false); }}
-        onOpenConfig={() => setConfigModalOpen(true)}
         mobileOpen={mobileMenuOpen}
         onCloseMobile={() => setMobileMenuOpen(false)}
       />
@@ -499,11 +487,6 @@ export default function App() {
         )}
       </div>
 
-      {/* Database settings modal */}
-      <FirebaseConfigModal 
-        isOpen={configModalOpen} 
-        onClose={() => setConfigModalOpen(false)} 
-      />
     </div>
   );
 }
