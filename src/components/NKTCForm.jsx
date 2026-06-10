@@ -407,7 +407,8 @@ export default function NKTCForm({
 
           {activeTab === 'preview' ? (
             /* Printable PDF Preview */
-            <div className="glass-card" style={{ padding: '24px', background: 'white', color: '#1e293b', border: '1px solid #cbd5e1', boxShadow: '0 4px 15px rgba(0,0,0,0.05)', fontFamily: '"Times New Roman", Times, serif', minHeight: '600px', display: 'flex', flexDirection: 'column', wordBreak: 'break-all' }}>
+            <div className="preview-scroll-container">
+              <div className="glass-card" style={{ padding: '24px', background: 'white', color: '#1e293b', border: '1px solid #cbd5e1', boxShadow: '0 4px 15px rgba(0,0,0,0.05)', fontFamily: '"Times New Roman", Times, serif', minHeight: '600px', display: 'flex', flexDirection: 'column', wordBreak: 'break-all', minWidth: '794px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', fontWeight: 'bold', borderBottom: '1px solid #94a3b8', paddingBottom: '10px', marginBottom: '16px' }}>
                 <div>
                   <div>{project ? project.contractorB.toUpperCase() : "CÔNG TY CỔ PHẦN HYDROTECH"}</div>
@@ -531,6 +532,7 @@ export default function NKTCForm({
                   </div>
                 </div>
               )}
+            </div>
             </div>
           ) : (
             /* Standard JSON Code Viewer */
