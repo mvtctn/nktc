@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { exportBBPStoWord } from '../utils/WordExporter';
-import { Save, FileText, Plus, Trash2, Calendar, FileSpreadsheet, Building, Users, AlertTriangle, Lightbulb } from 'lucide-react';
+import { Save, FileText, Plus, Trash2, Calendar, FileSpreadsheet, Building, Users, AlertTriangle, Lightbulb, MoreVertical, Copy, Download } from 'lucide-react';
 
 const getTodayDateString = () => {
   const today = new Date();
@@ -37,6 +37,9 @@ export default function BBPSForm({
   onSave,
   onToast
 }) {
+  const [activeTab, setActiveTab] = useState('input'); // 'input' or 'preview'
+  const [actionsMenuOpen, setActionsMenuOpen] = useState(false);
+  
   // Form State
   const [ngay, setNgay] = useState(getTodayDateString());
   const [dai_dien_a, setDaiDienA] = useState('');
@@ -120,15 +123,33 @@ export default function BBPSForm({
 
   return (
     <div className="container-fluid" id="bbps-form-panel">
-      <div className="dashboard-grid">
-        {/* Left Side: Form inputs */}
-        <div className="glass-card" style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
+      {/* Top-level Tabs for BBPS Section */}
+      <div className="tabs" style={{ marginBottom: '20px' }}>
+        <div 
+          className={`tab ${activeTab === 'input' ? 'active' : ''}`}
+          onClick={() => setActiveTab('input')}
+          style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
+        >
+          <FileSpreadsheet size={16} /> Nhập Biên bản
+        </div>
+        <div 
+          className={`tab ${activeTab === 'preview' ? 'active' : ''}`}
+          onClick={() => setActiveTab('preview')}
+          style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
+        >
+          <FileText size={16} /> Xem bản in thử (A4)
+        </div>
+      </div>
+
+      {activeTab === 'input' && (
+        /* Giao diện Nhập liệu Biên bản (Full width, centered) */
+        <div className="glass-card" style={{ display: 'flex', flexDirection: 'column', gap: '18px', maxWidth: '850px', margin: '0 auto', width: '100%' }}>
           <div className="panel-header" style={{ marginBottom: '0' }}>
-            <h3 className="panel-title"><FileSpreadsheet size={18} /> Nhập Biên bản hiện trường / Phát sinh</h3>
+            <h3 className="panel-title"><FileSpreadsheet size={18} /> Giao diện Nhập Biên bản hiện trường / Phát sinh</h3>
           </div>
 
           <div className="form-group">
-            <label className="form-label"><Calendar size={14} style={{ display: 'inline', marginRight: '6px' }} /> Ngày lập biên bản</label>
+            <label className="form-label"><Calendar size={14} /> Ngày lập biên bản</label>
             <input
               type="date"
               className="form-control"
@@ -258,26 +279,57 @@ export default function BBPSForm({
           </div>
 
           {/* Action Buttons */}
-          <div className="form-actions-grid">
-            <button type="button" onClick={handleSave} className="btn btn-accent">
+          <div style={{ display: 'flex', gap: '10px', marginTop: '16px', position: 'relative' }}>
+            <button type="button" onClick={handleSave} className="btn btn-accent" style={{ flex: 1 }}>
               <Save size={18} /> Lưu Biên bản (Database)
             </button>
-            <button type="button" onClick={handleExportWord} className="btn btn-primary">
-              <FileText size={18} /> Xuất file Word (.docx)
-            </button>
-          </div>
-        </div>
-
-        {/* Right Side: Paper preview */}
-        <div style={{ minWidth: 0 }}>
-          <div className="tabs" style={{ marginBottom: '0' }}>
-            <div className="tab active" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <FileSpreadsheet size={16} /> Biểu mẫu in thử (Biên bản)
+            
+            <div style={{ position: 'relative' }}>
+              <button 
+                type="button" 
+                onClick={() => setActionsMenuOpen(!actionsMenuOpen)} 
+                className="btn btn-secondary"
+                style={{ padding: '12px', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                title="Tùy chọn khác"
+              >
+                <MoreVertical size={18} />
+              </button>
+              
+              {actionsMenuOpen && (
+                <div className="glass-card" style={{
+                  position: 'absolute',
+                  bottom: '100%',
+                  right: 0,
+                  marginBottom: '8px',
+                  zIndex: 100,
+                  minWidth: '200px',
+                  padding: '6px 0',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '2px',
+                  background: 'var(--primary-light)',
+                  border: '1px solid var(--border)',
+                  boxShadow: 'var(--shadow-lg)'
+                }}>
+                  <button 
+                    type="button" 
+                    onClick={() => { handleExportWord(); setActionsMenuOpen(false); }} 
+                    className="menu-item-action"
+                  >
+                    <FileText size={14} style={{ color: 'var(--secondary)' }} />
+                    <span>Xuất file Word (.docx)</span>
+                  </button>
+                </div>
+              )}
             </div>
           </div>
+        </div>
+      )}
 
-          <div className="preview-scroll-container">
-            <div className="glass-card" style={{ padding: '24px', background: 'white', color: '#1e293b', border: '1px solid #cbd5e1', boxShadow: '0 4px 15px rgba(0,0,0,0.05)', fontFamily: '"Times New Roman", Times, serif', minHeight: '600px', display: 'flex', flexDirection: 'column', wordBreak: 'break-all', minWidth: '794px' }}>
+      {activeTab === 'preview' && (
+        /* Printable PDF Preview centered */
+        <div className="preview-scroll-container">
+          <div className="glass-card" style={{ padding: '24px', background: 'white', color: '#1e293b', border: '1px solid #cbd5e1', boxShadow: '0 4px 15px rgba(0,0,0,0.05)', fontFamily: '"Times New Roman", Times, serif', minHeight: '600px', display: 'flex', flexDirection: 'column', wordBreak: 'break-all', minWidth: '794px', maxWidth: '794px', margin: '0 auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', fontWeight: 'bold', borderBottom: '1px solid #94a3b8', paddingBottom: '10px', marginBottom: '16px' }}>
               <div>
                 <div>{project ? project.contractorB.toUpperCase() : "CÔNG TY CỔ PHẦN HYDROTECH"}</div>
@@ -346,8 +398,7 @@ export default function BBPSForm({
             </div>
           </div>
         </div>
-        </div>
-      </div>
+      )}
     </div>
   );
 }

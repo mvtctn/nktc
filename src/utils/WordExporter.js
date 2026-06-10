@@ -29,7 +29,7 @@ const base64ToBuffer = (base64Str) => {
 };
 
 // EXPORT 1: NHẬT KÝ THI CÔNG (.docx)
-export const exportNKTCtoWord = async (logData, project, photos = []) => {
+export const buildNKTCSection = (logData, project, photos = []) => {
   const thinBorder = { style: BorderStyle.SINGLE, size: 6, color: "000000" };
   const tableBorders = {
     top: thinBorder,
@@ -65,9 +65,8 @@ export const exportNKTCtoWord = async (logData, project, photos = []) => {
   const checkVeSinhTB = isVeSinhTB ? "☑" : "☐";
   const checkVeSinhXau = isVeSinhXau ? "☑" : "☐";
 
-  const doc = new Document({
-    sections: [{
-      properties: {
+  return {
+    properties: {
         page: {
           size: {
             width: 11906, // A4 width in twips
@@ -517,13 +516,34 @@ export const exportNKTCtoWord = async (logData, project, photos = []) => {
           })
         ] : [])
       ]
-    }]
-  });
+    };
+  };
 
-  Packer.toBlob(doc).then(blob => {
-    saveAs(blob, `Nhat_ky_thi_cong_${logData.ngay.replace(/\//g, "-")}_trang_${logData.trang}.docx`);
-  });
-};
+  export const exportNKTCtoWord = async (logData, project, photos = []) => {
+    const section = buildNKTCSection(logData, project, photos);
+    const doc = new Document({
+      sections: [section]
+    });
+    Packer.toBlob(doc).then(blob => {
+      saveAs(blob, `Nhat_ky_thi_cong_${logData.ngay.replace(/\//g, "-")}_trang_${logData.trang}.docx`);
+    });
+  };
+
+  export const exportAllNKTCtoWord = async (diariesList, project) => {
+    const sortedDiaries = [...diariesList].sort((a, b) => {
+      const partsA = a.ngay.split('/');
+      const partsB = b.ngay.split('/');
+      const dateA = new Date(partsA[2], partsA[1] - 1, partsA[0]);
+      const dateB = new Date(partsB[2], partsB[1] - 1, partsB[0]);
+      return dateA - dateB;
+    });
+
+    const sections = sortedDiaries.map(d => buildNKTCSection(d, project, d.photos || []));
+    const doc = new Document({ sections });
+    Packer.toBlob(doc).then(blob => {
+      saveAs(blob, `Toan_bo_Nhat_ky_thi_cong_${project ? project.name.replace(/\s+/g, "_") : "Du_an"}.docx`);
+    });
+  };
 
 // Helper function to dynamically generate Table Rows of images in docx
 const createPhotoRows = (photos) => {

@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Mic, Play, RefreshCw, Cpu, BrainCircuit, Key } from 'lucide-react';
+import { Mic, Play, RefreshCw, Cpu, BrainCircuit, Key, Sparkles, X } from 'lucide-react';
 import { parseRawLog, parseLogWithGemini } from '../utils/parser';
 
 export default function NKTCParser({ onParsed, onToast, date, page }) {
+  const [isOpen, setIsOpen] = useState(false);
   const [rawText, setRawText] = useState('');
   const [parsing, setParsing] = useState(false);
   const [geminiKey, setGeminiKey] = useState('');
@@ -107,52 +108,109 @@ export default function NKTCParser({ onParsed, onToast, date, page }) {
     }
   };
 
+  if (!isOpen) {
+    return (
+      <div style={{ display: 'flex', justifyContent: 'flex-start', marginBottom: '16px' }}>
+        <button
+          type="button"
+          onClick={() => setIsOpen(true)}
+          className="btn"
+          style={{
+            background: 'linear-gradient(135deg, rgba(0, 180, 216, 0.15) 0%, rgba(0, 229, 255, 0.08) 100%)',
+            border: '1px solid rgba(0, 229, 255, 0.25)',
+            color: 'var(--accent)',
+            fontSize: '0.85rem',
+            fontWeight: '700',
+            padding: '8px 18px',
+            borderRadius: '20px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            boxShadow: '0 0 12px rgba(0, 229, 255, 0.1)',
+            transition: 'all 0.2s ease',
+            cursor: 'pointer'
+          }}
+          onMouseOver={(e) => {
+            e.currentTarget.style.transform = 'translateY(-1px)';
+            e.currentTarget.style.boxShadow = '0 0 18px rgba(0, 229, 255, 0.3)';
+            e.currentTarget.style.borderColor = 'rgba(0, 229, 255, 0.5)';
+            e.currentTarget.style.background = 'linear-gradient(135deg, rgba(0, 180, 216, 0.25) 0%, rgba(0, 229, 255, 0.15) 100%)';
+          }}
+          onMouseOut={(e) => {
+            e.currentTarget.style.transform = 'translateY(0)';
+            e.currentTarget.style.boxShadow = '0 0 12px rgba(0, 229, 255, 0.1)';
+            e.currentTarget.style.borderColor = 'rgba(0, 229, 255, 0.25)';
+            e.currentTarget.style.background = 'linear-gradient(135deg, rgba(0, 180, 216, 0.15) 0%, rgba(0, 229, 255, 0.08) 100%)';
+          }}
+        >
+          <Sparkles size={14} /> AI Hỗ trợ nhập liệu
+        </button>
+      </div>
+    );
+  }
+
   return (
-    <div className="glass-card" style={{ marginBottom: '24px' }}>
-      <div className="panel-header" style={{ marginBottom: '12px' }}>
-        <h3 className="panel-title" style={{ fontSize: '0.95rem' }}><Mic size={18} /> Nhập ghi chép nhanh hoặc nhật ký thoại</h3>
-      </div>
+    <div className="modal-backdrop" style={{ zIndex: 1100 }}>
+      <div className="modal-card" style={{ padding: '24px', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', maxWidth: '580px' }}>
+        <div className="modal-header" style={{ borderBottom: '1px solid var(--border)', paddingBottom: '12px', marginBottom: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <h3 className="modal-title" style={{ fontSize: '1.05rem', margin: 0, color: 'var(--accent)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Sparkles size={18} color="var(--accent)" /> AI Hỗ trợ nhập liệu
+          </h3>
+          <button 
+            type="button" 
+            onClick={() => setIsOpen(false)}
+            className="modal-close"
+            style={{ color: 'var(--text-secondary)', background: 'transparent', border: 'none', cursor: 'pointer' }}
+          >
+            <X size={20} />
+          </button>
+        </div>
 
-      {/* Speech Dictation Button */}
-      <button 
-        type="button" 
-        onClick={handleVoiceInput} 
-        className={`audio-input-btn ${isRecording ? 'recording' : ''}`}
-      >
-        <Mic size={18} />
-        {isRecording ? 'Đang thu âm giọng nói... Bấm để dừng' : 'Ghi âm nhật ký bằng giọng nói (Giọng Việt)'}
-      </button>
+        <div className="modal-body" style={{ padding: 0 }}>
+          {/* Speech Dictation Button */}
+          <button 
+            type="button" 
+            onClick={handleVoiceInput} 
+            className={`audio-input-btn ${isRecording ? 'recording' : ''}`}
+            style={{ marginBottom: '16px' }}
+          >
+            <Mic size={18} />
+            {isRecording ? 'Đang thu âm giọng nói... Bấm để dừng' : 'Ghi âm nhật ký bằng giọng nói (Giọng Việt)'}
+          </button>
 
-      {/* Raw Text Input */}
-      <div className="form-group">
-        <textarea
-          className="form-control"
-          rows={6}
-          placeholder="Ví dụ: Nhật ký ngày 15/6/26 trang 42. Dự án Johnson Thuận Thành 1. Sáng nắng gắt, chiều đổ mưa to. Đội thợ hôm nay giữ nguyên 17 người. Thiết bị có 3 máy cắt tay, 1 máy cắt bàn, 6 khoan bê tông. Tiến độ: lắp ống nhựa đen tầng 1+2. Vẫn đang chờ mặt bằng phần xưởng 2 tầng 2. Chờ quạt từ bên A cấp. An toàn tốt, vệ sinh sạch sẽ..."
-          value={rawText}
-          onChange={(e) => setRawText(e.value || e.target.value)}
-          style={{ fontSize: '0.875rem' }}
-        />
-      </div>
+          {/* Raw Text Input */}
+          <div className="form-group">
+            <label className="form-label" style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Nhập nội dung ghi chép thô hoặc nói:</label>
+            <textarea
+              className="form-control"
+              rows={6}
+              placeholder="Ví dụ: Nhật ký ngày 15/6/26 trang 42. Dự án Johnson Thuận Thành 1. Sáng nắng gắt, chiều đổ mưa to. Đội thợ hôm nay giữ nguyên 17 người. Thiết bị có 3 máy cắt tay, 1 máy cắt bàn, 6 khoan bê tông. Tiến độ: lắp ống nhựa đen tầng 1+2. Vẫn đang chờ mặt bằng phần xưởng 2 tầng 2. Chờ quạt từ bên A cấp. An toàn tốt, vệ sinh sạch sẽ..."
+              value={rawText}
+              onChange={(e) => setRawText(e.value || e.target.value)}
+              style={{ fontSize: '0.875rem' }}
+            />
+          </div>
 
-      {/* Parse Trigger Buttons */}
-      <div className="parser-actions-grid">
-        <button 
-          type="button" 
-          onClick={handleParseLocal} 
-          className="btn btn-secondary btn-parse-action" 
-          disabled={parsing}
-        >
-          <Cpu size={16} /> <span>Chuẩn hóa nhanh (Regex)</span>
-        </button>
-        <button 
-          type="button" 
-          onClick={handleParseGemini} 
-          className="btn btn-primary btn-parse-action" 
-          disabled={parsing}
-        >
-          <BrainCircuit size={16} /> <span>Phân tích thông minh (Gemini AI)</span>
-        </button>
+          {/* Parse Trigger Buttons */}
+          <div className="parser-actions-grid" style={{ marginTop: '16px' }}>
+            <button 
+              type="button" 
+              onClick={handleParseLocal} 
+              className="btn btn-secondary btn-parse-action" 
+              disabled={parsing}
+            >
+              <Cpu size={16} /> <span>Chuẩn hóa nhanh (Regex)</span>
+            </button>
+            <button 
+              type="button" 
+              onClick={handleParseGemini} 
+              className="btn btn-primary btn-parse-action" 
+              disabled={parsing}
+            >
+              <BrainCircuit size={16} /> <span>Phân tích thông minh (Gemini AI)</span>
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );

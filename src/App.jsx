@@ -395,9 +395,6 @@ export default function App() {
             
             <div>
               <span className="header-title">Project Construction diary</span>
-              <span className="header-subtitle">
-                {activeProject ? activeProject.name : 'Vui lòng chọn hoặc tạo dự án ở menu'}
-              </span>
             </div>
           </div>
 
@@ -453,6 +450,7 @@ export default function App() {
               initialData={activeDiary}
               onSave={handleSaveDiary}
               onToast={showToast}
+              diaries={diaries}
             />
           </div>
         )}

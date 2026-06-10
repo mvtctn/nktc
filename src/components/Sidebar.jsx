@@ -62,30 +62,6 @@ export default function Sidebar({
         </button>
       </div>
 
-      {/* Project Selector */}
-      <div style={{ padding: '12px 16px', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
-        <label style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.5)', fontWeight: '700', textTransform: 'uppercase', display: 'block', marginBottom: '6px' }}>
-          Dự án hoạt động
-        </label>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'rgba(255,255,255,0.05)', borderRadius: '6px', padding: '6px 10px', border: '1px solid rgba(255,255,255,0.1)' }}>
-          <FolderOpen size={16} color="#00e5ff" style={{ flexShrink: 0 }} />
-          <select 
-            value={activeProjectId} 
-            onChange={(e) => setActiveProjectId(e.target.value)}
-            style={{ width: '100%', background: 'transparent', border: 'none', color: 'white', fontSize: '0.825rem', outline: 'none', cursor: 'pointer' }}
-          >
-            {projects.length === 0 ? (
-              <option value="" style={{ background: '#0a192f' }}>-- Chưa có dự án --</option>
-            ) : (
-              projects.map(p => (
-                <option key={p.id} value={p.id} style={{ background: '#0a192f' }}>
-                  {p.name.length > 25 ? p.name.substring(0, 25) + '...' : p.name}
-                </option>
-              ))
-            )}
-          </select>
-        </div>
-      </div>
 
       {/* Navigation Menu */}
       <nav className="sidebar-menu">
