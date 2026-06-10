@@ -2,6 +2,34 @@ import React, { useState, useEffect } from 'react';
 import { exportBBPStoWord } from '../utils/WordExporter';
 import { Save, FileText, Plus, Trash2, Calendar, FileSpreadsheet, Building, Users, AlertTriangle, Lightbulb } from 'lucide-react';
 
+const getTodayDateString = () => {
+  const today = new Date();
+  const day = today.getDate().toString().padStart(2, '0');
+  const month = (today.getMonth() + 1).toString().padStart(2, '0');
+  const year = today.getFullYear();
+  return `${day}/${month}/${year}`;
+};
+
+const convertToInputDate = (dateStr) => {
+  if (!dateStr) return '';
+  const parts = dateStr.split('/');
+  if (parts.length === 3) {
+    const [day, month, year] = parts;
+    return `${year}-${month}-${day}`;
+  }
+  return dateStr;
+};
+
+const convertToDisplayDate = (dateStr) => {
+  if (!dateStr) return '';
+  const parts = dateStr.split('-');
+  if (parts.length === 3) {
+    const [year, month, day] = parts;
+    return `${day}/${month}/${year}`;
+  }
+  return dateStr;
+};
+
 export default function BBPSForm({
   user,
   project,
@@ -10,7 +38,7 @@ export default function BBPSForm({
   onToast
 }) {
   // Form State
-  const [ngay, setNgay] = useState('');
+  const [ngay, setNgay] = useState(getTodayDateString());
   const [dai_dien_a, setDaiDienA] = useState('');
   const [chuc_vu_a, setChucVuA] = useState('Kỹ sư giám sát');
   const [dai_dien_b, setDaiDienB] = useState('');
@@ -47,13 +75,7 @@ export default function BBPSForm({
     }
   }, [initialData, project]);
 
-  const getTodayDateString = () => {
-    const today = new Date();
-    const day = today.getDate().toString().padStart(2, '0');
-    const month = (today.getMonth() + 1).toString().padStart(2, '0');
-    const year = today.getFullYear();
-    return `${day}/${month}/${year}`;
-  };
+
 
   const handleSave = () => {
     if (!vi_tri || !su_viec) {
@@ -108,11 +130,10 @@ export default function BBPSForm({
           <div className="form-group">
             <label className="form-label"><Calendar size={14} style={{ display: 'inline', marginRight: '6px' }} /> Ngày lập biên bản</label>
             <input
-              type="text"
+              type="date"
               className="form-control"
-              placeholder="DD/MM/YYYY"
-              value={ngay}
-              onChange={(e) => setNgay(e.value || e.target.value)}
+              value={convertToInputDate(ngay)}
+              onChange={(e) => setNgay(convertToDisplayDate(e.target.value))}
             />
           </div>
 
@@ -255,7 +276,7 @@ export default function BBPSForm({
             </div>
           </div>
 
-          <div className="glass-card" style={{ padding: '24px', background: 'white', color: '#1e293b', border: '1px solid #cbd5e1', boxShadow: '0 4px 15px rgba(0,0,0,0.05)', fontFamily: '"Times New Roman", Times, serif', minHeight: '600px', display: 'flex', flexDirection: 'column' }}>
+          <div className="glass-card" style={{ padding: '24px', background: 'white', color: '#1e293b', border: '1px solid #cbd5e1', boxShadow: '0 4px 15px rgba(0,0,0,0.05)', fontFamily: '"Times New Roman", Times, serif', minHeight: '600px', display: 'flex', flexDirection: 'column', wordBreak: 'break-all' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', fontWeight: 'bold', borderBottom: '1px solid #94a3b8', paddingBottom: '10px', marginBottom: '16px' }}>
               <div>
                 <div>{project ? project.contractorB.toUpperCase() : "CÔNG TY CỔ PHẦN HYDROTECH"}</div>

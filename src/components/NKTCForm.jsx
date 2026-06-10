@@ -19,6 +19,34 @@ import {
   Code
 } from 'lucide-react';
 
+const getTodayDateString = () => {
+  const today = new Date();
+  const day = today.getDate().toString().padStart(2, '0');
+  const month = (today.getMonth() + 1).toString().padStart(2, '0');
+  const year = today.getFullYear();
+  return `${day}/${month}/${year}`;
+};
+
+const convertToInputDate = (dateStr) => {
+  if (!dateStr) return '';
+  const parts = dateStr.split('/');
+  if (parts.length === 3) {
+    const [day, month, year] = parts;
+    return `${year}-${month}-${day}`;
+  }
+  return dateStr;
+};
+
+const convertToDisplayDate = (dateStr) => {
+  if (!dateStr) return '';
+  const parts = dateStr.split('-');
+  if (parts.length === 3) {
+    const [year, month, day] = parts;
+    return `${day}/${month}/${year}`;
+  }
+  return dateStr;
+};
+
 export default function NKTCForm({
   user,
   project,
@@ -30,7 +58,7 @@ export default function NKTCForm({
 
   // Form Fields
   const [trang, setTrang] = useState('1');
-  const [ngay, setNgay] = useState('');
+  const [ngay, setNgay] = useState(getTodayDateString());
   const [thoi_tiet_sang, setThoiTietSang] = useState('Bình thường');
   const [thoi_tiet_chieu, setThoiTietChieu] = useState('Bình thường');
   const [so_luong_cong_nhan, setSoLuongCongNhan] = useState(0);
@@ -63,13 +91,7 @@ export default function NKTCForm({
     }
   }, [initialData]);
 
-  const getTodayDateString = () => {
-    const today = new Date();
-    const day = today.getDate().toString().padStart(2, '0');
-    const month = (today.getMonth() + 1).toString().padStart(2, '0');
-    const year = today.getFullYear();
-    return `${day}/${month}/${year}`;
-  };
+
 
   // List Management
   const addEquipment = () => {
@@ -193,32 +215,17 @@ export default function NKTCForm({
             <h3 className="panel-title"><FileText size={18} /> Biểu mẫu nhập Nhật ký thi công</h3>
           </div>
 
+          {/* Combined Date & Weather Options Row */}
           <div className="input-row">
             <div className="form-group">
               <label className="form-label"><Calendar size={14} style={{ display: 'inline', marginRight: '6px' }} /> Ngày thi công</label>
               <input
-                type="text"
+                type="date"
                 className="form-control"
-                placeholder="DD/MM/YYYY"
-                value={ngay}
-                onChange={(e) => setNgay(e.value || e.target.value)}
+                value={convertToInputDate(ngay)}
+                onChange={(e) => setNgay(convertToDisplayDate(e.target.value))}
               />
             </div>
-            
-            <div className="form-group">
-              <label className="form-label">Số trang nhật ký</label>
-              <input
-                type="text"
-                className="form-control"
-                placeholder="Số trang"
-                value={trang}
-                onChange={(e) => setTrang(e.value || e.target.value)}
-              />
-            </div>
-          </div>
-
-          {/* Weather Options */}
-          <div className="input-row">
             <div className="form-group">
               <label className="form-label">Thời tiết Sáng</label>
               <select className="form-control" value={thoi_tiet_sang} onChange={(e) => setThoiTietSang(e.target.value)}>
@@ -237,20 +244,17 @@ export default function NKTCForm({
             </div>
           </div>
 
-          {/* Manpower Slider */}
+          {/* Manpower Input */}
           <div className="form-group">
-            <label className="form-label"><Users size={14} style={{ display: 'inline', marginRight: '6px' }} /> Nhân sự tại công trường</label>
-            <div className="slider-container">
-              <input
-                type="range"
-                min="0"
-                max="100"
-                className="slider-input"
-                value={so_luong_cong_nhan}
-                onChange={(e) => setSoLuongCongNhan(parseInt(e.value || e.target.value, 10))}
-              />
-              <span className="slider-value">{so_luong_cong_nhan}</span>
-            </div>
+            <label className="form-label"><Users size={14} style={{ display: 'inline', marginRight: '6px' }} /> Số lượng công nhân (Điền số)</label>
+            <input
+              type="number"
+              min="0"
+              className="form-control"
+              placeholder="Nhập số lượng công nhân..."
+              value={so_luong_cong_nhan}
+              onChange={(e) => setSoLuongCongNhan(parseInt(e.target.value || 0, 10))}
+            />
           </div>
 
           {/* Equipment List */}
@@ -403,7 +407,7 @@ export default function NKTCForm({
 
           {activeTab === 'preview' ? (
             /* Printable PDF Preview */
-            <div className="glass-card" style={{ padding: '24px', background: 'white', color: '#1e293b', border: '1px solid #cbd5e1', boxShadow: '0 4px 15px rgba(0,0,0,0.05)', fontFamily: '"Times New Roman", Times, serif', minHeight: '600px', display: 'flex', flexDirection: 'column' }}>
+            <div className="glass-card" style={{ padding: '24px', background: 'white', color: '#1e293b', border: '1px solid #cbd5e1', boxShadow: '0 4px 15px rgba(0,0,0,0.05)', fontFamily: '"Times New Roman", Times, serif', minHeight: '600px', display: 'flex', flexDirection: 'column', wordBreak: 'break-all' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', fontWeight: 'bold', borderBottom: '1px solid #94a3b8', paddingBottom: '10px', marginBottom: '16px' }}>
                 <div>
                   <div>{project ? project.contractorB.toUpperCase() : "CÔNG TY CỔ PHẦN HYDROTECH"}</div>

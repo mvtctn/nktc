@@ -221,6 +221,22 @@ textarea.form-control {
   min-height: 100px;
 }
 
+select.form-control {
+  background-color: var(--bg-card);
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+select.form-control option {
+  background-color: #172a45;
+  color: #f8fafc;
+}
+
+[data-theme="light"] select.form-control option {
+  background-color: #ffffff;
+  color: #1e293b;
+}
+
 .input-row {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));

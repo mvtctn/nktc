@@ -393,7 +393,7 @@ export default function App() {
             </button>
             
             <div>
-              <span className="header-title">HProject Construction diary</span>
+              <span className="header-title">Project Construction diary</span>
               <span className="header-subtitle">
                 {activeProject ? activeProject.name : 'Vui lòng chọn hoặc tạo dự án ở menu'}
               </span>
