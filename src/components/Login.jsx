@@ -30,13 +30,19 @@ export default function Login({ onLoginSuccess, onOpenConfig }) {
       }
     } catch (err) {
       console.error(err);
-      let errMsg = 'Đăng nhập thất bại. Vui lòng kiểm tra lại tài khoản.';
-      if (err.code === 'auth/wrong-password' || err.code === 'auth/user-not-found') {
+      let errMsg = `Đăng nhập/Đăng ký thất bại: ${err.message} (${err.code})`;
+      if (err.code === 'auth/wrong-password' || err.code === 'auth/user-not-found' || err.code === 'auth/invalid-credential') {
         errMsg = 'Email hoặc mật khẩu không chính xác.';
       } else if (err.code === 'auth/email-already-in-use') {
         errMsg = 'Email này đã được sử dụng.';
       } else if (err.code === 'auth/weak-password') {
         errMsg = 'Mật khẩu phải chứa ít nhất 6 ký tự.';
+      } else if (err.code === 'auth/operation-not-allowed') {
+        errMsg = 'Phương thức đăng ký Email/Mật khẩu chưa được bật trên Firebase Console. Vui lòng truy cập Firebase Console > Authentication > Sign-in method và BẬT Email/Password.';
+      } else if (err.code === 'auth/invalid-email') {
+        errMsg = 'Địa chỉ email không đúng định dạng.';
+      } else {
+        errMsg = `Lỗi hệ thống (${err.code}): ${err.message}`;
       }
       setError(errMsg);
     } finally {
