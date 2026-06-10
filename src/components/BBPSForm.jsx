@@ -237,7 +237,7 @@ export default function BBPSForm({
           </div>
 
           {/* Action Buttons */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginTop: '10px' }}>
+          <div className="form-actions-grid">
             <button type="button" onClick={handleSave} className="btn btn-accent">
               <Save size={18} /> Lưu Biên bản (Database)
             </button>

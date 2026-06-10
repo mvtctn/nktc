@@ -372,7 +372,7 @@ export default function NKTCForm({
           />
 
           {/* Action buttons */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginTop: '16px' }}>
+          <div className="form-actions-grid">
             <button type="button" onClick={handleSaveDiary} className="btn btn-accent">
               <Save size={18} /> Lưu Nhật ký (Cloud/Local)
             </button>

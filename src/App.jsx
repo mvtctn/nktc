@@ -18,17 +18,19 @@ import { onAuthStateChanged, signOut } from 'firebase/auth';
 import Sidebar from './components/Sidebar';
 import Login from './components/Login';
 import ProjectSettings from './components/ProjectSettings';
+import UserSettings from './components/UserSettings';
 import NKTCForm from './components/NKTCForm';
 import NKTCParser from './components/NKTCParser';
 import BBPSForm from './components/BBPSForm';
 import FirebaseConfigModal from './components/FirebaseConfigModal';
 
-import { Menu, X } from 'lucide-react';
+import { Menu, X, User } from 'lucide-react';
 
 export default function App() {
   const [user, setUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [currentTab, setCurrentTab] = useState('nktc'); // 'nktc', 'bbps', 'settings'
+  const [settingsSubTab, setSettingsSubTab] = useState('project'); // 'project', 'user'
   const [theme, setTheme] = useState('dark');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -391,19 +393,32 @@ export default function App() {
             </button>
             
             <div>
-              <span className="header-title">HYDROTECH FIELD ASSISTANT</span>
+              <span className="header-title">HProject Construction diary</span>
               <span className="header-subtitle">
                 {activeProject ? activeProject.name : 'Vui lòng chọn hoặc tạo dự án ở menu'}
               </span>
             </div>
           </div>
 
-          <div className="user-profile">
-            <div className="user-info" style={{ display: 'block' }}>
-              <div className="user-name">{user.displayName || 'Kỹ sư Hydrotech'}</div>
-              <div className="user-role">{isOffline ? 'OFFLINE' : 'ONLINE'}</div>
+          <button 
+            type="button"
+            className="user-profile-badge" 
+            onClick={() => {
+              setCurrentTab('settings');
+              setSettingsSubTab('user');
+            }}
+            title="Xem hồ sơ & cấu hình AI"
+          >
+            <div className="avatar-circle">
+              <User size={15} />
             </div>
-          </div>
+            <div className="user-info">
+              <span className="user-name">{user.displayName || 'Kỹ sư'}</span>
+              <span className={`status-tag ${isOffline ? 'offline' : 'online'}`}>
+                {isOffline ? 'Ngoại tuyến' : 'Trực tuyến'}
+              </span>
+            </div>
+          </button>
         </header>
 
         {/* Tab switcher renderer */}
@@ -436,12 +451,36 @@ export default function App() {
         )}
 
         {currentTab === 'settings' && (
-          <ProjectSettings
-            user={user}
-            activeProjectId={activeProjectId}
-            setActiveProjectId={setActiveProjectId}
-            onToast={showToast}
-          />
+          <div className="container-fluid" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <div className="tabs" style={{ marginBottom: '10px' }}>
+              <div 
+                className={`tab ${settingsSubTab === 'project' ? 'active' : ''}`}
+                onClick={() => setSettingsSubTab('project')}
+              >
+                Cấu hình Dự án
+              </div>
+              <div 
+                className={`tab ${settingsSubTab === 'user' ? 'active' : ''}`}
+                onClick={() => setSettingsSubTab('user')}
+              >
+                Hồ sơ Kỹ sư & Cấu hình AI
+              </div>
+            </div>
+            
+            {settingsSubTab === 'project' ? (
+              <ProjectSettings
+                user={user}
+                activeProjectId={activeProjectId}
+                setActiveProjectId={setActiveProjectId}
+                onToast={showToast}
+              />
+            ) : (
+              <UserSettings
+                user={user}
+                onToast={showToast}
+              />
+            )}
+          </div>
         )}
       </div>
 

@@ -85,17 +85,17 @@ export default function NKTCParser({ onParsed, onToast, date, page }) {
       onToast('Vui lòng nhập ghi chép thô', true);
       return;
     }
-    if (!geminiKey) {
-      onToast('Vui lòng nhập Gemini API Key để phân tích bằng AI', true);
+    
+    const savedKey = localStorage.getItem('hydrotech_gemini_key');
+    if (!savedKey) {
+      onToast('Chưa cấu hình Gemini API Key. Vui lòng thiết lập trong mục Quản lý Dự án > Hồ sơ Kỹ sư & Cấu hình AI', true);
       return;
     }
 
     setParsing(true);
     onToast('Đang gọi AI Gemini phân tích nâng cao...');
     try {
-      // Save key
-      localStorage.setItem('hydrotech_gemini_key', geminiKey);
-      const parsedData = await parseLogWithGemini(rawText, geminiKey, date, page);
+      const parsedData = await parseLogWithGemini(rawText, savedKey, date, page);
       onParsed(parsedData);
       onToast('AI Gemini đã hoàn tất xử lý nhật ký!');
     } catch (e) {
@@ -136,38 +136,23 @@ export default function NKTCParser({ onParsed, onToast, date, page }) {
       </div>
 
       {/* Parse Trigger Buttons */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
+      <div className="parser-actions-grid">
         <button 
           type="button" 
           onClick={handleParseLocal} 
-          className="btn btn-secondary" 
+          className="btn btn-secondary btn-parse-action" 
           disabled={parsing}
-          style={{ fontSize: '0.85rem' }}
         >
-          <Cpu size={16} /> Chuẩn hóa nhanh (Regex)
+          <Cpu size={16} /> <span>Chuẩn hóa nhanh (Regex)</span>
         </button>
         <button 
           type="button" 
           onClick={handleParseGemini} 
-          className="btn btn-primary" 
-          disabled={parsing || !geminiKey}
-          style={{ fontSize: '0.85rem' }}
+          className="btn btn-primary btn-parse-action" 
+          disabled={parsing}
         >
-          <BrainCircuit size={16} /> Phân tích thông minh (Gemini AI)
+          <BrainCircuit size={16} /> <span>Phân tích thông minh (Gemini AI)</span>
         </button>
-      </div>
-
-      {/* Gemini API Key Configuration */}
-      <div style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid var(--border)', borderRadius: '6px', padding: '10px 12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-        <Key size={14} color="var(--text-secondary)" style={{ flexShrink: 0 }} />
-        <input
-          type="password"
-          className="form-control"
-          placeholder="Cấu hình Gemini API Key (Không bắt buộc)..."
-          value={geminiKey}
-          onChange={(e) => setGeminiKey(e.value || e.target.value)}
-          style={{ height: '30px', padding: '4px 8px', fontSize: '0.75rem', border: 'none', background: 'transparent' }}
-        />
       </div>
     </div>
   );
