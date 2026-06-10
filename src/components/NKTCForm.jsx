@@ -247,13 +247,6 @@ export default function NKTCForm({
         >
           <FileText size={16} /> Xem bản in thử (A4)
         </div>
-        <div 
-          className={`tab ${activeTab === 'json' ? 'active' : ''}`}
-          onClick={() => setActiveTab('json')}
-          style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
-        >
-          <Code size={16} /> Định dạng JSON chuẩn
-        </div>
       </div>
 
       {activeTab === 'input' && (
@@ -631,25 +624,7 @@ export default function NKTCForm({
         </div>
       )}
 
-      {activeTab === 'json' && (
-        /* Standard JSON Code Viewer centered */
-        <div className="glass-card" style={{ maxWidth: '850px', margin: '0 auto', width: '100%' }}>
-          <div className="code-preview-header">
-            <span className="code-preview-lang">json</span>
-            <div style={{ display: 'flex', gap: '8px' }}>
-              <button onClick={handleCopyJSON} className="btn btn-secondary btn-sm" style={{ padding: '4px 8px', borderColor: '#1a2f4c', color: '#e2e8f0' }} title="Copy">
-                <Copy size={14} /> Copy
-              </button>
-              <button onClick={handleDownloadJSON} className="btn btn-secondary btn-sm" style={{ padding: '4px 8px', borderColor: '#1a2f4c', color: '#e2e8f0' }} title="Download">
-                <Download size={14} /> Download
-              </button>
-            </div>
-          </div>
-          <div className="code-preview-scroll">
-            <pre><code className="json-code">{getFormattedJSON()}</code></pre>
-          </div>
-        </div>
-      )}
+
     </div>
   );
 }
