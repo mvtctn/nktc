@@ -1,0 +1,18 @@
+{
+  "short_name": "Hydrotech NKTC",
+  "name": "Hydrotech Nhật Ký Thi Công PWA",
+  "description": "Ứng dụng Quản lý Nhật ký thi công & Biên bản phát sinh chuyên sâu cho Hydrotech",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "type": "image/svg+xml",
+      "sizes": "any",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": ".",
+  "background_color": "#0a192f",
+  "theme_color": "#0a192f",
+  "display": "standalone",
+  "orientation": "portrait-primary"
+}
