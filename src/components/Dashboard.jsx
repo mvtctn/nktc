@@ -33,9 +33,9 @@ export default function Dashboard({
   const totalMinutes = minutes.length;
   
   // Calculate average worker count from recent diaries
-  const recentDiariesWithWorkers = diaries.filter(d => d.so_luong_cong_nhan > 0);
+  const recentDiariesWithWorkers = diaries.filter(d => parseInt(d.so_luong_cong_nhan, 10) > 0);
   const averageWorkers = recentDiariesWithWorkers.length > 0 
-    ? Math.round(recentDiariesWithWorkers.reduce((acc, curr) => acc + curr.so_luong_cong_nhan, 0) / recentDiariesWithWorkers.length)
+    ? Math.round(recentDiariesWithWorkers.reduce((acc, curr) => acc + (parseInt(curr.so_luong_cong_nhan, 10) || 0), 0) / recentDiariesWithWorkers.length)
     : 0;
 
   // 2. Prepare Recent Activities
@@ -365,7 +365,7 @@ export default function Dashboard({
                         {/* Content text */}
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px', marginBottom: '2px' }}>
-                            <h5 style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--primary-light)', margin: '0', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <h5 style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-primary)', margin: '0', display: 'flex', alignItems: 'center', gap: '6px' }}>
                               {act.title}
                             </h5>
                             <span style={{ fontSize: '0.7rem', color: 'var(--text-light)', whiteSpace: 'nowrap' }}>
@@ -410,8 +410,8 @@ export default function Dashboard({
               border: '1px solid var(--border)',
               padding: '20px'
             }}>
-              <h4 style={{ fontSize: '0.85rem', fontWeight: '700', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--primary-light)' }}>
-                <TrendingUp size={14} /> Thông số Vận hành & An toàn
+              <h4 style={{ fontSize: '0.85rem', fontWeight: '700', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text-primary)' }}>
+                <TrendingUp size={14} color="var(--secondary)" /> Thông số Vận hành & An toàn
               </h4>
               
               <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', fontSize: '0.8rem' }}>
