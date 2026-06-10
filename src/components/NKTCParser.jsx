@@ -87,9 +87,9 @@ export default function NKTCParser({ onParsed, onToast, date, page }) {
       return;
     }
     
-    const savedKey = localStorage.getItem('hydrotech_gemini_key');
+    const savedKey = localStorage.getItem('hydrotech_gemini_key') || import.meta.env.VITE_GEMINI_API_KEY;
     if (!savedKey) {
-      onToast('Chưa cấu hình Gemini API Key. Vui lòng thiết lập trong mục Quản lý Dự án > Hồ sơ Kỹ sư & Cấu hình AI', true);
+      onToast('Chưa cấu hình Gemini API Key. Vui lòng cấu hình VITE_GEMINI_API_KEY trong tệp .env hoặc thiết lập trong mục Hồ sơ Kỹ sư & Cấu hình AI', true);
       return;
     }
 

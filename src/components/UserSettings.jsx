@@ -170,7 +170,7 @@ export default function UserSettings({ user, onToast }) {
                 <input
                   type={showPass ? "text" : "password"}
                   className="form-control"
-                  placeholder="Nhập Gemini API Key của bạn để bật tính năng AI..."
+                  placeholder={import.meta.env.VITE_GEMINI_API_KEY ? "Đang dùng khóa mặc định trong .env - Nhập vào đây để ghi đè" : "Nhập Gemini API Key của bạn để bật tính năng AI..."}
                   value={geminiKey}
                   onChange={(e) => setGeminiKey(e.value || e.target.value)}
                   style={{ paddingRight: '40px' }}
