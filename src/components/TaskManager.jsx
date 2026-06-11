@@ -30,7 +30,7 @@ export default function TaskManager({
   isOffline,
   isSuperAdmin
 }) {
-  const [currentView, setCurrentView] = useState(!activeProjectId ? 'project-list' : 'list'); 
+  const [currentView, setCurrentView] = useState('project-list'); 
   // 'project-list' | 'list' | 'job-detail' | 'job-form' | 'task-form'
   
   const [activeJobId, setActiveJobId] = useState(null);
@@ -60,13 +60,6 @@ export default function TaskManager({
   const activeProjectJobs = jobs.filter(j => j.projectId === activeProjectId);
   const activeJob = jobs.find(j => j.id === activeJobId);
   const activeJobTasks = tasks.filter(t => t.jobId === activeJobId);
-
-  // Sync current view if activeProjectId changes from outside
-  useEffect(() => {
-    if (activeProjectId && currentView === 'project-list') {
-      setCurrentView('list');
-    }
-  }, [activeProjectId]);
 
   const getInitials = (name) => {
     if (!name) return 'PJ';
@@ -603,7 +596,7 @@ export default function TaskManager({
               <label>Tên hạng mục công việc *</label>
               <input 
                 type="text" 
-                className="form-input" 
+                className="form-control" 
                 value={jobFormData.name} 
                 onChange={e => setJobFormData({...jobFormData, name: e.target.value})}
                 required
@@ -615,7 +608,7 @@ export default function TaskManager({
                 <label>Ngày bắt đầu</label>
                 <input 
                   type="date" 
-                  className="form-input" 
+                  className="form-control" 
                   value={jobFormData.startDate} 
                   onChange={e => setJobFormData({...jobFormData, startDate: e.target.value})}
                 />
@@ -624,7 +617,7 @@ export default function TaskManager({
                 <label>Ngày kết thúc</label>
                 <input 
                   type="date" 
-                  className="form-input" 
+                  className="form-control" 
                   value={jobFormData.endDate} 
                   onChange={e => setJobFormData({...jobFormData, endDate: e.target.value})}
                 />
@@ -635,7 +628,7 @@ export default function TaskManager({
               <div className="form-group" style={{ margin: 0 }}>
                 <label>Trạng thái</label>
                 <select 
-                  className="form-input" 
+                  className="form-control" 
                   value={jobFormData.status} 
                   onChange={e => setJobFormData({...jobFormData, status: e.target.value})}
                 >
@@ -648,7 +641,7 @@ export default function TaskManager({
                 <label>Tiến độ (%)</label>
                 <input 
                   type="number" 
-                  className="form-input" 
+                  className="form-control" 
                   min="0" max="100"
                   value={jobFormData.progress} 
                   onChange={e => setJobFormData({...jobFormData, progress: e.target.value})}
@@ -657,12 +650,12 @@ export default function TaskManager({
               </div>
             </div>
 
-            <div style={{ display: 'flex', gap: '12px', marginTop: '12px', borderTop: '1px solid var(--border)', paddingTop: '20px' }}>
-              <button type="submit" className="btn btn-primary" style={{ flex: 1, justifyContent: 'center' }}>
-                Lưu Công việc
-              </button>
-              <button type="button" className="btn btn-secondary" onClick={() => setCurrentView(activeJobId === editingJob?.id ? 'job-detail' : 'list')} style={{ flex: 1, justifyContent: 'center' }}>
+            <div style={{ display: 'flex', gap: '12px', marginTop: '12px', borderTop: '1px solid var(--border)', paddingTop: '20px', justifyContent: 'flex-end' }}>
+              <button type="button" className="btn btn-secondary" onClick={() => setCurrentView(activeJobId === editingJob?.id ? 'job-detail' : 'list')}>
                 Hủy
+              </button>
+              <button type="submit" className="btn btn-primary">
+                Lưu Công việc
               </button>
             </div>
           </form>
@@ -692,7 +685,7 @@ export default function TaskManager({
               <label>Tên task *</label>
               <input 
                 type="text" 
-                className="form-input" 
+                className="form-control" 
                 value={taskFormData.name} 
                 onChange={e => setTaskFormData({...taskFormData, name: e.target.value})}
                 required
@@ -704,7 +697,7 @@ export default function TaskManager({
                 <label>Ngày bắt đầu</label>
                 <input 
                   type="date" 
-                  className="form-input" 
+                  className="form-control" 
                   value={taskFormData.startDate} 
                   onChange={e => setTaskFormData({...taskFormData, startDate: e.target.value})}
                 />
@@ -713,7 +706,7 @@ export default function TaskManager({
                 <label>Ngày kết thúc</label>
                 <input 
                   type="date" 
-                  className="form-input" 
+                  className="form-control" 
                   value={taskFormData.endDate} 
                   onChange={e => setTaskFormData({...taskFormData, endDate: e.target.value})}
                 />
@@ -724,7 +717,7 @@ export default function TaskManager({
               <div className="form-group" style={{ margin: 0 }}>
                 <label>Trạng thái</label>
                 <select 
-                  className="form-input" 
+                  className="form-control" 
                   value={taskFormData.status} 
                   onChange={e => setTaskFormData({...taskFormData, status: e.target.value})}
                 >
@@ -737,7 +730,7 @@ export default function TaskManager({
                 <label>Tiến độ (%)</label>
                 <input 
                   type="number" 
-                  className="form-input" 
+                  className="form-control" 
                   min="0" max="100"
                   value={taskFormData.progress} 
                   onChange={e => setTaskFormData({...taskFormData, progress: e.target.value})}
@@ -777,12 +770,12 @@ export default function TaskManager({
               </div>
             </div>
 
-            <div style={{ display: 'flex', gap: '12px', marginTop: '12px', borderTop: '1px solid var(--border)', paddingTop: '20px' }}>
-              <button type="submit" className="btn btn-primary" style={{ flex: 1, justifyContent: 'center' }}>
-                Lưu Task
-              </button>
-              <button type="button" className="btn btn-secondary" onClick={() => setCurrentView('job-detail')} style={{ flex: 1, justifyContent: 'center' }}>
+            <div style={{ display: 'flex', gap: '12px', marginTop: '12px', borderTop: '1px solid var(--border)', paddingTop: '20px', justifyContent: 'flex-end' }}>
+              <button type="button" className="btn btn-secondary" onClick={() => setCurrentView('job-detail')}>
                 Hủy
+              </button>
+              <button type="submit" className="btn btn-primary">
+                Lưu Task
               </button>
             </div>
           </form>
