@@ -365,6 +365,23 @@ export default function App() {
     }
   };
 
+  const handleChangePassword = async (memberEmail) => {
+    if (isOffline || !isValidConfig) {
+      showToast('Không thể gửi email đặt lại mật khẩu ở chế độ ngoại tuyến', true);
+      return false;
+    }
+    try {
+      const { sendPasswordResetEmail } = await import('firebase/auth');
+      await sendPasswordResetEmail(auth, memberEmail);
+      showToast(`Đã gửi email đặt lại mật khẩu tới ${memberEmail}`);
+      return true;
+    } catch (err) {
+      console.error(err);
+      showToast(`Lỗi: ${err.message}`, true);
+      return false;
+    }
+  };
+
   // 2. Data Listener (Projects, Diaries, Minutes)
   useEffect(() => {
     if (!user) return;
@@ -859,6 +876,7 @@ export default function App() {
                 onCreateMember={handleCreateMember}
                 onUpdateMember={handleUpdateMember}
                 onDeleteMember={handleDeleteMember}
+                onChangePassword={handleChangePassword}
               />
             )}
           </div>

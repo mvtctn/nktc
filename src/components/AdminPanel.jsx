@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ShieldCheck, Database, Users, Check, X, Award, Activity, Lock, Unlock, FileText, FileSpreadsheet, Briefcase, Plus, UserPlus, Edit2, Trash2 } from 'lucide-react';
+import { ShieldCheck, Database, Users, Check, X, Award, Activity, Lock, Unlock, FileText, FileSpreadsheet, Briefcase, Plus, UserPlus, Edit2, Trash2, KeyRound, Send } from 'lucide-react';
 
 export default function AdminPanel({ 
   user, 
@@ -9,7 +9,8 @@ export default function AdminPanel({
   members = [], 
   onCreateMember,
   onUpdateMember,
-  onDeleteMember
+  onDeleteMember,
+  onChangePassword,
 }) {
   // Local Form State
   const [email, setEmail] = useState('');
@@ -28,16 +29,21 @@ export default function AdminPanel({
   const [editName, setEditName] = useState('');
   const [editPosition, setEditPosition] = useState('');
   const [editRole, setEditRole] = useState('Kỹ sư hiện trường');
+  const [editNewPassword, setEditNewPassword] = useState('');
+  const [pwLoading, setPwLoading] = useState(false);
 
   const startEdit = (eng) => {
     setEditingMember(eng);
     setEditName(eng.displayName || '');
     setEditPosition(eng.position || '');
     setEditRole(eng.role || 'Kỹ sư hiện trường');
+    setEditNewPassword('');
+    setPwLoading(false);
   };
 
   const cancelEdit = () => {
     setEditingMember(null);
+    setEditNewPassword('');
   };
 
   const saveEdit = async () => {
@@ -49,7 +55,15 @@ export default function AdminPanel({
     });
     if (success) {
       setEditingMember(null);
+      setEditNewPassword('');
     }
+  };
+
+  const handleSendPasswordReset = async () => {
+    if (!editingMember) return;
+    setPwLoading(true);
+    await onChangePassword(editingMember.email);
+    setPwLoading(false);
   };
 
   const confirmDelete = async (eng) => {
@@ -513,6 +527,49 @@ export default function AdminPanel({
                   * Không thể tự đổi vai trò của bản thân hoặc của tài khoản admin mặc định.
                 </span>
               )}
+            </div>
+
+            <div style={{
+              borderTop: '1px solid var(--border)',
+              paddingTop: '14px',
+              marginTop: '4px',
+            }}>
+              <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px' }}>
+                <KeyRound size={14} color="#f59e0b" /> Đặt lại mật khẩu
+              </label>
+              <p style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', margin: '0 0 10px 0', lineHeight: '1.4' }}>
+                Hệ thống sẽ gửi email hướng dẫn đặt lại mật khẩu tới địa chỉ email của kỹ sư.
+                Yêu cầu kỹ sư kiểm tra hộp thư (kể cả thư rác).
+              </p>
+              <button
+                type="button"
+                onClick={handleSendPasswordReset}
+                disabled={pwLoading}
+                style={{
+                  width: '100%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px',
+                  padding: '9px 14px',
+                  borderRadius: 'var(--radius-sm)',
+                  background: 'rgba(245,158,11,0.08)',
+                  border: '1px solid rgba(245,158,11,0.3)',
+                  color: '#f59e0b',
+                  cursor: pwLoading ? 'not-allowed' : 'pointer',
+                  fontSize: '0.82rem',
+                  fontWeight: '600',
+                  opacity: pwLoading ? 0.7 : 1,
+                  transition: 'all 0.15s',
+                }}
+              >
+                {pwLoading ? (
+                  <div className="spinner" style={{ width: '14px', height: '14px', borderTopColor: '#f59e0b' }} />
+                ) : (
+                  <Send size={14} />
+                )}
+                {pwLoading ? 'Đang gửi...' : `Gửi email đặt lại mật khẩu`}
+              </button>
             </div>
 
             <div style={{ display: 'flex', gap: '10px', marginTop: '8px' }}>
