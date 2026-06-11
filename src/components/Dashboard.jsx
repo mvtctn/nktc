@@ -267,9 +267,9 @@ export default function Dashboard({
                     {activeDropdown === proj.id && (
                       <div style={{ 
                         position: 'absolute', right: 0, top: '100%', marginTop: '4px',
-                        background: 'var(--bg-panel)', border: '1px solid var(--border)',
-                        borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
-                        zIndex: 10, minWidth: '160px', padding: '4px'
+                        background: '#1e293b', border: '1px solid rgba(255,255,255,0.1)',
+                        borderRadius: '8px', boxShadow: '0 10px 25px rgba(0,0,0,0.5)',
+                        zIndex: 10, minWidth: '180px', padding: '6px'
                       }}>
                         <button className="dropdown-item" onClick={(e) => { e.stopPropagation(); setActiveDropdown(null); handleQuickModule(proj.id, 'nktc'); }}>
                           <FileText size={14} color="#10b981" /> Viết Nhật ký
