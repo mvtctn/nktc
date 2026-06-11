@@ -296,51 +296,54 @@ export default function TaskManager({
     return (
       <div className="container-fluid task-manager" id="task-manager-panel">
         {/* Header and Back Button */}
-        <div className="section-header" style={{ marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
-          <button className="btn btn-secondary btn-sm" onClick={() => setCurrentView('project-list')} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <ArrowLeft size={16} /> Danh sách Dự án
+        <div className="section-header" style={{ marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <button 
+            className="btn-icon" 
+            onClick={() => setCurrentView('project-list')} 
+            style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border)' }}
+            title="Quay lại danh sách dự án"
+          >
+            <ArrowLeft size={20} />
           </button>
-          <h2 style={{ fontSize: '1.25rem', fontWeight: '800', margin: 0, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <h2 style={{ fontSize: '1.25rem', fontWeight: '800', margin: 0, color: 'var(--text-primary)' }}>
             Chi tiết Dự án
           </h2>
         </div>
 
         {/* Project Information Card */}
         {activeProject ? (
-          <div className="glass-card" style={{ padding: '20px', marginBottom: '24px', display: 'flex', gap: '16px', alignItems: 'center', flexWrap: 'wrap' }}>
-            <div style={{ 
-              width: '56px', 
-              height: '56px', 
-              borderRadius: '12px', 
-              background: 'linear-gradient(135deg, var(--secondary), #0077b6)', 
-              color: 'white',
-              fontWeight: '800',
-              fontSize: '1.2rem',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              flexShrink: 0
-            }}>
-              {getInitials(activeProject.name)}
-            </div>
-            <div style={{ flex: 1, minWidth: '250px' }}>
-              <h3 style={{ margin: '0 0 6px 0', color: 'var(--text-primary)', fontSize: '1.2rem' }}>{activeProject.name}</h3>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
-                <MapPin size={14} />
-                <span>{activeProject.address || 'Chưa có địa chỉ'}</span>
+          <div className="glass-card" style={{ padding: '20px', marginBottom: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <div style={{ display: 'flex', gap: '14px', alignItems: 'flex-start' }}>
+              <div style={{ 
+                width: '46px', height: '46px', borderRadius: '10px', 
+                background: 'linear-gradient(135deg, var(--secondary), #0077b6)', 
+                color: 'white', fontWeight: '800', fontSize: '1rem',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
+              }}>
+                {getInitials(activeProject.name)}
               </div>
-            </div>
-            <div style={{ display: 'flex', gap: '16px', background: 'rgba(255,255,255,0.05)', padding: '12px 20px', borderRadius: '8px' }}>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '1.2rem', fontWeight: 'bold', color: 'var(--accent)' }}>{activeProjectJobs.length}</div>
-                <div style={{ fontSize: '0.75rem', color: 'var(--text-light)', textTransform: 'uppercase' }}>Công việc</div>
-              </div>
-              <div style={{ width: '1px', background: 'var(--border)' }}></div>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '1.2rem', fontWeight: 'bold', color: 'var(--accent)' }}>
-                  {tasks.filter(t => t.projectId === activeProject.id).length}
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <h3 style={{ margin: '0 0 6px 0', color: 'var(--text-primary)', fontSize: '1.1rem', fontWeight: '700' }}>
+                  {activeProject.name}
+                </h3>
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '4px', color: 'var(--text-secondary)', fontSize: '0.8rem' }}>
+                  <MapPin size={12} style={{ flexShrink: 0, marginTop: '3px' }} />
+                  <span style={{ 
+                    display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', 
+                    overflow: 'hidden', lineHeight: '1.4'
+                  }}>
+                    {activeProject.address || 'Chưa có địa chỉ'}
+                  </span>
                 </div>
-                <div style={{ fontSize: '0.75rem', color: 'var(--text-light)', textTransform: 'uppercase' }}>Task con</div>
+              </div>
+            </div>
+            
+            <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'rgba(255, 255, 255, 0.05)', color: 'var(--text-primary)', padding: '6px 12px', borderRadius: '20px', fontSize: '0.8rem', fontWeight: '600', border: '1px solid var(--border)' }}>
+                <FolderOpen size={14} color="var(--accent)" /> {activeProjectJobs.length} Công việc
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'rgba(255, 255, 255, 0.05)', color: 'var(--text-primary)', padding: '6px 12px', borderRadius: '20px', fontSize: '0.8rem', fontWeight: '600', border: '1px solid var(--border)' }}>
+                <CheckCircle size={14} color="#10b981" /> {tasks.filter(t => t.projectId === activeProject.id).length} Task con
               </div>
             </div>
           </div>
@@ -351,13 +354,17 @@ export default function TaskManager({
         )}
 
         {/* Jobs Section Header */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
-          <h3 style={{ margin: 0, color: 'var(--text-primary)', fontSize: '1.1rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <FolderOpen className="icon-blue" size={20} />
-            Các Công việc đang triển khai
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', gap: '12px' }}>
+          <h3 style={{ margin: 0, color: 'var(--text-primary)', fontSize: '1.05rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <FolderOpen className="icon-blue" size={18} />
+            Các công việc đang triển khai
           </h3>
-          <button className="btn btn-primary" onClick={() => handleOpenJobForm()}>
-            <Plus size={16} /> Thêm Công việc mới
+          <button 
+            className="btn btn-primary btn-sm" 
+            onClick={() => handleOpenJobForm()}
+            style={{ display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap' }}
+          >
+            <Plus size={14} /> <span className="hide-on-mobile">Thêm mới</span>
           </button>
         </div>
 
