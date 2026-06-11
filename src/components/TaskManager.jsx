@@ -8,7 +8,8 @@ import {
   CheckCircle, 
   Clock, 
   AlertCircle,
-  Users
+  Users,
+  ArrowLeft
 } from 'lucide-react';
 
 export default function TaskManager({
@@ -28,8 +29,7 @@ export default function TaskManager({
   isSuperAdmin
 }) {
   const [expandedJobs, setExpandedJobs] = useState({});
-  const [jobModalOpen, setJobModalOpen] = useState(false);
-  const [taskModalOpen, setTaskModalOpen] = useState(false);
+  const [currentView, setCurrentView] = useState('list'); // 'list' | 'job-form' | 'task-form'
   const [editingJob, setEditingJob] = useState(null);
   const [editingTask, setEditingTask] = useState(null);
   const [activeJobIdForTask, setActiveJobIdForTask] = useState(null);
@@ -84,7 +84,7 @@ export default function TaskManager({
   };
 
   // Job Handlers
-  const handleOpenJobModal = (job = null) => {
+  const handleOpenJobForm = (job = null) => {
     if (!activeProjectId) {
       onToast('Vui lòng chọn hoặc tạo dự án trước.', true);
       return;
@@ -102,7 +102,7 @@ export default function TaskManager({
       setEditingJob(null);
       setJobFormData({ name: '', startDate: '', endDate: '', status: 'Chưa bắt đầu', progress: 0 });
     }
-    setJobModalOpen(true);
+    setCurrentView('job-form');
   };
 
   const handleSubmitJob = (e) => {
@@ -113,11 +113,11 @@ export default function TaskManager({
     }
     const data = { ...jobFormData, id: editingJob ? editingJob.id : null };
     onSaveJob(data);
-    setJobModalOpen(false);
+    setCurrentView('list');
   };
 
   // Task Handlers
-  const handleOpenTaskModal = (jobId, task = null) => {
+  const handleOpenTaskForm = (jobId, task = null) => {
     setActiveJobIdForTask(jobId);
     if (task) {
       setEditingTask(task);
@@ -133,7 +133,7 @@ export default function TaskManager({
       setEditingTask(null);
       setTaskFormData({ name: '', startDate: '', endDate: '', status: 'Chưa bắt đầu', progress: 0, assignees: [] });
     }
-    setTaskModalOpen(true);
+    setCurrentView('task-form');
   };
 
   const handleSubmitTask = (e) => {
@@ -148,7 +148,7 @@ export default function TaskManager({
       jobId: activeJobIdForTask 
     };
     onSaveTask(data);
-    setTaskModalOpen(false);
+    setCurrentView('list');
   };
 
   const handleToggleAssignee = (uid) => {
@@ -184,6 +184,212 @@ export default function TaskManager({
     );
   };
 
+  // Render Job Form View
+  if (currentView === 'job-form') {
+    return (
+      <div className="task-manager">
+        <div className="section-header" style={{ marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <button className="btn btn-secondary btn-sm" onClick={() => setCurrentView('list')} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <ArrowLeft size={16} /> Quay lại
+          </button>
+          <h2 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+            {editingJob ? 'Sửa Công việc' : 'Thêm Công việc mới'}
+          </h2>
+        </div>
+        
+        <div className="form-card" style={{ padding: '24px', backgroundColor: 'var(--bg-card)', borderRadius: '8px', border: '1px solid var(--border)' }}>
+          <form onSubmit={handleSubmitJob} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            <div className="form-group" style={{ margin: 0 }}>
+              <label>Tên hạng mục công việc *</label>
+              <input 
+                type="text" 
+                className="form-input" 
+                value={jobFormData.name} 
+                onChange={e => setJobFormData({...jobFormData, name: e.target.value})}
+                required
+              />
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px' }}>
+              <div className="form-group" style={{ margin: 0 }}>
+                <label>Ngày bắt đầu</label>
+                <input 
+                  type="date" 
+                  className="form-input" 
+                  value={jobFormData.startDate} 
+                  onChange={e => setJobFormData({...jobFormData, startDate: e.target.value})}
+                />
+              </div>
+              <div className="form-group" style={{ margin: 0 }}>
+                <label>Ngày kết thúc</label>
+                <input 
+                  type="date" 
+                  className="form-input" 
+                  value={jobFormData.endDate} 
+                  onChange={e => setJobFormData({...jobFormData, endDate: e.target.value})}
+                />
+              </div>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px' }}>
+              <div className="form-group" style={{ margin: 0 }}>
+                <label>Trạng thái</label>
+                <select 
+                  className="form-input" 
+                  value={jobFormData.status} 
+                  onChange={e => setJobFormData({...jobFormData, status: e.target.value})}
+                >
+                  <option value="Chưa bắt đầu">Chưa bắt đầu</option>
+                  <option value="Đang thực hiện">Đang thực hiện</option>
+                  <option value="Hoàn thành">Hoàn thành</option>
+                </select>
+              </div>
+              <div className="form-group" style={{ margin: 0 }}>
+                <label>Tiến độ (%)</label>
+                <input 
+                  type="number" 
+                  className="form-input" 
+                  min="0" max="100"
+                  value={jobFormData.progress} 
+                  onChange={e => setJobFormData({...jobFormData, progress: e.target.value})}
+                />
+                <small style={{ color: 'var(--text-light)', display: 'block', marginTop: '6px' }}>Tự động tính nếu có Task con</small>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', gap: '12px', marginTop: '12px', borderTop: '1px solid var(--border)', paddingTop: '20px' }}>
+              <button type="submit" className="btn btn-primary" style={{ flex: 1, justifyContent: 'center' }}>
+                Lưu Công việc
+              </button>
+              <button type="button" className="btn btn-secondary" onClick={() => setCurrentView('list')} style={{ flex: 1, justifyContent: 'center' }}>
+                Hủy
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    );
+  }
+
+  // Render Task Form View
+  if (currentView === 'task-form') {
+    return (
+      <div className="task-manager">
+        <div className="section-header" style={{ marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <button className="btn btn-secondary btn-sm" onClick={() => setCurrentView('list')} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <ArrowLeft size={16} /> Quay lại
+          </button>
+          <h2 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+            {editingTask ? 'Sửa Task chi tiết' : 'Thêm Task mới'}
+          </h2>
+        </div>
+        
+        <div className="form-card" style={{ padding: '24px', backgroundColor: 'var(--bg-card)', borderRadius: '8px', border: '1px solid var(--border)' }}>
+          <form onSubmit={handleSubmitTask} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            <div className="form-group" style={{ margin: 0 }}>
+              <label>Tên task *</label>
+              <input 
+                type="text" 
+                className="form-input" 
+                value={taskFormData.name} 
+                onChange={e => setTaskFormData({...taskFormData, name: e.target.value})}
+                required
+              />
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px' }}>
+              <div className="form-group" style={{ margin: 0 }}>
+                <label>Ngày bắt đầu</label>
+                <input 
+                  type="date" 
+                  className="form-input" 
+                  value={taskFormData.startDate} 
+                  onChange={e => setTaskFormData({...taskFormData, startDate: e.target.value})}
+                />
+              </div>
+              <div className="form-group" style={{ margin: 0 }}>
+                <label>Ngày kết thúc</label>
+                <input 
+                  type="date" 
+                  className="form-input" 
+                  value={taskFormData.endDate} 
+                  onChange={e => setTaskFormData({...taskFormData, endDate: e.target.value})}
+                />
+              </div>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px' }}>
+              <div className="form-group" style={{ margin: 0 }}>
+                <label>Trạng thái</label>
+                <select 
+                  className="form-input" 
+                  value={taskFormData.status} 
+                  onChange={e => setTaskFormData({...taskFormData, status: e.target.value})}
+                >
+                  <option value="Chưa bắt đầu">Chưa bắt đầu</option>
+                  <option value="Đang thực hiện">Đang thực hiện</option>
+                  <option value="Hoàn thành">Hoàn thành</option>
+                </select>
+              </div>
+              <div className="form-group" style={{ margin: 0 }}>
+                <label>Tiến độ (%)</label>
+                <input 
+                  type="number" 
+                  className="form-input" 
+                  min="0" max="100"
+                  value={taskFormData.progress} 
+                  onChange={e => setTaskFormData({...taskFormData, progress: e.target.value})}
+                />
+              </div>
+            </div>
+
+            <div className="form-group" style={{ margin: 0 }}>
+              <label>Phân công nhân sự</label>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', padding: '16px', backgroundColor: 'rgba(0,0,0,0.2)', borderRadius: '6px', border: '1px solid var(--border)' }}>
+                {members.map(member => {
+                  const isAssigned = taskFormData.assignees.includes(member.uid);
+                  return (
+                    <div 
+                      key={member.uid} 
+                      onClick={() => handleToggleAssignee(member.uid)}
+                      style={{
+                        padding: '6px 12px',
+                        borderRadius: '20px',
+                        backgroundColor: isAssigned ? 'rgba(0, 229, 255, 0.15)' : 'rgba(255, 255, 255, 0.05)',
+                        color: isAssigned ? 'var(--accent)' : 'var(--text-secondary)',
+                        border: `1px solid ${isAssigned ? 'var(--accent)' : 'var(--border)'}`,
+                        cursor: 'pointer',
+                        fontSize: '0.85rem',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        transition: 'all 0.2s'
+                      }}
+                    >
+                      <UserAvatar name={member.displayName} />
+                      {member.displayName}
+                    </div>
+                  );
+                })}
+                {members.length === 0 && <span style={{ color: 'var(--text-light)', fontSize: '0.9rem' }}>Chưa có thành viên nào trong hệ thống.</span>}
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', gap: '12px', marginTop: '12px', borderTop: '1px solid var(--border)', paddingTop: '20px' }}>
+              <button type="submit" className="btn btn-primary" style={{ flex: 1, justifyContent: 'center' }}>
+                Lưu Task
+              </button>
+              <button type="button" className="btn btn-secondary" onClick={() => setCurrentView('list')} style={{ flex: 1, justifyContent: 'center' }}>
+                Hủy
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    );
+  }
+
+  // Render List View
   return (
     <div className="task-manager">
       <div className="section-header">
@@ -211,7 +417,7 @@ export default function TaskManager({
       </div>
 
       <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '16px' }}>
-        <button className="btn btn-primary" onClick={() => handleOpenJobModal()}>
+        <button className="btn btn-primary" onClick={() => handleOpenJobForm()}>
           <Plus size={18} /> Thêm Công việc mới
         </button>
       </div>
@@ -230,28 +436,28 @@ export default function TaskManager({
             const displayProgress = jobTasks.length > 0 ? calculateJobProgress(job.id) : job.progress;
 
             return (
-              <div key={job.id} className="job-card" style={{ backgroundColor: '#1a2234', borderRadius: '8px', marginBottom: '16px', border: '1px solid #2a3441', overflow: 'hidden' }}>
+              <div key={job.id} className="job-card" style={{ backgroundColor: 'var(--bg-card)', borderRadius: '8px', marginBottom: '16px', border: '1px solid var(--border)', overflow: 'hidden' }}>
                 <div 
                   className="job-header" 
-                  style={{ padding: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', borderBottom: isExpanded ? '1px solid #2a3441' : 'none' }}
+                  style={{ padding: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', borderBottom: isExpanded ? '1px solid var(--border)' : 'none' }}
                   onClick={() => toggleJob(job.id)}
                 >
                   <div style={{ flex: 1 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                      <h3 style={{ margin: 0, fontSize: '1.1rem', color: '#fff' }}>{job.name}</h3>
-                      <span className="status-badge" style={{ backgroundColor: getStatusColor(job.status) + '33', color: getStatusColor(job.status), padding: '4px 8px', borderRadius: '12px', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+                      <h3 style={{ margin: 0, fontSize: '1.1rem', color: 'var(--text-primary)' }}>{job.name}</h3>
+                      <span className="status-badge" style={{ backgroundColor: getStatusColor(job.status) + '22', color: getStatusColor(job.status), padding: '4px 10px', borderRadius: '12px', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '4px', border: `1px solid ${getStatusColor(job.status)}55` }}>
                         {getStatusIcon(job.status)} {job.status}
                       </span>
                     </div>
-                    <div style={{ fontSize: '0.9rem', color: '#8892b0', marginTop: '8px', display: 'flex', gap: '16px' }}>
+                    <div style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginTop: '8px', display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
                       <span>Bắt đầu: {job.startDate || '---'}</span>
                       <span>Kết thúc: {job.endDate || '---'}</span>
-                      <span>Tiến độ tổng: {displayProgress}%</span>
+                      <span style={{ fontWeight: '600', color: 'var(--text-primary)' }}>Tiến độ: {displayProgress}%</span>
                     </div>
                     {renderProgressBar(displayProgress)}
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginLeft: '16px' }}>
-                    <button className="btn-icon" onClick={(e) => { e.stopPropagation(); handleOpenJobModal(job); }} title="Sửa công việc">
+                    <button className="btn-icon" onClick={(e) => { e.stopPropagation(); handleOpenJobForm(job); }} title="Sửa công việc">
                       <Edit size={16} />
                     </button>
                     <button className="btn-icon danger" onClick={(e) => { e.stopPropagation(); if(window.confirm('Xóa công việc này và tất cả task con?')) onDeleteJob(job.id); }} title="Xóa công việc">
@@ -262,51 +468,53 @@ export default function TaskManager({
                 </div>
 
                 {isExpanded && (
-                  <div className="job-body" style={{ padding: '16px', backgroundColor: '#0f1623' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                      <h4 style={{ margin: 0, color: '#a0aec0' }}>Danh sách Task chi tiết ({jobTasks.length})</h4>
-                      <button className="btn btn-secondary btn-sm" onClick={() => handleOpenTaskModal(job.id)}>
+                  <div className="job-body" style={{ padding: '16px', backgroundColor: 'rgba(0,0,0,0.1)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
+                      <h4 style={{ margin: 0, color: 'var(--text-secondary)' }}>Danh sách Task chi tiết ({jobTasks.length})</h4>
+                      <button className="btn btn-secondary btn-sm" onClick={() => handleOpenTaskForm(job.id)}>
                         <Plus size={14} /> Thêm Task
                       </button>
                     </div>
 
                     {jobTasks.length === 0 ? (
-                      <div style={{ color: '#666', fontStyle: 'italic', fontSize: '0.9rem' }}>Chưa có task chi tiết nào.</div>
+                      <div style={{ color: 'var(--text-light)', fontStyle: 'italic', fontSize: '0.9rem' }}>Chưa có task chi tiết nào.</div>
                     ) : (
                       <div className="task-grid" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                         {jobTasks.map(task => (
-                          <div key={task.id} className="task-item" style={{ backgroundColor: '#1e293b', padding: '12px', borderRadius: '6px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <div style={{ flex: 1 }}>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '4px' }}>
-                                <span style={{ fontWeight: '500', color: '#e2e8f0' }}>{task.name}</span>
-                                <span className="status-badge" style={{ backgroundColor: getStatusColor(task.status) + '22', color: getStatusColor(task.status), padding: '2px 6px', borderRadius: '4px', fontSize: '0.75rem' }}>
+                          <div key={task.id} className="task-item" style={{ backgroundColor: 'var(--bg-card)', padding: '16px', borderRadius: '8px', border: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
+                            <div style={{ flex: 1, minWidth: '200px' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px', flexWrap: 'wrap' }}>
+                                <span style={{ fontWeight: '600', color: 'var(--text-primary)' }}>{task.name}</span>
+                                <span className="status-badge" style={{ backgroundColor: getStatusColor(task.status) + '15', color: getStatusColor(task.status), border: `1px solid ${getStatusColor(task.status)}44`, padding: '2px 8px', borderRadius: '4px', fontSize: '0.75rem' }}>
                                   {task.status}
                                 </span>
                               </div>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '16px', fontSize: '0.85rem', color: '#94a3b8' }}>
-                                <span>{task.startDate} - {task.endDate}</span>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '16px', fontSize: '0.85rem', color: 'var(--text-secondary)', flexWrap: 'wrap' }}>
+                                <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                  <Clock size={12} /> {task.startDate || '--'} đến {task.endDate || '--'}
+                                </span>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                                   <Users size={12} />
                                   {task.assignees && task.assignees.length > 0 ? (
-                                    <span>
+                                    <span style={{ color: 'var(--text-primary)' }}>
                                       {task.assignees.map(uid => members.find(m => m.uid === uid)?.displayName || 'Unknown').join(', ')}
                                     </span>
                                   ) : (
-                                    <span style={{ color: '#64748b' }}>Chưa phân công</span>
+                                    <span style={{ color: 'var(--text-light)' }}>Chưa phân công</span>
                                   )}
                                 </div>
-                                <span style={{ color: '#38bdf8' }}>{task.progress}%</span>
+                                <span style={{ color: 'var(--accent)', fontWeight: 'bold' }}>{task.progress}%</span>
                               </div>
-                              <div style={{ marginTop: '4px' }}>
+                              <div style={{ marginTop: '8px' }}>
                                 {renderProgressBar(task.progress)}
                               </div>
                             </div>
-                            <div style={{ display: 'flex', gap: '8px', marginLeft: '16px' }}>
-                              <button className="btn-icon small" onClick={() => handleOpenTaskModal(job.id, task)}>
-                                <Edit size={14} />
+                            <div style={{ display: 'flex', gap: '8px' }}>
+                              <button className="btn-icon small" onClick={() => handleOpenTaskForm(job.id, task)}>
+                                <Edit size={16} />
                               </button>
                               <button className="btn-icon danger small" onClick={() => { if(window.confirm('Xóa task này?')) onDeleteTask(task.id); }}>
-                                <Trash2 size={14} />
+                                <Trash2 size={16} />
                               </button>
                             </div>
                           </div>
@@ -320,183 +528,6 @@ export default function TaskManager({
           })
         )}
       </div>
-
-      {/* Modal Job */}
-      {jobModalOpen && (
-        <div className="modal-backdrop" style={{ zIndex: 1000 }}>
-          <div className="modal-card" style={{ maxWidth: '500px' }}>
-            <div className="modal-header">
-              <h3 className="modal-title">{editingJob ? 'Sửa Công việc' : 'Thêm Công việc mới'}</h3>
-            </div>
-            <form onSubmit={handleSubmitJob}>
-              <div className="modal-body">
-                <div className="form-group">
-                <label>Tên hạng mục công việc *</label>
-                <input 
-                  type="text" 
-                  className="form-input" 
-                  value={jobFormData.name} 
-                  onChange={e => setJobFormData({...jobFormData, name: e.target.value})}
-                  required
-                />
-              </div>
-              <div style={{ display: 'flex', gap: '16px' }}>
-                <div className="form-group" style={{ flex: 1 }}>
-                  <label>Ngày bắt đầu</label>
-                  <input 
-                    type="date" 
-                    className="form-input" 
-                    value={jobFormData.startDate} 
-                    onChange={e => setJobFormData({...jobFormData, startDate: e.target.value})}
-                  />
-                </div>
-                <div className="form-group" style={{ flex: 1 }}>
-                  <label>Ngày kết thúc</label>
-                  <input 
-                    type="date" 
-                    className="form-input" 
-                    value={jobFormData.endDate} 
-                    onChange={e => setJobFormData({...jobFormData, endDate: e.target.value})}
-                  />
-                </div>
-              </div>
-              <div style={{ display: 'flex', gap: '16px' }}>
-                <div className="form-group" style={{ flex: 1 }}>
-                  <label>Trạng thái</label>
-                  <select 
-                    className="form-input" 
-                    value={jobFormData.status} 
-                    onChange={e => setJobFormData({...jobFormData, status: e.target.value})}
-                  >
-                    <option value="Chưa bắt đầu">Chưa bắt đầu</option>
-                    <option value="Đang thực hiện">Đang thực hiện</option>
-                    <option value="Hoàn thành">Hoàn thành</option>
-                  </select>
-                </div>
-                <div className="form-group" style={{ flex: 1 }}>
-                  <label>Tiến độ (%)</label>
-                  <input 
-                    type="number" 
-                    className="form-input" 
-                    min="0" max="100"
-                    value={jobFormData.progress} 
-                    onChange={e => setJobFormData({...jobFormData, progress: e.target.value})}
-                  />
-                  <small style={{ color: '#8892b0' }}>Tự động tính nếu có Task con</small>
-                </div>
-              </div>
-              </div>
-              <div className="modal-footer">
-                <button type="button" className="btn btn-secondary" onClick={() => setJobModalOpen(false)}>Hủy</button>
-                <button type="submit" className="btn btn-primary">Lưu Công việc</button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* Modal Task */}
-      {taskModalOpen && (
-        <div className="modal-backdrop" style={{ zIndex: 1000 }}>
-          <div className="modal-card" style={{ maxWidth: '600px' }}>
-            <div className="modal-header">
-              <h3 className="modal-title">{editingTask ? 'Sửa Task chi tiết' : 'Thêm Task mới'}</h3>
-            </div>
-            <form onSubmit={handleSubmitTask}>
-              <div className="modal-body">
-                <div className="form-group">
-                <label>Tên task *</label>
-                <input 
-                  type="text" 
-                  className="form-input" 
-                  value={taskFormData.name} 
-                  onChange={e => setTaskFormData({...taskFormData, name: e.target.value})}
-                  required
-                />
-              </div>
-              <div style={{ display: 'flex', gap: '16px' }}>
-                <div className="form-group" style={{ flex: 1 }}>
-                  <label>Ngày bắt đầu</label>
-                  <input 
-                    type="date" 
-                    className="form-input" 
-                    value={taskFormData.startDate} 
-                    onChange={e => setTaskFormData({...taskFormData, startDate: e.target.value})}
-                  />
-                </div>
-                <div className="form-group" style={{ flex: 1 }}>
-                  <label>Ngày kết thúc</label>
-                  <input 
-                    type="date" 
-                    className="form-input" 
-                    value={taskFormData.endDate} 
-                    onChange={e => setTaskFormData({...taskFormData, endDate: e.target.value})}
-                  />
-                </div>
-              </div>
-              <div style={{ display: 'flex', gap: '16px' }}>
-                <div className="form-group" style={{ flex: 1 }}>
-                  <label>Trạng thái</label>
-                  <select 
-                    className="form-input" 
-                    value={taskFormData.status} 
-                    onChange={e => setTaskFormData({...taskFormData, status: e.target.value})}
-                  >
-                    <option value="Chưa bắt đầu">Chưa bắt đầu</option>
-                    <option value="Đang thực hiện">Đang thực hiện</option>
-                    <option value="Hoàn thành">Hoàn thành</option>
-                  </select>
-                </div>
-                <div className="form-group" style={{ flex: 1 }}>
-                  <label>Tiến độ (%)</label>
-                  <input 
-                    type="number" 
-                    className="form-input" 
-                    min="0" max="100"
-                    value={taskFormData.progress} 
-                    onChange={e => setTaskFormData({...taskFormData, progress: e.target.value})}
-                  />
-                </div>
-              </div>
-              <div className="form-group">
-                <label>Phân công nhân sự</label>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', padding: '12px', backgroundColor: '#1a2234', borderRadius: '4px', border: '1px solid #2a3441' }}>
-                  {members.map(member => {
-                    const isAssigned = taskFormData.assignees.includes(member.uid);
-                    return (
-                      <div 
-                        key={member.uid} 
-                        onClick={() => handleToggleAssignee(member.uid)}
-                        style={{
-                          padding: '6px 12px',
-                          borderRadius: '16px',
-                          backgroundColor: isAssigned ? '#00e5ff22' : '#2a3441',
-                          color: isAssigned ? '#00e5ff' : '#a0aec0',
-                          border: `1px solid ${isAssigned ? '#00e5ff' : '#2a3441'}`,
-                          cursor: 'pointer',
-                          fontSize: '0.85rem',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '6px'
-                        }}
-                      >
-                        <UserAvatar name={member.displayName} />
-                        {member.displayName}
-                      </div>
-                    );
-                  })}
-                  {members.length === 0 && <span style={{ color: '#8892b0', fontSize: '0.9rem' }}>Chưa có thành viên nào trong hệ thống.</span>}
-                </div>
-              </div>
-              </div>
-              <div className="modal-footer">
-                <button type="button" className="btn btn-secondary" onClick={() => setTaskModalOpen(false)}>Hủy</button>
-                <button type="submit" className="btn btn-primary">Lưu Task</button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
