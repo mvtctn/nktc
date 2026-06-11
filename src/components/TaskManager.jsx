@@ -374,7 +374,7 @@ export default function TaskManager({
           <button 
             className="btn btn-primary btn-sm" 
             onClick={() => handleOpenJobForm()}
-            style={{ display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap' }}
+            style={{ whiteSpace: 'nowrap' }}
           >
             <Plus size={14} /> <span className="hide-on-mobile">Thêm mới</span>
           </button>
@@ -561,7 +561,7 @@ export default function TaskManager({
           <button 
             className="btn btn-primary btn-sm" 
             onClick={() => handleOpenTaskForm(activeJob.id)}
-            style={{ display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap' }}
+            style={{ whiteSpace: 'nowrap' }}
           >
             <Plus size={14} /> <span className="hide-on-mobile">Thêm Task mới</span>
           </button>
