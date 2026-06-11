@@ -26,6 +26,7 @@ import Dashboard from './components/Dashboard';
 import ProjectDetailModal from './components/ProjectDetailModal';
 import AdminPanel from './components/AdminPanel';
 import TaskManager from './components/TaskManager';
+import ResourceMaster from './components/ResourceMaster';
 import { Menu, X, User } from 'lucide-react';
 
 // Helper to parse date "DD/MM/YYYY" to Date object
@@ -1044,6 +1045,17 @@ export default function App() {
             onToast={showToast}
             isOffline={isOffline}
             isSuperAdmin={isSuperAdmin}
+          />
+        )}
+
+        {currentTab === 'resources' && (
+          <ResourceMaster
+            equipmentMaster={equipmentMaster}
+            onSaveEquipmentMaster={saveEquipmentMaster}
+            materialMaster={materialMaster}
+            onSaveMaterialMaster={saveMaterialMaster}
+            isSuperAdmin={isSuperAdmin}
+            onToast={showToast}
           />
         )}
 

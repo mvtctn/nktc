@@ -11,7 +11,8 @@ import {
   FolderOpen,
   X,
   LayoutDashboard,
-  Kanban
+  Kanban,
+  Wrench
 } from 'lucide-react';
 
 export default function Sidebar({
@@ -169,6 +170,14 @@ export default function Sidebar({
         >
           <Kanban size={18} />
           <span>Quản lý Tiến độ</span>
+        </div>
+
+        <div 
+          className={`menu-item ${currentTab === 'resources' ? 'active' : ''}`}
+          onClick={() => { setCurrentTab('resources'); onCloseMobile && onCloseMobile(); }}
+        >
+          <Wrench size={18} />
+          <span>Quản lý Vật tư - Thiết bị</span>
         </div>
 
         <div 
