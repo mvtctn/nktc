@@ -94,7 +94,7 @@ body {
   overflow-y: auto;
   overflow-x: hidden;
   position: relative;
-  padding-bottom: 24px;
+  padding-bottom: calc(24px + env(safe-area-inset-bottom));
 }
 
 .container-fluid {
@@ -128,6 +128,7 @@ body {
   align-items: center;
   justify-content: space-between;
   padding: 16px 24px;
+  padding-top: calc(16px + env(safe-area-inset-top));
   background: var(--primary);
   color: white;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
@@ -832,6 +833,33 @@ pre code.json-code {
   border-bottom-color: var(--secondary);
 }
 
+/* SmartTagInput general classes */
+.tag-input-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+  width: 100%;
+}
+.tag-input-name-col {
+  flex: 3;
+  position: relative;
+}
+.tag-input-qty-col {
+  flex: 2;
+}
+.tag-input-btn-col {
+  padding: 10px 14px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+.tag-input-dropdown div {
+  padding: 12px 16px !important;
+  font-size: 0.95rem !important;
+}
+
 /* Modal Styling */
 .modal-backdrop {
   position: fixed;
@@ -1079,15 +1107,16 @@ pre code.json-code {
   /* Layout Spacing */
   .container-fluid {
     padding: 12px !important;
+    padding-bottom: calc(24px + env(safe-area-inset-bottom)) !important;
   }
   
   .glass-card {
     padding: 16px !important;
-    border-radius: var(--radius-sm) !important;
+    border-radius: var(--radius-md) !important;
   }
 
   .form-group {
-    margin-bottom: 14px !important;
+    margin-bottom: 16px !important;
   }
 
   .input-row {
@@ -1095,23 +1124,24 @@ pre code.json-code {
     gap: 12px !important;
   }
 
-  /* Compact Responsive Header */
+  /* Compact Responsive Header & Safe Area */
   .app-header {
-    padding: 10px 14px !important;
-    height: 64px;
+    padding: 12px 16px !important;
+    padding-top: calc(12px + env(safe-area-inset-top)) !important;
+    height: auto;
   }
 
   .header-title-container {
     gap: 8px !important;
-    max-width: 70%;
+    max-width: 65%;
   }
 
   #mobile-menu-trigger {
-    padding: 4px !important;
+    padding: 6px !important;
   }
 
   .header-title {
-    font-size: 0.95rem !important;
+    font-size: 1rem !important;
     line-height: 1.2;
     white-space: nowrap;
     overflow: hidden;
@@ -1120,7 +1150,7 @@ pre code.json-code {
   }
 
   .header-subtitle {
-    font-size: 0.65rem !important;
+    font-size: 0.68rem !important;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -1129,11 +1159,11 @@ pre code.json-code {
   }
 
   .user-profile {
-    gap: 6px !important;
+    gap: 8px !important;
   }
 
   .user-name {
-    font-size: 0.75rem !important;
+    font-size: 0.8rem !important;
     max-width: 80px;
     white-space: nowrap;
     overflow: hidden;
@@ -1143,6 +1173,15 @@ pre code.json-code {
   .user-role {
     font-size: 0.6rem !important;
     letter-spacing: 0.5px;
+  }
+
+  /* Prevent auto-zooming on iOS Safari by enforcing min font-size 16px for inputs */
+  input.form-control,
+  select.form-control,
+  textarea.form-control {
+    font-size: 16px !important;
+    padding: 12px 14px !important;
+    min-height: 48px; /* High touch target area */
   }
 
   /* Responsive Sidebar overlay */
@@ -1156,9 +1195,11 @@ pre code.json-code {
     height: 100vh !important;
     transform: translateX(-100%) !important;
     z-index: 200 !important;
-    background: #0a192f !important; /* Solid background, no transparency overlap */
+    background: #0a192f !important;
     box-shadow: none;
     transition: transform var(--transition-slow) !important;
+    padding-top: calc(10px + env(safe-area-inset-top)) !important;
+    padding-bottom: calc(10px + env(safe-area-inset-bottom)) !important;
   }
 
   .sidebar.open {
@@ -1169,8 +1210,8 @@ pre code.json-code {
   .sidebar-close-mobile-btn {
     display: block !important;
     color: var(--text-secondary) !important;
-    padding: 4px;
-    border-radius: 4px;
+    padding: 6px;
+    border-radius: 6px;
     transition: color var(--transition-fast);
   }
 
@@ -1185,7 +1226,7 @@ pre code.json-code {
     align-items: center !important;
     gap: 10px !important;
     padding: 8px 12px !important;
-    height: 44px !important;
+    height: 48px !important;
     box-sizing: border-box;
   }
 
@@ -1193,7 +1234,7 @@ pre code.json-code {
     height: 100% !important;
     padding: 0 !important;
     margin: 0 !important;
-    font-size: 0.85rem !important;
+    font-size: 16px !important;
     color: var(--text-primary) !important;
   }
 
@@ -1202,7 +1243,7 @@ pre code.json-code {
     background: rgba(255, 255, 255, 0.02) !important;
     color: var(--text-primary) !important;
     border: 1px solid var(--border) !important;
-    font-size: 0.85rem !important;
+    font-size: 16px !important;
     line-height: 1.4 !important;
   }
   
@@ -1217,9 +1258,29 @@ pre code.json-code {
   }
 
   .option-checkbox-card {
-    padding: 8px 10px !important;
-    font-size: 0.75rem !important;
+    padding: 12px 14px !important; /* Larger touch area */
+    font-size: 0.85rem !important;
     justify-content: flex-start;
+    min-height: 48px;
+  }
+
+  /* SmartTagInput Stacked Responsive Layout */
+  .tag-input-row {
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+  }
+  .tag-input-name-col {
+    flex: 1 1 100% !important; /* Full width */
+    margin-bottom: 4px;
+  }
+  .tag-input-qty-col {
+    flex: 1 1 calc(100% - 64px) !important; /* Remaining space minus add button */
+  }
+  .tag-input-btn-col {
+    flex: 0 0 54px !important; /* Button fixed size */
+    height: 48px !important;
+    padding: 0 !important;
+    margin: 0 !important;
   }
 
   /* Quick action buttons grid */
@@ -1231,9 +1292,10 @@ pre code.json-code {
 
   .btn-parse-action {
     padding: 14px 16px !important;
-    font-size: 0.85rem !important;
+    font-size: 0.95rem !important;
     white-space: normal !important;
     text-align: center;
+    min-height: 48px;
   }
 
   /* Action buttons grid at bottom */
@@ -1245,13 +1307,26 @@ pre code.json-code {
 
   .form-actions-grid .btn {
     padding: 14px 16px !important;
-    font-size: 0.85rem !important;
+    font-size: 0.95rem !important;
+    min-height: 48px;
+  }
+
+  /* Touch buttons inside lists */
+  .btn-accent, .btn-secondary, .btn-primary, .btn-danger {
+    min-height: 48px;
+    font-size: 0.95rem;
+  }
+
+  .btn-sm {
+    min-height: 38px;
+    font-size: 0.85rem;
   }
 
   /* Compact User Profile Badge on Mobile */
   .user-profile-badge {
-    padding: 4px 8px !important;
+    padding: 6px 10px !important;
     gap: 6px !important;
+    height: 38px;
   }
 
   .avatar-circle {
@@ -1261,21 +1336,45 @@ pre code.json-code {
 
   .user-profile-badge .user-name {
     max-width: 70px !important;
-    font-size: 0.725rem !important;
+    font-size: 0.75rem !important;
   }
 
   .user-profile-badge .status-tag {
-    font-size: 0.55rem !important;
+    font-size: 0.58rem !important;
   }
 
   /* Dashboard Tabs */
   .tabs {
-    gap: 4px !important;
+    gap: 6px !important;
   }
 
   .tab {
-    padding: 8px 12px !important;
-    font-size: 0.8rem !important;
+    padding: 10px 14px !important;
+    font-size: 0.9rem !important;
+    min-height: 40px;
+  }
+
+  /* Printable PDF Preview screen orientation helper */
+  .preview-scroll-container {
+    padding-top: 36px;
+    position: relative;
+  }
+
+  .preview-scroll-container::before {
+    content: '💡 Xoay ngang màn hình điện thoại để xem bản in A4 chuẩn nhất';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    background: #0f2b48;
+    color: #00e5ff;
+    padding: 6px 12px;
+    text-align: center;
+    font-size: 0.775rem;
+    font-weight: 700;
+    border-radius: var(--radius-sm);
+    box-shadow: var(--shadow-sm);
+    border: 1px solid rgba(0, 229, 255, 0.2);
   }
 }
 

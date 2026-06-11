@@ -1,9 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { db, isValidConfig } from '../firebase';
 import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc } from 'firebase/firestore';
-import { Briefcase, MapPin, Building, ShieldCheck, Award, Layers, Plus, Trash2, Edit2, CheckCircle2 } from 'lucide-react';
+import { Briefcase, MapPin, Building, ShieldCheck, Award, Layers, Plus, Trash2, Edit2, CheckCircle2, Wrench, X } from 'lucide-react';
 
-export default function ProjectSettings({ user, activeProjectId, setActiveProjectId, onToast }) {
+export default function ProjectSettings({
+  user,
+  activeProjectId,
+  setActiveProjectId,
+  onToast,
+  equipmentMaster = [],
+  onSaveEquipmentMaster,
+  materialMaster = [],
+  onSaveMaterialMaster,
+}) {
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(false);
   const [editingId, setEditingId] = useState(null);
@@ -19,6 +28,36 @@ export default function ProjectSettings({ user, activeProjectId, setActiveProjec
   const [supervisor, setSupervisor] = useState('');
 
   const isOffline = user.uid === 'offline_local_user';
+
+  // Local state for the global master list inputs
+  const [newEqInput, setNewEqInput] = useState('');
+  const [newMatInput, setNewMatInput] = useState('');
+
+  const addEquipmentMaster = () => {
+    const val = newEqInput.trim();
+    if (!val) return;
+    if (!equipmentMaster.includes(val)) {
+      onSaveEquipmentMaster([...equipmentMaster, val]);
+    }
+    setNewEqInput('');
+  };
+
+  const removeEquipmentMaster = (idx) => {
+    onSaveEquipmentMaster(equipmentMaster.filter((_, i) => i !== idx));
+  };
+
+  const addMaterialMaster = () => {
+    const val = newMatInput.trim();
+    if (!val) return;
+    if (!materialMaster.includes(val)) {
+      onSaveMaterialMaster([...materialMaster, val]);
+    }
+    setNewMatInput('');
+  };
+
+  const removeMaterialMaster = (idx) => {
+    onSaveMaterialMaster(materialMaster.filter((_, i) => i !== idx));
+  };
 
   useEffect(() => {
     fetchProjects();
@@ -170,6 +209,7 @@ export default function ProjectSettings({ user, activeProjectId, setActiveProjec
   };
 
   return (
+    <>
     <div className="container-fluid" id="project-settings-panel">
       <div className="panel-header">
         <h2 className="panel-title"><Briefcase size={20} /> Cài đặt & Quản lý Dự án</h2>
@@ -178,7 +218,7 @@ export default function ProjectSettings({ user, activeProjectId, setActiveProjec
       <div className="dashboard-grid">
         {/* Form add/edit project */}
         <div className="glass-card">
-          <h3 style={{ marginBottom: '16px', fontSize: '1rem', color: 'var(--primary-light)', fontWeight: '700' }}>
+          <h3 style={{ marginBottom: '16px', fontSize: '1rem', color: 'var(--text-primary)', fontWeight: '700' }}>
             {editingId ? 'Chỉnh sửa dự án' : 'Thêm dự án mới'}
           </h3>
           <form onSubmit={handleSave}>
@@ -294,7 +334,7 @@ export default function ProjectSettings({ user, activeProjectId, setActiveProjec
 
         {/* Project List */}
         <div className="glass-card" style={{ display: 'flex', flexDirection: 'column' }}>
-          <h3 style={{ marginBottom: '16px', fontSize: '1rem', color: 'var(--primary-light)', fontWeight: '700' }}>
+          <h3 style={{ marginBottom: '16px', fontSize: '1rem', color: 'var(--text-primary)', fontWeight: '700' }}>
             Danh sách dự án hoạt động ({projects.length})
           </h3>
           {loading ? (
@@ -320,7 +360,7 @@ export default function ProjectSettings({ user, activeProjectId, setActiveProjec
                 >
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '10px' }}>
                     <div style={{ cursor: 'pointer', flex: 1 }} onClick={() => setActiveProjectId(proj.id)}>
-                      <h4 style={{ fontSize: '0.925rem', fontWeight: '700', color: 'var(--primary-light)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <h4 style={{ fontSize: '0.925rem', fontWeight: '700', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
                         {proj.name}
                         {activeProjectId === proj.id && <CheckCircle2 size={16} color="var(--secondary)" />}
                       </h4>
@@ -348,6 +388,142 @@ export default function ProjectSettings({ user, activeProjectId, setActiveProjec
           )}
         </div>
       </div>
+
+      {/* ===== Global Master Lists (Shared across all projects) ===== */}
+      <div style={{ marginTop: '24px' }}>
+        <div className="panel-header" style={{ marginBottom: '16px' }}>
+          <h3 className="panel-title" style={{ color: 'var(--text-primary)' }}>
+            <Wrench size={18} /> Danh mục Thiết bị &amp; Vật liệu dùng chung
+          </h3>
+          <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+            Lưu sẵn để chọn nhanh khi nhập nhật ký
+          </span>
+        </div>
+
+        <div className="dashboard-grid">
+          {/* Equipment Master */}
+          <div className="glass-card">
+            <h4 style={{ fontSize: '0.9rem', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '14px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <Wrench size={15} color="var(--accent)" /> Thiết bị thi công
+            </h4>
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
+              <input
+                type="text"
+                className="form-control"
+                placeholder="Vd: Máy hàn đối đầu HDPE, Khoan bê tông..."
+                value={newEqInput}
+                onChange={(e) => setNewEqInput(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addEquipmentMaster(); } }}
+              />
+              <button
+                type="button"
+                className="btn btn-secondary"
+                style={{ padding: '10px', flexShrink: 0 }}
+                onClick={addEquipmentMaster}
+                title="Thêm thiết bị"
+              >
+                <Plus size={16} />
+              </button>
+            </div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', minHeight: '32px' }}>
+              {equipmentMaster.length === 0 ? (
+                <span style={{ fontSize: '0.775rem', color: 'var(--text-secondary)', fontStyle: 'italic' }}>
+                  Chưa có thiết bị nào — thêm để nhập liệu nhanh hơn
+                </span>
+              ) : (
+                equipmentMaster.map((item, i) => (
+                  <span
+                    key={i}
+                    style={{
+                      padding: '4px 10px',
+                      background: 'rgba(0,180,216,0.08)',
+                      border: '1px solid rgba(0,180,216,0.22)',
+                      borderRadius: '20px',
+                      fontSize: '0.8rem',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      color: 'var(--text-primary)',
+                    }}
+                  >
+                    {item}
+                    <button
+                      type="button"
+                      onClick={() => removeEquipmentMaster(i)}
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center' }}
+                      title="Xóa"
+                    >
+                      <X size={12} color="#ef4444" />
+                    </button>
+                  </span>
+                ))
+              )}
+            </div>
+          </div>
+
+          {/* Material Master */}
+          <div className="glass-card">
+            <h4 style={{ fontSize: '0.9rem', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '14px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <Layers size={15} color="#10b981" /> Vật liệu thi công
+            </h4>
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
+              <input
+                type="text"
+                className="form-control"
+                placeholder="Vd: Ống HDPE DN110, Phụ kiện siphonic..."
+                value={newMatInput}
+                onChange={(e) => setNewMatInput(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addMaterialMaster(); } }}
+              />
+              <button
+                type="button"
+                className="btn btn-secondary"
+                style={{ padding: '10px', flexShrink: 0 }}
+                onClick={addMaterialMaster}
+                title="Thêm vật liệu"
+              >
+                <Plus size={16} />
+              </button>
+            </div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', minHeight: '32px' }}>
+              {materialMaster.length === 0 ? (
+                <span style={{ fontSize: '0.775rem', color: 'var(--text-secondary)', fontStyle: 'italic' }}>
+                  Chưa có vật liệu nào — thêm để nhập liệu nhanh hơn
+                </span>
+              ) : (
+                materialMaster.map((item, i) => (
+                  <span
+                    key={i}
+                    style={{
+                      padding: '4px 10px',
+                      background: 'rgba(16,185,129,0.08)',
+                      border: '1px solid rgba(16,185,129,0.22)',
+                      borderRadius: '20px',
+                      fontSize: '0.8rem',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      color: 'var(--text-primary)',
+                    }}
+                  >
+                    {item}
+                    <button
+                      type="button"
+                      onClick={() => removeMaterialMaster(i)}
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center' }}
+                      title="Xóa"
+                    >
+                      <X size={12} color="#ef4444" />
+                    </button>
+                  </span>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
     </div>
+    </>
   );
 }

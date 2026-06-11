@@ -11,7 +11,8 @@ import {
   Activity, 
   ArrowRight,
   Clock,
-  Sparkles
+  Sparkles,
+  Eye
 } from 'lucide-react';
 
 export default function Dashboard({
@@ -25,7 +26,8 @@ export default function Dashboard({
   setSettingsSubTab,
   onSelectDiary,
   onSelectMinute,
-  onToast
+  onToast,
+  onViewProject
 }) {
   // 1. Calculate General Stats
   const totalProjects = projects.length;
@@ -257,9 +259,27 @@ export default function Dashboard({
                         {/* Module Buttons Grid */}
                         <div style={{ 
                           display: 'grid', 
-                          gridTemplateColumns: 'repeat(auto-fit, minmax(110px, 1fr))', 
-                          gap: '10px' 
+                          gridTemplateColumns: 'repeat(auto-fit, minmax(90px, 1fr))', 
+                          gap: '8px' 
                         }}>
+                          <button 
+                            onClick={() => onViewProject && onViewProject(proj)}
+                            className="btn btn-secondary btn-sm" 
+                            style={{ 
+                              display: 'inline-flex', 
+                              alignItems: 'center', 
+                              justifyContent: 'center', 
+                              gap: '5px',
+                              background: 'rgba(0, 229, 255, 0.06)',
+                              border: '1px solid rgba(0, 229, 255, 0.2)',
+                              fontSize: '0.8rem',
+                              fontWeight: '600'
+                            }}
+                          >
+                            <Eye size={14} color="var(--accent)" />
+                            Xem
+                          </button>
+
                           <button 
                             onClick={() => handleQuickModule(proj.id, 'nktc')}
                             className="btn btn-secondary btn-sm" 

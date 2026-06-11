@@ -23,6 +23,7 @@ import NKTCForm from './components/NKTCForm';
 import NKTCParser from './components/NKTCParser';
 import BBPSForm from './components/BBPSForm';
 import Dashboard from './components/Dashboard';
+import ProjectDetailModal from './components/ProjectDetailModal';
 
 import { Menu, X, User } from 'lucide-react';
 
@@ -46,6 +47,13 @@ export default function App() {
   
   const [minutes, setMinutes] = useState([]);
   const [activeMinute, setActiveMinute] = useState(null);
+
+  // Global shared equipment & material master lists
+  const [equipmentMaster, setEquipmentMaster] = useState([]);
+  const [materialMaster, setMaterialMaster] = useState([]);
+
+  // Project detail modal
+  const [viewingProject, setViewingProject] = useState(null);
 
   const isOffline = user && user.uid === 'offline_local_user';
 
@@ -72,6 +80,25 @@ export default function App() {
       setAuthLoading(false);
     }
   }, []);
+
+  // Load global master lists when user logs in
+  useEffect(() => {
+    if (!user) return;
+    const eq = localStorage.getItem('hydrotech_equipment_master');
+    const mat = localStorage.getItem('hydrotech_material_master');
+    if (eq) setEquipmentMaster(JSON.parse(eq));
+    if (mat) setMaterialMaster(JSON.parse(mat));
+  }, [user]);
+
+  const saveEquipmentMaster = (list) => {
+    setEquipmentMaster(list);
+    localStorage.setItem('hydrotech_equipment_master', JSON.stringify(list));
+  };
+
+  const saveMaterialMaster = (list) => {
+    setMaterialMaster(list);
+    localStorage.setItem('hydrotech_material_master', JSON.stringify(list));
+  };
 
   // 2. Data Listener (Projects, Diaries, Minutes)
   useEffect(() => {
@@ -421,6 +448,7 @@ export default function App() {
             onSelectDiary={setActiveDiary}
             onSelectMinute={setActiveMinute}
             onToast={showToast}
+            onViewProject={setViewingProject}
           />
         )}
 
@@ -439,6 +467,8 @@ export default function App() {
               onSave={handleSaveDiary}
               onToast={showToast}
               diaries={diaries}
+              equipmentMaster={equipmentMaster}
+              materialMaster={materialMaster}
             />
           </div>
         )}
@@ -476,6 +506,10 @@ export default function App() {
                 activeProjectId={activeProjectId}
                 setActiveProjectId={setActiveProjectId}
                 onToast={showToast}
+                equipmentMaster={equipmentMaster}
+                onSaveEquipmentMaster={saveEquipmentMaster}
+                materialMaster={materialMaster}
+                onSaveMaterialMaster={saveMaterialMaster}
               />
             ) : (
               <UserSettings
@@ -486,6 +520,27 @@ export default function App() {
           </div>
         )}
       </div>
+
+      {/* Project Detail Modal */}
+      {viewingProject && (
+        <ProjectDetailModal
+          project={viewingProject}
+          diaries={diaries}
+          minutes={minutes}
+          onClose={() => setViewingProject(null)}
+          onOpenDiary={(diary) => {
+            setActiveDiary(diary);
+            setActiveProjectId(diary.projectId);
+            setCurrentTab('nktc');
+          }}
+          onOpenMinute={(minute) => {
+            setActiveMinute(minute);
+            setActiveProjectId(minute.projectId);
+            setCurrentTab('bbps');
+          }}
+          onToast={showToast}
+        />
+      )}
 
     </div>
   );

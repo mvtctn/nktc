@@ -12,7 +12,7 @@ import {
   ImageRun,
   HeadingLevel,
   VerticalAlign,
-  SimpleField
+  PageBreak
 } from "docx";
 import { saveAs } from "file-saver";
 
@@ -182,7 +182,7 @@ export const buildNKTCSection = (logData, project, photos = []) => {
                   children: [
                     new Paragraph({
                       alignment: AlignmentType.CENTER,
-                      children: [new SimpleField("PAGE")]
+                      children: [new TextRun({ text: String(logData.trang || ''), size: 20, font: "Times New Roman" })]
                     })
                   ]
                 })
@@ -530,20 +530,195 @@ export const buildNKTCSection = (logData, project, photos = []) => {
   };
 
   export const exportAllNKTCtoWord = async (diariesList, project) => {
-    const sortedDiaries = [...diariesList].sort((a, b) => {
-      const partsA = a.ngay.split('/');
-      const partsB = b.ngay.split('/');
-      const dateA = new Date(partsA[2], partsA[1] - 1, partsA[0]);
-      const dateB = new Date(partsB[2], partsB[1] - 1, partsB[0]);
-      return dateA - dateB;
-    });
+  const sortedDiaries = [...diariesList].sort((a, b) => {
+    const partsA = a.ngay.split('/');
+    const partsB = b.ngay.split('/');
+    const dateA = new Date(partsA[2], partsA[1] - 1, partsA[0]);
+    const dateB = new Date(partsB[2], partsB[1] - 1, partsB[0]);
+    return dateA - dateB;
+  });
 
-    const sections = sortedDiaries.map(d => buildNKTCSection(d, project, d.photos || []));
-    const doc = new Document({ sections });
-    Packer.toBlob(doc).then(blob => {
-      saveAs(blob, `Toan_bo_Nhat_ky_thi_cong_${project ? project.name.replace(/\s+/g, "_") : "Du_an"}.docx`);
-    });
+  const thinBorder = { style: BorderStyle.SINGLE, size: 6, color: "000000" };
+  const tableBorders = {
+    top: thinBorder, bottom: thinBorder,
+    left: thinBorder, right: thinBorder,
+    insideHorizontal: thinBorder, insideVertical: thinBorder
   };
+  const noBorder = { style: BorderStyle.NONE };
+  const noBorders = { top: noBorder, bottom: noBorder, left: noBorder, right: noBorder, insideHorizontal: noBorder, insideVertical: noBorder };
+
+  const dateFirst = sortedDiaries.length > 0 ? sortedDiaries[0].ngay : '...';
+  const dateLast  = sortedDiaries.length > 0 ? sortedDiaries[sortedDiaries.length - 1].ngay : '...';
+
+  // ===== COVER PAGE SECTION =====
+  const coverSection = {
+    properties: {
+      page: {
+        size: { width: 11906, height: 16838 },
+        margin: { top: 1134, bottom: 1134, left: 1700, right: 1134 }
+      }
+    },
+    children: [
+      // Top: Company & Republic header
+      new Table({
+        width: { size: 9638, type: WidthType.DXA },
+        borders: noBorders,
+        rows: [
+          new TableRow({
+            children: [
+              new TableCell({
+                width: { size: 4819, type: WidthType.DXA },
+                borders: noBorders,
+                children: [
+                  new Paragraph({ children: [new TextRun({ text: project ? project.contractorB.toUpperCase() : 'CÔNG TY CỔ PHẦN HYDROTECH', bold: true, size: 22, font: 'Times New Roman' })] }),
+                  new Paragraph({ children: [new TextRun({ text: `Ban điều hành dự án: ${project ? project.name : ''}`, italic: true, size: 18, font: 'Times New Roman' })] })
+                ]
+              }),
+              new TableCell({
+                width: { size: 4819, type: WidthType.DXA },
+                borders: noBorders,
+                children: [
+                  new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: 'CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM', bold: true, size: 20, font: 'Times New Roman' })] }),
+                  new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: 'Độc lập - Tự do - Hạnh phúc', bold: true, size: 18, font: 'Times New Roman' })] }),
+                  new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: '───────────────', size: 16, font: 'Times New Roman' })] })
+                ]
+              })
+            ]
+          })
+        ]
+      }),
+
+      new Paragraph({ spacing: { before: 600, after: 200 } }),
+
+      // BIG TITLE
+      new Paragraph({
+        alignment: AlignmentType.CENTER,
+        children: [new TextRun({ text: 'NHẬT KÝ THI CÔNG', bold: true, size: 52, font: 'Times New Roman' })]
+      }),
+      new Paragraph({ spacing: { before: 200, after: 200 } }),
+
+      // Project info table
+      new Table({
+        width: { size: 9638, type: WidthType.DXA },
+        borders: tableBorders,
+        margins: { top: 120, bottom: 120, left: 180, right: 180 },
+        rows: [
+          new TableRow({
+            children: [
+              new TableCell({ width: { size: 2800, type: WidthType.DXA }, children: [new Paragraph({ children: [new TextRun({ text: 'Tên công trình:', bold: true, size: 22, font: 'Times New Roman' })] })] }),
+              new TableCell({ width: { size: 6838, type: WidthType.DXA }, children: [new Paragraph({ children: [new TextRun({ text: project ? project.name : '', size: 22, font: 'Times New Roman' })] })] })
+            ]
+          }),
+          new TableRow({
+            children: [
+              new TableCell({ width: { size: 2800, type: WidthType.DXA }, children: [new Paragraph({ children: [new TextRun({ text: 'Địa điểm:', bold: true, size: 22, font: 'Times New Roman' })] })] }),
+              new TableCell({ width: { size: 6838, type: WidthType.DXA }, children: [new Paragraph({ children: [new TextRun({ text: project ? project.address : '', size: 22, font: 'Times New Roman' })] })] })
+            ]
+          }),
+          new TableRow({
+            children: [
+              new TableCell({ width: { size: 2800, type: WidthType.DXA }, children: [new Paragraph({ children: [new TextRun({ text: 'Chủ đầu tư:', bold: true, size: 22, font: 'Times New Roman' })] })] }),
+              new TableCell({ width: { size: 6838, type: WidthType.DXA }, children: [new Paragraph({ children: [new TextRun({ text: project ? project.investor : '', size: 22, font: 'Times New Roman' })] })] })
+            ]
+          }),
+          new TableRow({
+            children: [
+              new TableCell({ width: { size: 2800, type: WidthType.DXA }, children: [new Paragraph({ children: [new TextRun({ text: 'Tổng thầu (Bên A):', bold: true, size: 22, font: 'Times New Roman' })] })] }),
+              new TableCell({ width: { size: 6838, type: WidthType.DXA }, children: [new Paragraph({ children: [new TextRun({ text: project ? project.contractorA : '', size: 22, font: 'Times New Roman' })] })] })
+            ]
+          }),
+          new TableRow({
+            children: [
+              new TableCell({ width: { size: 2800, type: WidthType.DXA }, children: [new Paragraph({ children: [new TextRun({ text: 'Nhà thầu thi công (Bên B):', bold: true, size: 22, font: 'Times New Roman' })] })] }),
+              new TableCell({ width: { size: 6838, type: WidthType.DXA }, children: [new Paragraph({ children: [new TextRun({ text: project ? project.contractorB : '', size: 22, font: 'Times New Roman' })] })] })
+            ]
+          }),
+          new TableRow({
+            children: [
+              new TableCell({ width: { size: 2800, type: WidthType.DXA }, children: [new Paragraph({ children: [new TextRun({ text: 'Gói thầu:', bold: true, size: 22, font: 'Times New Roman' })] })] }),
+              new TableCell({ width: { size: 6838, type: WidthType.DXA }, children: [new Paragraph({ children: [new TextRun({ text: project ? project.packageName : '', size: 22, font: 'Times New Roman' })] })] })
+            ]
+          }),
+          new TableRow({
+            children: [
+              new TableCell({ width: { size: 2800, type: WidthType.DXA }, children: [new Paragraph({ children: [new TextRun({ text: 'Hạng mục:', bold: true, size: 22, font: 'Times New Roman' })] })] }),
+              new TableCell({ width: { size: 6838, type: WidthType.DXA }, children: [new Paragraph({ children: [new TextRun({ text: project ? project.categoryName : '', size: 22, font: 'Times New Roman' })] })] })
+            ]
+          }),
+          new TableRow({
+            children: [
+              new TableCell({ width: { size: 2800, type: WidthType.DXA }, children: [new Paragraph({ children: [new TextRun({ text: 'Kỹ sư giám sát:', bold: true, size: 22, font: 'Times New Roman' })] })] }),
+              new TableCell({ width: { size: 6838, type: WidthType.DXA }, children: [new Paragraph({ children: [new TextRun({ text: project ? project.supervisor : '', size: 22, font: 'Times New Roman' })] })] })
+            ]
+          }),
+          new TableRow({
+            children: [
+              new TableCell({ width: { size: 2800, type: WidthType.DXA }, children: [new Paragraph({ children: [new TextRun({ text: 'Thời gian ghi chép:', bold: true, size: 22, font: 'Times New Roman' })] })] }),
+              new TableCell({ width: { size: 6838, type: WidthType.DXA }, children: [new Paragraph({ children: [new TextRun({ text: `Từ ngày ${dateFirst} đến ngày ${dateLast}`, size: 22, font: 'Times New Roman' })] })] })
+            ]
+          }),
+          new TableRow({
+            children: [
+              new TableCell({ width: { size: 2800, type: WidthType.DXA }, children: [new Paragraph({ children: [new TextRun({ text: 'Tổng số trang:', bold: true, size: 22, font: 'Times New Roman' })] })] }),
+              new TableCell({ width: { size: 6838, type: WidthType.DXA }, children: [new Paragraph({ children: [new TextRun({ text: `${sortedDiaries.length} trang`, size: 22, font: 'Times New Roman' })] })] })
+            ]
+          })
+        ]
+      }),
+
+      new Paragraph({ spacing: { before: 600, after: 200 } }),
+
+      // Certification text
+      new Paragraph({
+        alignment: AlignmentType.CENTER,
+        children: [new TextRun({ text: 'XÁC NHẬN CỦA CÁC BÊN', bold: true, size: 26, font: 'Times New Roman' })]
+      }),
+      new Paragraph({ spacing: { before: 200 } }),
+
+      // Signature table
+      new Table({
+        width: { size: 9638, type: WidthType.DXA },
+        borders: noBorders,
+        rows: [
+          new TableRow({
+            children: [
+              new TableCell({
+                width: { size: 4819, type: WidthType.DXA },
+                borders: noBorders,
+                children: [
+                  new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: `ĐẠI DIỆN TỔNG THẦU BÊN A`, bold: true, size: 22, font: 'Times New Roman' })] }),
+                  new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: project ? project.contractorA.toUpperCase() : '', bold: true, size: 20, font: 'Times New Roman' })] }),
+                  new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: '(Ký, ghi rõ họ tên)', italic: true, size: 18, font: 'Times New Roman', color: '555555' })] }),
+                  new Paragraph({ spacing: { before: 1000 } }),
+                  new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: '......................................', size: 18, font: 'Times New Roman' })] })
+                ]
+              }),
+              new TableCell({
+                width: { size: 4819, type: WidthType.DXA },
+                borders: noBorders,
+                children: [
+                  new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: `ĐẠI DIỆN NHÀ THẦU BÊN B`, bold: true, size: 22, font: 'Times New Roman' })] }),
+                  new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: project ? project.contractorB.toUpperCase() : '', bold: true, size: 20, font: 'Times New Roman' })] }),
+                  new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: '(Ký, ghi rõ họ tên)', italic: true, size: 18, font: 'Times New Roman', color: '555555' })] }),
+                  new Paragraph({ spacing: { before: 1000 } }),
+                  new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: project ? project.supervisor : '......................................', bold: true, size: 20, font: 'Times New Roman' })] })
+                ]
+              })
+            ]
+          })
+        ]
+      })
+    ]
+  };
+
+  // ===== DIARY SECTIONS (one per page) =====
+  const diarySections = sortedDiaries.map(d => buildNKTCSection(d, project, d.photos || []));
+
+  const doc = new Document({ sections: [coverSection, ...diarySections] });
+  Packer.toBlob(doc).then(blob => {
+    saveAs(blob, `Toan_bo_Nhat_ky_thi_cong_${project ? project.name.replace(/\s+/g, '_') : 'Du_an'}.docx`);
+  });
+};
 
 // Helper function to dynamically generate Table Rows of images in docx
 const createPhotoRows = (photos) => {

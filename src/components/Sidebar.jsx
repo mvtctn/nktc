@@ -62,6 +62,67 @@ export default function Sidebar({
       </div>
 
 
+      {/* Active Project Selector */}
+      <div className="sidebar-project-selector" style={{ padding: '12px 16px', borderBottom: '1px solid rgba(255, 255, 255, 0.08)', marginBottom: '8px' }}>
+        <div style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)', fontWeight: '700', textTransform: 'uppercase', marginBottom: '6px', letterSpacing: '0.5px' }}>
+          Dự án hoạt động
+        </div>
+        {projects.length === 0 ? (
+          <div 
+            onClick={() => {
+              setCurrentTab('settings');
+              setActiveProjectId('');
+              onCloseMobile && onCloseMobile();
+            }} 
+            style={{ 
+              padding: '8px 12px', 
+              borderRadius: '6px', 
+              background: 'rgba(239, 68, 68, 0.1)', 
+              border: '1px dashed rgba(239, 68, 68, 0.3)', 
+              color: '#ef4444', 
+              fontSize: '0.775rem', 
+              cursor: 'pointer',
+              textAlign: 'center',
+              fontWeight: '600',
+              transition: 'all 0.2s'
+            }}
+            className="btn-create-project-pulse"
+          >
+            + Cài đặt Dự án Mới
+          </div>
+        ) : (
+          <select
+            className="form-control"
+            style={{ 
+              background: 'rgba(255, 255, 255, 0.05)', 
+              border: '1px solid rgba(255, 255, 255, 0.15)', 
+              color: '#00e5ff', 
+              width: '100%', 
+              padding: '6px 10px',
+              borderRadius: '6px',
+              fontSize: '0.825rem',
+              cursor: 'pointer',
+              outline: 'none',
+              fontWeight: '600',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+              overflow: 'hidden'
+            }}
+            value={activeProjectId}
+            onChange={(e) => setActiveProjectId(e.target.value)}
+          >
+            <option value="" disabled style={{ background: '#0f172a', color: 'rgba(255,255,255,0.5)' }}>
+              -- Chọn Dự án --
+            </option>
+            {projects.map(p => (
+              <option key={p.id} value={p.id} style={{ background: '#0f172a', color: 'white' }}>
+                {p.name}
+              </option>
+            ))}
+          </select>
+        )}
+      </div>
+
       {/* Navigation Menu */}
       <nav className="sidebar-menu">
         <div className="menu-item" style={{ cursor: 'default', padding: '4px 8px', fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)', fontWeight: '700', textTransform: 'uppercase' }}>

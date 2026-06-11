@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import PhotoStamper from './PhotoStamper';
+import SmartTagInput from './SmartTagInput';
 import { exportNKTCtoWord, exportAllNKTCtoWord } from '../utils/WordExporter';
 import { 
   Save, 
@@ -54,7 +55,9 @@ export default function NKTCForm({
   initialData,
   onSave,
   onToast,
-  diaries = []
+  diaries = [],
+  equipmentMaster = [],
+  materialMaster = [],
 }) {
   const [activeTab, setActiveTab] = useState('input'); // 'input', 'preview', or 'json'
   const [actionsMenuOpen, setActionsMenuOpen] = useState(false);
@@ -301,51 +304,25 @@ export default function NKTCForm({
           {/* Equipment List */}
           <div className="form-group">
             <label className="form-label"><Wrench size={14} /> Thiết bị sử dụng trong ngày</label>
-            <div style={{ display: 'flex', gap: '8px', marginBottom: '10px' }}>
-              <input
-                type="text"
-                className="form-control"
-                placeholder="Ví dụ: Máy hàn đối đầu ống HDPE: 02 cái"
-                value={newEquipment}
-                onChange={(e) => setNewEquipment(e.value || e.target.value)}
-              />
-              <button type="button" onClick={addEquipment} className="btn btn-secondary" style={{ padding: '10px' }}>
-                <Plus size={16} />
-              </button>
-            </div>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-              {thiet_bi.map((eq, index) => (
-                <span key={index} style={{ padding: '6px 12px', background: 'rgba(0,180,216,0.08)', border: '1px solid var(--border)', borderRadius: '20px', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  {eq}
-                  <Trash2 size={12} color="#ef4444" style={{ cursor: 'pointer' }} onClick={() => removeEquipment(index)} />
-                </span>
-              ))}
-            </div>
+            <SmartTagInput
+              suggestions={equipmentMaster}
+              items={thiet_bi}
+              setItems={setThietBi}
+              namePlaceholder="Chọn thiết bị hoặc gõ tên..."
+              quantityPlaceholder="Số lượng (vd: 02 cái)"
+            />
           </div>
 
           {/* Material List */}
           <div className="form-group">
             <label className="form-label">Vật liệu nhập kho / sử dụng</label>
-            <div style={{ display: 'flex', gap: '8px', marginBottom: '10px' }}>
-              <input
-                type="text"
-                className="form-control"
-                placeholder="Ví dụ: Ống HDPE DN110: 50m"
-                value={newMaterial}
-                onChange={(e) => setNewMaterial(e.value || e.target.value)}
-              />
-              <button type="button" onClick={addMaterial} className="btn btn-secondary" style={{ padding: '10px' }}>
-                <Plus size={16} />
-              </button>
-            </div>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-              {vat_lieu.map((mat, index) => (
-                <span key={index} style={{ padding: '6px 12px', background: 'rgba(0,180,216,0.04)', border: '1px solid var(--border)', borderRadius: '20px', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  {mat}
-                  <Trash2 size={12} color="#ef4444" style={{ cursor: 'pointer' }} onClick={() => removeMaterial(index)} />
-                </span>
-              ))}
-            </div>
+            <SmartTagInput
+              suggestions={materialMaster}
+              items={vat_lieu}
+              setItems={setVatLieu}
+              namePlaceholder="Chọn vật liệu hoặc gõ tên..."
+              quantityPlaceholder="Khối lượng (vd: 50m)"
+            />
           </div>
 
           {/* Progress Details */}

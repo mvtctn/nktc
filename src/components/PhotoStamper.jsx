@@ -169,12 +169,12 @@ export default function PhotoStamper({ photos, setPhotos, project, date, weather
       </div>
 
       {/* Upload button area */}
-      <label className="photo-upload-container">
+      <label className="photo-upload-container" style={{ display: 'block' }}>
         <input 
           type="file" 
           multiple 
           accept="image/*" 
-          className="photo-upload-input" 
+          style={{ display: 'none', position: 'absolute', width: 0, height: 0, opacity: 0 }}
           onChange={handlePhotoUpload} 
           disabled={compressing}
         />
