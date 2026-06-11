@@ -141,7 +141,7 @@ export default function Sidebar({
         
         <div 
           className={`menu-item ${currentTab === 'dashboard' ? 'active' : ''}`}
-          onClick={() => setCurrentTab('dashboard')}
+          onClick={() => { setCurrentTab('dashboard'); onCloseMobile && onCloseMobile(); }}
         >
           <LayoutDashboard size={18} />
           <span>Dashboard Dự án</span>
@@ -149,7 +149,7 @@ export default function Sidebar({
 
         <div 
           className={`menu-item ${currentTab === 'nktc' ? 'active' : ''}`}
-          onClick={() => setCurrentTab('nktc')}
+          onClick={() => { setCurrentTab('nktc'); onCloseMobile && onCloseMobile(); }}
         >
           <FileText size={18} />
           <span>Nhật ký thi công (NKTC)</span>
@@ -157,7 +157,7 @@ export default function Sidebar({
 
         <div 
           className={`menu-item ${currentTab === 'bbps' ? 'active' : ''}`}
-          onClick={() => setCurrentTab('bbps')}
+          onClick={() => { setCurrentTab('bbps'); onCloseMobile && onCloseMobile(); }}
         >
           <FileSpreadsheet size={18} />
           <span>Biên bản phát sinh (BBPS)</span>
@@ -165,7 +165,7 @@ export default function Sidebar({
 
         <div 
           className={`menu-item ${currentTab === 'tasks' ? 'active' : ''}`}
-          onClick={() => setCurrentTab('tasks')}
+          onClick={() => { setCurrentTab('tasks'); onCloseMobile && onCloseMobile(); }}
         >
           <Kanban size={18} />
           <span>Quản lý Tiến độ</span>
@@ -173,7 +173,7 @@ export default function Sidebar({
 
         <div 
           className={`menu-item ${currentTab === 'settings' ? 'active' : ''}`}
-          onClick={() => setCurrentTab('settings')}
+          onClick={() => { setCurrentTab('settings'); onCloseMobile && onCloseMobile(); }}
         >
           <Settings size={18} />
           <span>Quản lý Dự án</span>
