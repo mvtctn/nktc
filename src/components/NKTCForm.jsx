@@ -94,8 +94,30 @@ export default function NKTCForm({
       setVeSinhMoiTruong(initialData.ve_sinh_moi_truong || 'Tốt');
       setGhiChuKhac(initialData.ghi_chu_khac || '');
       setPhotos(initialData.photos || []);
+    } else {
+      // Calculate next page number based on existing project diaries
+      const projDiaries = diaries.filter(d => d.projectId === project?.id);
+      let nextPage = 1;
+      if (projDiaries.length > 0) {
+        const pages = projDiaries.map(d => parseInt(d.trang, 10)).filter(p => !isNaN(p));
+        if (pages.length > 0) {
+          nextPage = Math.max(...pages) + 1;
+        }
+      }
+      setTrang(nextPage.toString());
+      setNgay(getTodayDateString());
+      setThoiTietSang('Bình thường');
+      setThoiTietChieu('Bình thường');
+      setSoLuongCongNhan(0);
+      setThietBi([]);
+      setVatLieu([]);
+      setTienTrinhCongViec([]);
+      setAnToanLaoDong('Tốt');
+      setVeSinhMoiTruong('Tốt');
+      setGhiChuKhac('');
+      setPhotos([]);
     }
-  }, [initialData]);
+  }, [initialData, project, diaries]);
 
 
 

@@ -11,7 +11,6 @@ import {
   Activity, 
   ArrowRight,
   Clock,
-  Sparkles,
   Eye
 } from 'lucide-react';
 
@@ -27,7 +26,8 @@ export default function Dashboard({
   onSelectDiary,
   onSelectMinute,
   onToast,
-  onViewProject
+  onViewProject,
+  onNewDiary
 }) {
   // 1. Calculate General Stats
   const totalProjects = projects.length;
@@ -104,44 +104,273 @@ export default function Dashboard({
 
   return (
     <div className="container-fluid" id="dashboard-panel">
-      {/* Welcome Banner */}
-      <div className="glass-card" style={{ 
-        marginBottom: '24px', 
-        padding: '24px 30px', 
-        background: 'linear-gradient(135deg, rgba(15, 43, 72, 0.9) 0%, rgba(0, 180, 216, 0.2) 100%)',
-        border: '1px solid rgba(0, 229, 255, 0.15)',
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        flexWrap: 'wrap',
-        gap: '16px'
+      {/* Top Header: Title and Actions */}
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center', 
+        marginBottom: '20px', 
+        flexWrap: 'wrap', 
+        gap: '12px' 
       }}>
         <div>
-          <h2 style={{ fontSize: '1.45rem', fontWeight: '800', margin: '0', display: 'flex', alignItems: 'center', gap: '8px', color: '#fff' }}>
-            Xin chào, Kỹ sư {user.displayName || 'Hydrotech'}! <Sparkles size={20} color="var(--accent)" />
+          <h2 style={{ fontSize: '1.25rem', fontWeight: '800', margin: 0, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Briefcase size={22} color="var(--accent)" /> Danh sách Dự án Đang Quản lý
           </h2>
-          <p style={{ color: 'var(--text-light)', fontSize: '0.875rem', marginTop: '6px', maxWidth: '600px' }}>
-            Hệ thống Quản lý Nhật ký thi công & Biên bản hiện trường Hydrotech. Chọn một dự án bên dưới hoặc chuyển đổi nhanh giữa các phân hệ quản lý để bắt đầu làm việc.
+          <p style={{ color: 'var(--text-light)', fontSize: '0.8rem', margin: '2px 0 0' }}>
+            Xin chào, Kỹ sư {user.displayName || 'Hydrotech'}! Chọn dự án của bạn để xem và quản lý
           </p>
         </div>
         
-        {/* Quick Action Button */}
-        <button 
-          onClick={() => {
-            setCurrentTab('settings');
-            setSettingsSubTab('project');
-          }}
-          className="btn btn-accent" 
-          style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
-        >
-          <PlusCircle size={16} /> Tạo Dự án Mới
-        </button>
+        <div className="dashboard-header-actions">
+          <button 
+            onClick={() => {
+              if (projects.length === 0) {
+                onToast('Vui lòng tạo dự án mới trước khi ghi nhật ký', true);
+                return;
+              }
+              const activeProj = projects.find(p => p.id === activeProjectId);
+              if (activeProj) {
+                onToast(`Ghi nhật ký mới cho dự án: ${activeProj.name}`);
+              }
+              onNewDiary();
+            }}
+            className="btn btn-accent btn-sm" 
+            style={{ 
+              display: 'inline-flex', 
+              alignItems: 'center', 
+              gap: '6px', 
+              minHeight: '38px',
+              background: '#10b981',
+              borderColor: '#10b981',
+              color: '#ffffff',
+              fontWeight: '700'
+            }}
+          >
+            <FileText size={15} /> Ghi Nhật Ký Mới
+          </button>
+
+          <button 
+            onClick={() => {
+              setCurrentTab('settings');
+              setSettingsSubTab('project');
+            }}
+            className="btn btn-secondary btn-sm" 
+            style={{ 
+              display: 'inline-flex', 
+              alignItems: 'center', 
+              gap: '6px', 
+              minHeight: '38px',
+              background: 'rgba(255, 255, 255, 0.05)',
+              border: '1px solid var(--border)',
+              color: 'var(--text-primary)',
+              fontWeight: '600'
+            }}
+          >
+            <PlusCircle size={15} /> Tạo Dự án Mới
+          </button>
+        </div>
       </div>
+
+      {/* Projects Grid */}
+      {projects.length === 0 ? (
+        <div className="glass-card" style={{ padding: '60px', textAlign: 'center', color: 'var(--text-secondary)', marginBottom: '24px' }}>
+          Chưa có dự án nào được cài đặt. Vui lòng bấm vào "Tạo Dự án Mới" ở góc phải để bắt đầu cấu hình.
+        </div>
+      ) : (
+        <div className="project-grid" style={{ marginBottom: '24px' }}>
+          {projects.map(proj => {
+            // Find diaries and minutes for this project
+            const projectDiaries = diaries.filter(d => d.projectId === proj.id);
+            const projectMinutes = minutes.filter(m => m.projectId === proj.id);
+            const isActive = activeProjectId === proj.id;
+
+            return (
+              <div 
+                key={proj.id} 
+                className={`glass-card ${isActive ? 'active' : ''}`}
+                style={{ 
+                  padding: '20px',
+                  borderLeft: isActive ? '5px solid var(--secondary)' : '1px solid var(--border)',
+                  background: isActive ? 'rgba(0, 180, 216, 0.02)' : 'var(--bg-card)',
+                  transition: 'all 0.2s ease',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'space-between',
+                  gap: '12px'
+                }}
+              >
+                <div style={{ display: 'flex', gap: '14px', alignItems: 'flex-start' }}>
+                  {/* Project Logo Initial Bubble */}
+                  <div style={{ 
+                    width: '46px', 
+                    height: '46px', 
+                    borderRadius: '10px', 
+                    background: isActive ? 'linear-gradient(135deg, var(--secondary), #0077b6)' : 'linear-gradient(135deg, var(--primary-light), var(--primary))', 
+                    color: 'white',
+                    fontWeight: '800',
+                    fontSize: '1rem',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexShrink: 0,
+                    border: '1px solid rgba(255,255,255,0.05)'
+                  }}>
+                    {getInitials(proj.name)}
+                  </div>
+
+                  {/* Project Information */}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <h4 style={{ fontSize: '1rem', fontWeight: '700', color: 'var(--text-primary)', margin: '0 0 4px', display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                      {proj.name}
+                      {isActive && (
+                        <span style={{ fontSize: '0.6rem', padding: '1px 6px', background: 'rgba(0, 229, 255, 0.15)', color: 'var(--accent)', border: '1px solid rgba(0, 229, 255, 0.25)', borderRadius: '20px', textTransform: 'uppercase', fontWeight: '700', letterSpacing: '0.5px' }}>
+                          Đang chọn
+                        </span>
+                      )}
+                    </h4>
+                    
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--text-secondary)', fontSize: '0.78rem', marginBottom: '4px' }}>
+                      <MapPin size={12} style={{ flexShrink: 0 }} />
+                      <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {proj.address || 'Chưa cấu hình địa chỉ'}
+                      </span>
+                    </div>
+
+                    {/* Project Statistics Counts */}
+                    <div style={{ display: 'flex', gap: '12px', fontSize: '0.72rem', color: 'var(--text-light)' }}>
+                      <span><strong>Nhật ký:</strong> {projectDiaries.length} bản</span>
+                      <span>•</span>
+                      <span><strong>Phát sinh:</strong> {projectMinutes.length} bản</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Module Buttons Grid */}
+                <div className="project-card-actions">
+                  <button 
+                    onClick={() => onViewProject && onViewProject(proj)}
+                    className="btn btn-secondary btn-sm" 
+                    style={{ 
+                      display: 'inline-flex', 
+                      alignItems: 'center', 
+                      justifyContent: 'center', 
+                      gap: '4px',
+                      background: 'rgba(0, 229, 255, 0.06)',
+                      border: '1px solid rgba(0, 229, 255, 0.2)',
+                      fontSize: '0.75rem',
+                      fontWeight: '600',
+                      padding: '8px 4px',
+                      minHeight: '34px'
+                    }}
+                    title="Xem chi tiết dự án"
+                  >
+                    <Eye size={13} color="var(--accent)" />
+                    <span>Xem</span>
+                  </button>
+
+                  <button 
+                    onClick={() => handleQuickModule(proj.id, 'nktc')}
+                    className="btn btn-secondary btn-sm" 
+                    style={{ 
+                      display: 'inline-flex', 
+                      alignItems: 'center', 
+                      justifyContent: 'center', 
+                      gap: '4px',
+                      background: 'rgba(255, 255, 255, 0.02)',
+                      fontSize: '0.75rem',
+                      fontWeight: '600',
+                      padding: '8px 4px',
+                      minHeight: '34px'
+                    }}
+                    title="Nhật ký thi công"
+                  >
+                    <FileText size={13} color="#10b981" />
+                    <span>Nhật ký</span>
+                  </button>
+
+                  <button 
+                    onClick={() => handleQuickModule(proj.id, 'bbps')}
+                    className="btn btn-secondary btn-sm" 
+                    style={{ 
+                      display: 'inline-flex', 
+                      alignItems: 'center', 
+                      justifyContent: 'center', 
+                      gap: '4px',
+                      background: 'rgba(255, 255, 255, 0.02)',
+                      fontSize: '0.75rem',
+                      fontWeight: '600',
+                      padding: '8px 4px',
+                      minHeight: '34px'
+                    }}
+                    title="Biên bản phát sinh"
+                  >
+                    <FileSpreadsheet size={13} color="#ef4444" />
+                    <span>Phát sinh</span>
+                  </button>
+
+                  <button 
+                    onClick={() => handleQuickModule(proj.id, 'settings')}
+                    className="btn btn-secondary btn-sm" 
+                    style={{ 
+                      display: 'inline-flex', 
+                      alignItems: 'center', 
+                      justifyContent: 'center', 
+                      gap: '4px',
+                      background: 'rgba(255, 255, 255, 0.02)',
+                      fontSize: '0.75rem',
+                      fontWeight: '600',
+                      padding: '8px 4px',
+                      minHeight: '34px'
+                    }}
+                    title="Cài đặt & Cấu hình dự án"
+                  >
+                    <Settings size={13} color="var(--accent)" />
+                    <span>Cài đặt</span>
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+
+          {/* Add Project Card at the end of grid */}
+          <div 
+            onClick={() => {
+              setCurrentTab('settings');
+              setSettingsSubTab('project');
+            }}
+            className="glass-card add-project-card"
+            style={{ 
+              padding: '20px',
+              border: '2px dashed var(--border)',
+              background: 'rgba(255, 255, 255, 0.01)',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '12px',
+              cursor: 'pointer',
+              minHeight: '160px',
+              transition: 'all 0.2s ease',
+            }}
+          >
+            <PlusCircle size={32} color="var(--accent)" style={{ opacity: 0.8 }} />
+            <div style={{ textAlign: 'center' }}>
+              <span style={{ fontSize: '0.95rem', fontWeight: '700', color: 'var(--text-primary)', display: 'block', marginBottom: '4px' }}>
+                Tạo Dự án Mới
+              </span>
+              <span style={{ fontSize: '0.75rem', color: 'var(--text-light)' }}>
+                Thêm dự án thi công vào hệ thống quản lý
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Stats Summary Grid */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px', marginBottom: '24px' }}>
         <div className="glass-card" style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '20px' }}>
-          <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: 'rgba(0, 229, 255, 0.1)', display: 'flex', alignItems: 'center', justifycontent: 'center', flexShrink: 0 }} className="avatar-circle">
+          <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: 'rgba(0, 229, 255, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }} className="avatar-circle">
             <Briefcase size={22} color="var(--accent)" />
           </div>
           <div>
@@ -151,7 +380,7 @@ export default function Dashboard({
         </div>
 
         <div className="glass-card" style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '20px' }}>
-          <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: 'rgba(16, 185, 129, 0.1)', display: 'flex', alignItems: 'center', justifycontent: 'center', flexShrink: 0 }} className="avatar-circle">
+          <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: 'rgba(16, 185, 129, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }} className="avatar-circle">
             <FileText size={22} color="#10b981" />
           </div>
           <div>
@@ -161,7 +390,7 @@ export default function Dashboard({
         </div>
 
         <div className="glass-card" style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '20px' }}>
-          <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: 'rgba(239, 68, 68, 0.1)', display: 'flex', alignItems: 'center', justifycontent: 'center', flexShrink: 0 }} className="avatar-circle">
+          <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: 'rgba(239, 68, 68, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }} className="avatar-circle">
             <FileSpreadsheet size={22} color="#ef4444" />
           </div>
           <div>
@@ -171,11 +400,11 @@ export default function Dashboard({
         </div>
 
         <div className="glass-card" style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '20px' }}>
-          <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: 'rgba(255, 193, 7, 0.1)', display: 'flex', alignItems: 'center', justifycontent: 'center', flexShrink: 0 }} className="avatar-circle">
+          <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: 'rgba(255, 193, 7, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }} className="avatar-circle">
             <Users size={22} color="#ffc107" />
           </div>
           <div>
-            <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', fontWeight: '600', textTransform: 'uppercase' }}>Lực Lượng Nhân Công TB</span>
+            <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', fontWeight: '600', textTransform: 'uppercase' }}>Nhân Công TB</span>
             <h3 style={{ fontSize: '1.6rem', fontWeight: '800', margin: '2px 0 0' }}>{averageWorkers} <span style={{ fontSize: '0.85rem', fontWeight: '500', color: 'var(--text-light)' }}>người</span></h3>
           </div>
         </div>
@@ -183,298 +412,138 @@ export default function Dashboard({
 
       {/* Main Content Layout */}
       <div className="dashboard-grid">
-        {/* Left Side: Projects Panel */}
+        {/* Left Side: Activity Panel */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', minWidth: 0 }}>
           <div className="panel-header" style={{ marginBottom: '0' }}>
-            <h3 className="panel-title"><Briefcase size={18} /> Danh sách Dự án Đang Quản lý</h3>
+            <h3 className="panel-title"><Clock size={18} /> Hoạt động gần đây nhất</h3>
           </div>
-
-          {projects.length === 0 ? (
-            <div className="glass-card" style={{ padding: '60px', textAlign: 'center', color: 'var(--text-secondary)' }}>
-              Chưa có dự án nào được cài đặt. Vui lòng bấm vào "Tạo Dự án Mới" ở banner trên để bắt đầu cấu hình.
-            </div>
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              {projects.map(proj => {
-                // Find diaries and minutes for this project
-                const projectDiaries = diaries.filter(d => d.projectId === proj.id);
-                const projectMinutes = minutes.filter(m => m.projectId === proj.id);
-                const isActive = activeProjectId === proj.id;
-
-                return (
-                  <div 
-                    key={proj.id} 
-                    className={`glass-card ${isActive ? 'active' : ''}`}
-                    style={{ 
-                      padding: '20px',
-                      borderLeft: isActive ? '5px solid var(--secondary)' : '1px solid var(--border)',
-                      background: isActive ? 'rgba(0, 180, 216, 0.02)' : 'var(--bg-card)',
-                      transition: 'all 0.2s ease'
-                    }}
-                  >
-                    <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-start' }}>
-                      {/* Project Logo Initial Bubble */}
+          
+          <div className="glass-card" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            {sortedActivities.length === 0 ? (
+              <div style={{ padding: '24px', textAlign: 'center', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+                Chưa ghi nhận hoạt động nào gần đây. Hãy bắt đầu viết Nhật ký hoặc Biên bản hiện trường!
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', position: 'relative', paddingLeft: '8px' }}>
+                {sortedActivities.map((act, index) => {
+                  const actProj = projects.find(p => p.id === act.projectId);
+                  return (
+                    <div 
+                      key={act.id} 
+                      onClick={() => handleActivityClick(act)}
+                      style={{ 
+                        display: 'flex', 
+                        gap: '12px', 
+                        cursor: 'pointer',
+                        position: 'relative',
+                        paddingBottom: index !== sortedActivities.length - 1 ? '14px' : '0',
+                        borderBottom: index !== sortedActivities.length - 1 ? '1px dashed var(--border)' : 'none'
+                      }}
+                      className="activity-item"
+                    >
+                      {/* Bullet Marker */}
                       <div style={{ 
-                        width: '50px', 
-                        height: '50px', 
-                        borderRadius: '10px', 
-                        background: isActive ? 'linear-gradient(135deg, var(--secondary), #0077b6)' : 'linear-gradient(135deg, var(--primary-light), var(--primary))', 
-                        color: 'white',
-                        fontWeight: '800',
-                        fontSize: '1.1rem',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        flexShrink: 0,
-                        border: '1px solid rgba(255,255,255,0.05)'
-                      }}>
-                        {getInitials(proj.name)}
-                      </div>
+                        width: '8px', 
+                        height: '8px', 
+                        borderRadius: '50%', 
+                        background: act.type === 'nktc' ? '#10b981' : '#ef4444',
+                        boxShadow: act.type === 'nktc' ? '0 0 8px rgba(16, 185, 129, 0.4)' : '0 0 8px rgba(239, 68, 68, 0.4)',
+                        marginTop: '6px',
+                        flexShrink: 0
+                      }}></div>
 
-                      {/* Project Information */}
+                      {/* Content text */}
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <h4 style={{ fontSize: '1.05rem', fontWeight: '700', color: 'var(--text-primary)', margin: '0 0 4px', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                          {proj.name}
-                          {isActive && (
-                            <span style={{ fontSize: '0.625rem', padding: '2px 8px', background: 'rgba(0, 229, 255, 0.15)', color: 'var(--accent)', border: '1px solid rgba(0, 229, 255, 0.25)', borderRadius: '20px', textTransform: 'uppercase', fontWeight: '700', letterSpacing: '0.5px' }}>
-                              Đang chọn
-                            </span>
-                          )}
-                        </h4>
-                        
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--text-secondary)', fontSize: '0.8rem', marginBottom: '8px' }}>
-                          <MapPin size={13} style={{ flexShrink: 0 }} />
-                          <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                            {proj.address || 'Chưa cấu hình địa chỉ'}
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px', marginBottom: '2px' }}>
+                          <h5 style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-primary)', margin: '0', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            {act.title}
+                          </h5>
+                          <span style={{ fontSize: '0.7rem', color: 'var(--text-light)', whiteSpace: 'nowrap' }}>
+                            {act.date}
                           </span>
                         </div>
-
-                        {/* Project Statistics Counts */}
-                        <div style={{ display: 'flex', gap: '16px', fontSize: '0.75rem', color: 'var(--text-light)', marginBottom: '16px' }}>
-                          <span><strong>Nhật ký:</strong> {projectDiaries.length} bản ghi</span>
-                          <span>•</span>
-                          <span><strong>Phát sinh:</strong> {projectMinutes.length} biên bản</span>
-                        </div>
-
-                        {/* Module Buttons Grid */}
-                        <div style={{ 
-                          display: 'grid', 
-                          gridTemplateColumns: 'repeat(auto-fit, minmax(90px, 1fr))', 
-                          gap: '8px' 
+                        <p style={{ fontSize: '0.725rem', color: 'var(--text-light)', marginBottom: '4px', fontWeight: '600' }}>
+                          Dự án: {actProj ? actProj.name : 'N/A'}
+                        </p>
+                        <p style={{ 
+                          fontSize: '0.775rem', 
+                          color: 'var(--text-secondary)', 
+                          margin: '0', 
+                          whiteSpace: 'nowrap', 
+                          overflow: 'hidden', 
+                          textOverflow: 'ellipsis' 
                         }}>
-                          <button 
-                            onClick={() => onViewProject && onViewProject(proj)}
-                            className="btn btn-secondary btn-sm" 
-                            style={{ 
-                              display: 'inline-flex', 
-                              alignItems: 'center', 
-                              justifyContent: 'center', 
-                              gap: '5px',
-                              background: 'rgba(0, 229, 255, 0.06)',
-                              border: '1px solid rgba(0, 229, 255, 0.2)',
-                              fontSize: '0.8rem',
-                              fontWeight: '600'
-                            }}
-                          >
-                            <Eye size={14} color="var(--accent)" />
-                            Xem
-                          </button>
-
-                          <button 
-                            onClick={() => handleQuickModule(proj.id, 'nktc')}
-                            className="btn btn-secondary btn-sm" 
-                            style={{ 
-                              display: 'inline-flex', 
-                              alignItems: 'center', 
-                              justifyContent: 'center', 
-                              gap: '6px',
-                              background: 'rgba(255, 255, 255, 0.02)',
-                              fontSize: '0.8rem',
-                              fontWeight: '600'
-                            }}
-                          >
-                            <FileText size={14} color="#10b981" />
-                            Nhật ký
-                          </button>
-
-                          <button 
-                            onClick={() => handleQuickModule(proj.id, 'bbps')}
-                            className="btn btn-secondary btn-sm" 
-                            style={{ 
-                              display: 'inline-flex', 
-                              alignItems: 'center', 
-                              justifyContent: 'center', 
-                              gap: '6px',
-                              background: 'rgba(255, 255, 255, 0.02)',
-                              fontSize: '0.8rem',
-                              fontWeight: '600'
-                            }}
-                          >
-                            <FileSpreadsheet size={14} color="#ef4444" />
-                            Phát sinh
-                          </button>
-
-                          <button 
-                            onClick={() => handleQuickModule(proj.id, 'settings')}
-                            className="btn btn-secondary btn-sm" 
-                            style={{ 
-                              display: 'inline-flex', 
-                              alignItems: 'center', 
-                              justifyContent: 'center', 
-                              gap: '6px',
-                              background: 'rgba(255, 255, 255, 0.02)',
-                              fontSize: '0.8rem',
-                              fontWeight: '600'
-                            }}
-                          >
-                            <Settings size={14} color="var(--accent)" />
-                            Cài đặt
-                          </button>
-                        </div>
+                          {act.desc}
+                        </p>
+                      </div>
+                      
+                      {/* Go arrow */}
+                      <div style={{ alignSelf: 'center', color: 'var(--text-light)' }} className="go-arrow">
+                        <ArrowRight size={14} />
                       </div>
                     </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
+                  );
+                })}
+              </div>
+            )}
+          </div>
         </div>
 
-        {/* Right Side: Activity & Weather Panel */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', minWidth: 0 }}>
-          {/* Recent Activity */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <div className="panel-header" style={{ marginBottom: '0' }}>
-              <h3 className="panel-title"><Clock size={18} /> Hoạt động gần đây nhất</h3>
-            </div>
-            
-            <div className="glass-card" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              {sortedActivities.length === 0 ? (
-                <div style={{ padding: '24px', textAlign: 'center', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-                  Chưa ghi nhận hoạt động nào gần đây. Hãy bắt đầu viết Nhật ký hoặc Biên bản hiện trường!
-                </div>
-              ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', position: 'relative', paddingLeft: '8px' }}>
-                  {sortedActivities.map((act, index) => {
-                    const actProj = projects.find(p => p.id === act.projectId);
-                    return (
-                      <div 
-                        key={act.id} 
-                        onClick={() => handleActivityClick(act)}
-                        style={{ 
-                          display: 'flex', 
-                          gap: '12px', 
-                          cursor: 'pointer',
-                          position: 'relative',
-                          paddingBottom: index !== sortedActivities.length - 1 ? '14px' : '0',
-                          borderBottom: index !== sortedActivities.length - 1 ? '1px dashed var(--border)' : 'none'
-                        }}
-                        className="activity-item"
-                      >
-                        {/* Bullet Marker */}
-                        <div style={{ 
-                          width: '8px', 
-                          height: '8px', 
-                          borderRadius: '50%', 
-                          background: act.type === 'nktc' ? '#10b981' : '#ef4444',
-                          boxShadow: act.type === 'nktc' ? '0 0 8px rgba(16, 185, 129, 0.4)' : '0 0 8px rgba(239, 68, 68, 0.4)',
-                          marginTop: '6px',
-                          flexShrink: 0
-                        }}></div>
-
-                        {/* Content text */}
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px', marginBottom: '2px' }}>
-                            <h5 style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-primary)', margin: '0', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                              {act.title}
-                            </h5>
-                            <span style={{ fontSize: '0.7rem', color: 'var(--text-light)', whiteSpace: 'nowrap' }}>
-                              {act.date}
-                            </span>
-                          </div>
-                          <p style={{ fontSize: '0.725rem', color: 'var(--text-light)', marginBottom: '4px', fontWeight: '600' }}>
-                            Dự án: {actProj ? actProj.name : 'N/A'}
-                          </p>
-                          <p style={{ 
-                            fontSize: '0.775rem', 
-                            color: 'var(--text-secondary)', 
-                            margin: '0', 
-                            whiteSpace: 'nowrap', 
-                            overflow: 'hidden', 
-                            textOverflow: 'ellipsis' 
-                          }}>
-                            {act.desc}
-                          </p>
-                        </div>
-                        
-                        {/* Go arrow */}
-                        <div style={{ alignSelf: 'center', color: 'var(--text-light)' }} className="go-arrow">
-                          <ArrowRight size={14} />
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
+        {/* Right Side: Performance Analytics */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', minWidth: 0 }}>
+          <div className="panel-header" style={{ marginBottom: '0' }}>
+            <h3 className="panel-title"><Activity size={18} /> Phân tích Hiệu suất & An toàn</h3>
           </div>
-
-          {/* Quick Insights Widget */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <div className="panel-header" style={{ marginBottom: '0' }}>
-              <h3 className="panel-title"><Activity size={18} /> Phân tích Hiệu suất & An toàn</h3>
-            </div>
+          
+          <div className="glass-card" style={{ 
+            background: 'linear-gradient(135deg, rgba(0, 180, 216, 0.05) 0%, rgba(17, 34, 64, 0.1) 100%)',
+            border: '1px solid var(--border)',
+            padding: '20px'
+          }}>
+            <h4 style={{ fontSize: '0.85rem', fontWeight: '700', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text-primary)' }}>
+              <TrendingUp size={14} color="var(--secondary)" /> Thông số Vận hành & An toàn
+            </h4>
             
-            <div className="glass-card" style={{ 
-              background: 'linear-gradient(135deg, rgba(0, 180, 216, 0.05) 0%, rgba(17, 34, 64, 0.1) 100%)',
-              border: '1px solid var(--border)',
-              padding: '20px'
-            }}>
-              <h4 style={{ fontSize: '0.85rem', fontWeight: '700', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text-primary)' }}>
-                <TrendingUp size={14} color="var(--secondary)" /> Thông số Vận hành & An toàn
-              </h4>
-              
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', fontSize: '0.8rem' }}>
-                <div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                    <span>Độ phủ Nhật ký công trình</span>
-                    <strong>{totalProjects > 0 ? Math.round((totalDiaries / (totalProjects * 5)) * 100) : 0}%</strong>
-                  </div>
-                  <div style={{ height: '6px', background: 'rgba(255,255,255,0.05)', borderRadius: '3px', overflow: 'hidden' }}>
-                    <div style={{ 
-                      width: `${totalProjects > 0 ? Math.min(Math.round((totalDiaries / (totalProjects * 5)) * 100), 100) : 0}%`, 
-                      height: '100%', 
-                      background: 'linear-gradient(90deg, var(--secondary), var(--accent))' 
-                    }}></div>
-                  </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', fontSize: '0.8rem' }}>
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                  <span>Độ phủ Nhật ký công trình</span>
+                  <strong>{totalProjects > 0 ? Math.round((totalDiaries / (totalProjects * 5)) * 100) : 0}%</strong>
                 </div>
-
-                <div style={{ borderTop: '1px dashed var(--border)', paddingTop: '10px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                    <span>Chỉ số An toàn lao động (Tốt)</span>
-                    <strong>{totalDiaries > 0 ? Math.round((diaries.filter(d => d.an_toan_lao_dong === 'Tốt').length / totalDiaries) * 100) : 100}%</strong>
-                  </div>
-                  <div style={{ height: '6px', background: 'rgba(255,255,255,0.05)', borderRadius: '3px', overflow: 'hidden' }}>
-                    <div style={{ 
-                      width: `${totalDiaries > 0 ? Math.round((diaries.filter(d => d.an_toan_lao_dong === 'Tốt').length / totalDiaries) * 100) : 100}%`, 
-                      height: '100%', 
-                      background: '#10b981' 
-                    }}></div>
-                  </div>
+                <div style={{ height: '6px', background: 'rgba(255,255,255,0.05)', borderRadius: '3px', overflow: 'hidden' }}>
+                  <div style={{ 
+                    width: `${totalProjects > 0 ? Math.min(Math.round((totalDiaries / (totalProjects * 5)) * 100), 100) : 0}%`, 
+                    height: '100%', 
+                    background: 'linear-gradient(90deg, var(--secondary), var(--accent))' 
+                  }}></div>
                 </div>
+              </div>
 
-                <div style={{ borderTop: '1px dashed var(--border)', paddingTop: '10px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                    <span>Chỉ số Vệ sinh môi trường (Tốt)</span>
-                    <strong>{totalDiaries > 0 ? Math.round((diaries.filter(d => d.ve_sinh_moi_truong === 'Tốt').length / totalDiaries) * 100) : 100}%</strong>
-                  </div>
-                  <div style={{ height: '6px', background: 'rgba(255,255,255,0.05)', borderRadius: '3px', overflow: 'hidden' }}>
-                    <div style={{ 
-                      width: `${totalDiaries > 0 ? Math.round((diaries.filter(d => d.ve_sinh_moi_truong === 'Tốt').length / totalDiaries) * 100) : 100}%`, 
-                      height: '100%', 
-                      background: '#00b4d8' 
-                    }}></div>
-                  </div>
+              <div style={{ borderTop: '1px dashed var(--border)', paddingTop: '10px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                  <span>Chỉ số An toàn lao động (Tốt)</span>
+                  <strong>{totalDiaries > 0 ? Math.round((diaries.filter(d => d.an_toan_lao_dong === 'Tốt').length / totalDiaries) * 100) : 100}%</strong>
+                </div>
+                <div style={{ height: '6px', background: 'rgba(255,255,255,0.05)', borderRadius: '3px', overflow: 'hidden' }}>
+                  <div style={{ 
+                    width: `${totalDiaries > 0 ? Math.round((diaries.filter(d => d.an_toan_lao_dong === 'Tốt').length / totalDiaries) * 100) : 100}%`, 
+                    height: '100%', 
+                    background: '#10b981' 
+                  }}></div>
+                </div>
+              </div>
+
+              <div style={{ borderTop: '1px dashed var(--border)', paddingTop: '10px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                  <span>Chỉ số Vệ sinh môi trường (Tốt)</span>
+                  <strong>{totalDiaries > 0 ? Math.round((diaries.filter(d => d.ve_sinh_moi_truong === 'Tốt').length / totalDiaries) * 100) : 100}%</strong>
+                </div>
+                <div style={{ height: '6px', background: 'rgba(255,255,255,0.05)', borderRadius: '3px', overflow: 'hidden' }}>
+                  <div style={{ 
+                    width: `${totalDiaries > 0 ? Math.round((diaries.filter(d => d.ve_sinh_moi_truong === 'Tốt').length / totalDiaries) * 100) : 100}%`, 
+                    height: '100%', 
+                    background: '#00b4d8' 
+                  }}></div>
                 </div>
               </div>
             </div>

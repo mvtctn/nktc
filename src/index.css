@@ -1400,3 +1400,93 @@ pre code.json-code {
   color: white;
 }
 
+/* Projects grid dashboard */
+.project-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+  gap: 16px;
+}
+@media (max-width: 576px) {
+  .project-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Dashboard header actions spacing and mobile style */
+.dashboard-header-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+@media (max-width: 576px) {
+  .dashboard-header-actions {
+    width: 100%;
+    margin-top: 8px;
+  }
+  .dashboard-header-actions button {
+    flex: 1;
+    justify-content: center;
+    font-size: 0.8rem !important;
+    padding: 10px 8px !important;
+  }
+}
+
+/* Responsive grid for project actions within each card */
+.project-card-actions {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  margin-top: 10px;
+}
+@media (max-width: 768px) {
+  .project-card-actions {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+}
+
+/* Plus card inside projects grid hover effects */
+.add-project-card:hover {
+  border-color: var(--accent) !important;
+  background: rgba(0, 229, 255, 0.03) !important;
+  box-shadow: 0 0 15px rgba(0, 229, 255, 0.1);
+  transform: translateY(-2px);
+}
+
+/* Glassmorphic floating PWA Install prompt banner */
+.pwa-install-banner {
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  right: 20px;
+  z-index: 9999;
+  background: rgba(10, 25, 47, 0.85) !important;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(0, 229, 255, 0.2) !important;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5), 0 0 20px rgba(0, 229, 255, 0.1) !important;
+  padding: 16px;
+  animation: pwa-slide-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes pwa-slide-in {
+  from {
+    transform: translateY(120%) scale(0.95);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+@media (min-width: 768px) {
+  .pwa-install-banner {
+    left: auto;
+    right: 20px;
+    width: 420px;
+    bottom: 20px;
+  }
+}
+
+

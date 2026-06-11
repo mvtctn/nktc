@@ -35,6 +35,11 @@ export default function App() {
   const [theme, setTheme] = useState('dark');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
+  // PWA Install Prompt States
+  const [deferredPrompt, setDeferredPrompt] = useState(null);
+  const [showInstallBanner, setShowInstallBanner] = useState(false);
+  const [isIOSDevice, setIsIOSDevice] = useState(false);
+
   // Toast Alert State
   const [toast, setToast] = useState({ show: false, message: '', isError: false });
 
@@ -80,6 +85,49 @@ export default function App() {
       setAuthLoading(false);
     }
   }, []);
+
+  // PWA Installation Prompt Handler
+  useEffect(() => {
+    const ios = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    setIsIOSDevice(ios);
+
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+    const dismissed = localStorage.getItem('hydrotech_pwa_dismissed');
+
+    const handleBeforeInstallPrompt = (e) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+      if (!isStandalone && !dismissed) {
+        setShowInstallBanner(true);
+      }
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+
+    if (ios && !isStandalone && !dismissed) {
+      setShowInstallBanner(true);
+    }
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    };
+  }, []);
+
+  const handleInstallPWA = async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === 'accepted') {
+      console.log('User accepted the PWA install prompt');
+    }
+    setDeferredPrompt(null);
+    setShowInstallBanner(false);
+  };
+
+  const handleDismissPWA = () => {
+    setShowInstallBanner(false);
+    localStorage.setItem('hydrotech_pwa_dismissed', 'true');
+  };
 
   // Load global master lists when user logs in
   useEffect(() => {
@@ -451,6 +499,10 @@ export default function App() {
               setViewingProject(proj);
               setCurrentTab('project-detail');
             }}
+            onNewDiary={() => {
+              setActiveDiary(null);
+              setCurrentTab('nktc');
+            }}
           />
         )}
 
@@ -546,6 +598,54 @@ export default function App() {
         )}
       </div>
 
+      {/* PWA Installation Banner */}
+      {showInstallBanner && (
+        <div className="pwa-install-banner glass-card">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
+              <span style={{ fontSize: '1.4rem', lineHeight: 1 }}>📲</span>
+              <div style={{ flex: 1 }}>
+                <h4 style={{ margin: '0 0 4px 0', fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-primary)' }}>
+                  Cài đặt Ứng dụng Nhật ký thi công
+                </h4>
+                <p style={{ margin: '0', fontSize: '0.75rem', color: 'var(--text-secondary)', lineHeight: '1.35' }}>
+                  {isIOSDevice ? (
+                    <span>Bấm vào biểu tượng <strong>Chia sẻ (Share)</strong> trên Safari và chọn <strong>"Thêm vào MH chính" (Add to Home Screen)</strong> để sử dụng ngoài công trường.</span>
+                  ) : (
+                    <span>Cài đặt ứng dụng lên màn hình chính để truy cập nhanh và làm việc ngoại tuyến ổn định.</span>
+                  )}
+                </p>
+              </div>
+            </div>
+            
+            <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', width: '100%' }}>
+              {!isIOSDevice && (
+                <button 
+                  onClick={handleInstallPWA} 
+                  className="btn btn-accent btn-sm"
+                  style={{ minHeight: '34px', fontSize: '0.78rem', padding: '6px 12px' }}
+                >
+                  Cài đặt
+                </button>
+              )}
+              <button 
+                onClick={handleDismissPWA} 
+                className="btn btn-secondary btn-sm"
+                style={{ 
+                  minHeight: '34px', 
+                  fontSize: '0.78rem', 
+                  padding: '6px 12px',
+                  background: 'rgba(255,255,255,0.05)',
+                  border: '1px solid var(--border)',
+                  color: 'var(--text-secondary)'
+                }}
+              >
+                {isIOSDevice ? 'Đã hiểu' : 'Để sau'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );
