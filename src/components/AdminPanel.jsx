@@ -1,7 +1,16 @@
 import React, { useState } from 'react';
-import { ShieldCheck, Database, Users, Check, X, Award, Activity, Lock, Unlock, FileText, FileSpreadsheet, Briefcase, Plus, UserPlus } from 'lucide-react';
+import { ShieldCheck, Database, Users, Check, X, Award, Activity, Lock, Unlock, FileText, FileSpreadsheet, Briefcase, Plus, UserPlus, Edit2, Trash2 } from 'lucide-react';
 
-export default function AdminPanel({ user, projects = [], diaries = [], minutes = [], members = [], onCreateMember }) {
+export default function AdminPanel({ 
+  user, 
+  projects = [], 
+  diaries = [], 
+  minutes = [], 
+  members = [], 
+  onCreateMember,
+  onUpdateMember,
+  onDeleteMember
+}) {
   // Local Form State
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -13,6 +22,41 @@ export default function AdminPanel({ user, projects = [], diaries = [], minutes 
   const validProjectIds = new Set(projects.map(p => p.id));
   const validDiaries = diaries.filter(d => validProjectIds.has(d.projectId));
   const validMinutes = minutes.filter(m => validProjectIds.has(m.projectId));
+
+  // Edit Member States
+  const [editingMember, setEditingMember] = useState(null);
+  const [editName, setEditName] = useState('');
+  const [editPosition, setEditPosition] = useState('');
+  const [editRole, setEditRole] = useState('Kỹ sư hiện trường');
+
+  const startEdit = (eng) => {
+    setEditingMember(eng);
+    setEditName(eng.displayName || '');
+    setEditPosition(eng.position || '');
+    setEditRole(eng.role || 'Kỹ sư hiện trường');
+  };
+
+  const cancelEdit = () => {
+    setEditingMember(null);
+  };
+
+  const saveEdit = async () => {
+    if (!editName.trim() || !editPosition.trim()) return;
+    const success = await onUpdateMember(editingMember.id || editingMember.uid, {
+      displayName: editName.trim(),
+      position: editPosition.trim(),
+      role: editRole
+    });
+    if (success) {
+      setEditingMember(null);
+    }
+  };
+
+  const confirmDelete = async (eng) => {
+    if (window.confirm(`Bạn có chắc chắn muốn xóa tài khoản của kỹ sư ${eng.displayName || eng.email} không? Hành động này không thể hoàn tác.`)) {
+      await onDeleteMember(eng.id || eng.uid);
+    }
+  };
 
   const handleSubmitMember = async (e) => {
     e.preventDefault();
@@ -303,16 +347,16 @@ export default function AdminPanel({ user, projects = [], diaries = [], minutes 
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'space-between',
-                  padding: '8px 10px',
+                  padding: '10px 12px',
                   background: 'rgba(255,255,255,0.015)',
                   border: '1px solid var(--border)',
                   borderRadius: '6px',
                   fontSize: '0.78rem'
                 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0, flex: 1 }}>
                     <div style={{
-                      width: '30px',
-                      height: '30px',
+                      width: '32px',
+                      height: '32px',
                       borderRadius: '50%',
                       background: eng.role === 'Super Admin' || eng.email === 'maivantiem@gmail.com' ? 'rgba(245,158,11,0.1)' : 'rgba(0,180,216,0.1)',
                       border: eng.role === 'Super Admin' || eng.email === 'maivantiem@gmail.com' ? '1px solid rgba(245,158,11,0.2)' : '1px solid rgba(0,180,216,0.2)',
@@ -320,30 +364,75 @@ export default function AdminPanel({ user, projects = [], diaries = [], minutes 
                       alignItems: 'center',
                       justifyContent: 'center',
                       fontWeight: '700',
+                      flexShrink: 0,
                       color: eng.role === 'Super Admin' || eng.email === 'maivantiem@gmail.com' ? '#f59e0b' : 'var(--accent)'
                     }}>
                       {eng.displayName ? eng.displayName[0]?.toUpperCase() : 'K'}
                     </div>
-                    <div>
-                      <div style={{ fontWeight: '700', color: 'var(--text-primary)' }}>{eng.displayName || 'Chưa đặt tên'}</div>
-                      <div style={{ fontSize: '0.675rem', color: 'var(--text-secondary)' }}>{eng.email}</div>
+                    <div style={{ minWidth: 0, flex: 1, paddingRight: '8px' }}>
+                      <div style={{ fontWeight: '700', color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{eng.displayName || 'Chưa đặt tên'}</div>
+                      <div style={{ fontSize: '0.675rem', color: 'var(--text-secondary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{eng.email}</div>
                     </div>
                   </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px' }}>
-                    <span style={{
-                      padding: '1px 6px',
-                      borderRadius: '10px',
-                      fontSize: '0.65rem',
-                      fontWeight: '600',
-                      background: eng.role === 'Super Admin' || eng.email === 'maivantiem@gmail.com' ? 'rgba(245,158,11,0.1)' : 'rgba(255,255,255,0.05)',
-                      color: eng.role === 'Super Admin' || eng.email === 'maivantiem@gmail.com' ? '#f59e0b' : 'var(--text-secondary)',
-                      border: eng.role === 'Super Admin' || eng.email === 'maivantiem@gmail.com' ? '1px solid rgba(245,158,11,0.2)' : '1px solid var(--border)'
-                    }}>
-                      {eng.role === 'Super Admin' || eng.email === 'maivantiem@gmail.com' ? 'Super Admin' : 'Kỹ sư'}
-                    </span>
-                    <span style={{ fontSize: '0.625rem', color: 'var(--text-light)', opacity: 0.8 }}>
-                      {eng.position || 'Thành viên'}
-                    </span>
+                  
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px' }}>
+                      <span style={{
+                        padding: '1px 6px',
+                        borderRadius: '10px',
+                        fontSize: '0.65rem',
+                        fontWeight: '600',
+                        background: eng.role === 'Super Admin' || eng.email === 'maivantiem@gmail.com' ? 'rgba(245,158,11,0.1)' : 'rgba(255,255,255,0.05)',
+                        color: eng.role === 'Super Admin' || eng.email === 'maivantiem@gmail.com' ? '#f59e0b' : 'var(--text-secondary)',
+                        border: eng.role === 'Super Admin' || eng.email === 'maivantiem@gmail.com' ? '1px solid rgba(245,158,11,0.2)' : '1px solid var(--border)'
+                      }}>
+                        {eng.role === 'Super Admin' || eng.email === 'maivantiem@gmail.com' ? 'Super Admin' : 'Kỹ sư'}
+                      </span>
+                      <span style={{ fontSize: '0.625rem', color: 'var(--text-light)', opacity: 0.8 }}>
+                        {eng.position || 'Thành viên'}
+                      </span>
+                    </div>
+
+                    {/* Actions: Edit & Delete buttons */}
+                    <div style={{ display: 'flex', gap: '4px', borderLeft: '1px solid var(--border)', paddingLeft: '8px' }}>
+                      <button
+                        type="button"
+                        onClick={() => startEdit(eng)}
+                        style={{
+                          background: 'transparent',
+                          border: 'none',
+                          color: 'var(--accent)',
+                          cursor: 'pointer',
+                          padding: '4px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center'
+                        }}
+                        title="Chỉnh sửa & Phân quyền"
+                      >
+                        <Edit2 size={14} />
+                      </button>
+                      
+                      {eng.email !== 'maivantiem@gmail.com' && eng.email !== user.email && (
+                        <button
+                          type="button"
+                          onClick={() => confirmDelete(eng)}
+                          style={{
+                            background: 'transparent',
+                            border: 'none',
+                            color: '#ef4444',
+                            cursor: 'pointer',
+                            padding: '4px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                          }}
+                          title="Xóa tài khoản"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
               ))
@@ -351,6 +440,92 @@ export default function AdminPanel({ user, projects = [], diaries = [], minutes 
           </div>
         </div>
       </div>
+
+      {/* Edit Member Modal */}
+      {editingMember && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
+          backgroundColor: 'rgba(10, 25, 47, 0.75)',
+          backdropFilter: 'blur(4px)',
+          zIndex: 1000,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '20px'
+        }}>
+          <div className="glass-card" style={{
+            maxWidth: '450px',
+            width: '100%',
+            background: 'var(--primary-light)',
+            border: '1px solid var(--border)',
+            boxShadow: 'var(--shadow-xl)',
+            padding: '24px',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '16px'
+          }}>
+            <h4 style={{ fontSize: '1rem', fontWeight: '800', color: 'var(--text-primary)', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Edit2 size={18} color="var(--accent)" /> Cấu hình & Phân quyền thành viên
+            </h4>
+            <p style={{ fontSize: '0.75rem', color: 'var(--text-light)', margin: 0 }}>
+              Đang chỉnh sửa: <strong>{editingMember.email}</strong>
+            </p>
+
+            <div className="form-group">
+              <label className="form-label">Họ và tên kỹ sư *</label>
+              <input
+                type="text"
+                className="form-control"
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
+                placeholder="Nguyễn Văn A..."
+              />
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">Chức vụ kỹ sư *</label>
+              <input
+                type="text"
+                className="form-control"
+                value={editPosition}
+                onChange={(e) => setEditPosition(e.target.value)}
+                placeholder="Kỹ sư hiện trường, Chỉ huy phó..."
+              />
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">Vai trò phân quyền hệ thống</label>
+              <select 
+                className="form-control" 
+                value={editRole} 
+                onChange={(e) => setEditRole(e.target.value)}
+                disabled={editingMember.email === 'maivantiem@gmail.com' || editingMember.email === user.email}
+              >
+                <option value="Kỹ sư hiện trường">Kỹ sư thành viên (Xem & Tạo mới)</option>
+                <option value="Super Admin">Super Admin (Toàn bộ quyền Sửa/Xóa)</option>
+              </select>
+              {(editingMember.email === 'maivantiem@gmail.com' || editingMember.email === user.email) && (
+                <span style={{ fontSize: '0.65rem', color: 'var(--text-light)', marginTop: '4px', display: 'block', fontStyle: 'italic' }}>
+                  * Không thể tự đổi vai trò của bản thân hoặc của tài khoản admin mặc định.
+                </span>
+              )}
+            </div>
+
+            <div style={{ display: 'flex', gap: '10px', marginTop: '8px' }}>
+              <button type="button" className="btn btn-secondary" style={{ flex: 1 }} onClick={cancelEdit}>
+                Hủy
+              </button>
+              <button type="button" className="btn btn-accent" style={{ flex: 1 }} onClick={saveEdit}>
+                Lưu cấu hình
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

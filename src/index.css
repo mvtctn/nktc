@@ -1551,4 +1551,17 @@ pre code.json-code {
   }
 }
 
+/* PDF Export Page Breaks & Avoid Splitting (Accessible to html2pdf screen context) */
+.photo-print-section,
+.html2pdf__page-break {
+  page-break-before: always !important;
+  break-before: page !important;
+}
+
+.avoid-break {
+  page-break-inside: avoid !important;
+  break-inside: avoid !important;
+}
+
+
 

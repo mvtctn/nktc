@@ -321,6 +321,50 @@ export default function App() {
     }
   };
 
+  const handleUpdateMember = async (memberId, updatedFields) => {
+    try {
+      if (isOffline || !isValidConfig) {
+        let updated = members.map(m => m.id === memberId || m.uid === memberId ? { ...m, ...updatedFields } : m);
+        localStorage.setItem('hydrotech_members', JSON.stringify(updated));
+        setMembers(updated);
+        showToast('Cập nhật thông tin thành viên cục bộ thành công!');
+        return true;
+      } else {
+        const ref = doc(db, 'users', memberId);
+        await updateDoc(ref, updatedFields);
+        await fetchMembers();
+        showToast('Cập nhật thành viên trên Firestore thành công!');
+        return true;
+      }
+    } catch (e) {
+      console.error(e);
+      showToast(`Lỗi khi cập nhật thành viên: ${e.message || e}`, true);
+      return false;
+    }
+  };
+
+  const handleDeleteMember = async (memberId) => {
+    try {
+      if (isOffline || !isValidConfig) {
+        let updated = members.filter(m => m.id !== memberId && m.uid !== memberId);
+        localStorage.setItem('hydrotech_members', JSON.stringify(updated));
+        setMembers(updated);
+        showToast('Đã xóa thành viên khỏi danh sách cục bộ!');
+        return true;
+      } else {
+        const ref = doc(db, 'users', memberId);
+        await deleteDoc(ref);
+        await fetchMembers();
+        showToast('Đã xóa thành viên trên Firestore!');
+        return true;
+      }
+    } catch (e) {
+      console.error(e);
+      showToast(`Lỗi khi xóa thành viên: ${e.message || e}`, true);
+      return false;
+    }
+  };
+
   // 2. Data Listener (Projects, Diaries, Minutes)
   useEffect(() => {
     if (!user) return;
@@ -740,6 +784,8 @@ export default function App() {
               equipmentMaster={equipmentMaster}
               materialMaster={materialMaster}
               readOnly={!isSuperAdmin && activeDiary && activeDiary.id ? true : diaryReadOnly}
+              onEnableEdit={() => setDiaryReadOnly(false)}
+              isSuperAdmin={isSuperAdmin}
             />
           </div>
         )}
@@ -751,7 +797,9 @@ export default function App() {
             initialData={activeMinute}
             onSave={handleSaveMinute}
             onToast={showToast}
-            readOnly={!isSuperAdmin && activeMinute && activeMinute.id ? true : false}
+            readOnly={!isSuperAdmin && activeMinute && activeMinute.id ? true : diaryReadOnly}
+            onEnableEdit={() => setDiaryReadOnly(false)}
+            isSuperAdmin={isSuperAdmin}
           />
         )}
 
@@ -809,6 +857,8 @@ export default function App() {
                 minutes={minutes}
                 members={members}
                 onCreateMember={handleCreateMember}
+                onUpdateMember={handleUpdateMember}
+                onDeleteMember={handleDeleteMember}
               />
             )}
           </div>

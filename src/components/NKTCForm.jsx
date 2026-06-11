@@ -19,7 +19,8 @@ import {
   RefreshCw,
   Code,
   MoreVertical,
-  Printer
+  Printer,
+  Edit2
 } from 'lucide-react';
 
 const getTodayDateString = () => {
@@ -60,6 +61,8 @@ export default function NKTCForm({
   equipmentMaster = [],
   materialMaster = [],
   readOnly = false,
+  onEnableEdit,
+  isSuperAdmin = false,
 }) {
   const [activeTab, setActiveTab] = useState('input'); // 'input', 'preview', or 'json'
   const [actionsMenuOpen, setActionsMenuOpen] = useState(false);
@@ -266,7 +269,8 @@ export default function NKTCForm({
       filename:     `nktc_${ngay.replace(/\//g, '-')}_trang_${trang}.pdf`,
       image:        { type: 'jpeg', quality: 0.98 },
       html2canvas:  { scale: 2, useCORS: true, letterRendering: true },
-      jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
+      pagebreak:    { mode: ['css', 'legacy'] }
     };
     import('html2pdf.js').then((html2pdfModule) => {
       const html2pdf = html2pdfModule.default;
@@ -287,41 +291,46 @@ export default function NKTCForm({
   return (
     <div className="container-fluid" id="nktc-form-panel">
       {/* Top-level Tabs for NKTC Section */}
-      <div className="tabs" style={{ marginBottom: '20px' }}>
-        <div 
-          className={`tab ${activeTab === 'input' ? 'active' : ''}`}
-          onClick={() => setActiveTab('input')}
-          style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
-        >
-          <FileText size={16} /> Nhập liệu Nhật ký
+      <div className="tabs" style={{ marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <div 
+            className={`tab ${activeTab === 'input' ? 'active' : ''}`}
+            onClick={() => setActiveTab('input')}
+            style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
+          >
+            <FileText size={16} /> Nhập liệu Nhật ký
+          </div>
+          <div 
+            className={`tab ${activeTab === 'preview' ? 'active' : ''}`}
+            onClick={() => setActiveTab('preview')}
+            style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
+          >
+            <FileText size={16} /> Xem bản in thử (A4)
+          </div>
         </div>
-        <div 
-          className={`tab ${activeTab === 'preview' ? 'active' : ''}`}
-          onClick={() => setActiveTab('preview')}
-          style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
-        >
-          <FileText size={16} /> Xem bản in thử (A4)
-        </div>
-      </div>
 
-      {readOnly && (
-        <div className="glass-card" style={{ 
-          background: 'rgba(0, 229, 255, 0.05)',
-          border: '1px solid rgba(0, 229, 255, 0.25)',
-          padding: '12px 16px',
-          borderRadius: 'var(--radius-sm)',
-          fontSize: '0.85rem',
-          color: 'var(--accent)',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '8px',
-          fontWeight: '600',
-          maxWidth: '850px',
-          margin: '0 auto 16px'
-        }}>
-          ℹ️ Bạn đang xem chi tiết Nhật ký thi công ở chế độ chỉ đọc. Không thể chỉnh sửa dữ liệu.
-        </div>
-      )}
+        {readOnly && isSuperAdmin && (
+          <button 
+            type="button"
+            className="btn btn-secondary btn-sm"
+            onClick={onEnableEdit}
+            style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: '6px', 
+              padding: '6px 12px', 
+              fontSize: '0.8rem', 
+              height: '34px', 
+              borderColor: 'var(--accent)', 
+              color: 'var(--accent)',
+              fontWeight: '700',
+              borderRadius: 'var(--radius-sm)'
+            }}
+          >
+            <Edit2 size={12} /> Chỉnh sửa
+          </button>
+        )}
+      </div>
 
       {activeTab === 'input' && (
         /* Giao diện Nhập liệu Nhật ký (Full width, centered) */
@@ -574,8 +583,8 @@ export default function NKTCForm({
           <div ref={printAreaRef} className="printable-a4-area glass-card" style={{ padding: '24px', background: 'white', color: '#1e293b', border: '1px solid #cbd5e1', boxShadow: '0 4px 15px rgba(0,0,0,0.05)', fontFamily: '"Times New Roman", Times, serif', minHeight: '600px', display: 'flex', flexDirection: 'column', wordBreak: 'break-all', minWidth: '794px', maxWidth: '794px', margin: '0 auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', fontWeight: 'bold', borderBottom: '1px solid #94a3b8', paddingBottom: '10px', marginBottom: '16px' }}>
               <div>
-                <div>{project ? project.contractorB.toUpperCase() : "CÔNG TY CỔ PHẦN HYDROTECH"}</div>
-                <div style={{ fontStyle: 'italic', fontWeight: 'normal' }}>BĐH Dự án: {project ? project.name : "Hiện trường"}</div>
+                <div>{project && project.contractorA ? project.contractorA.toUpperCase() : "TỔNG THẦU"}</div>
+                <div style={{ fontWeight: 'normal', color: '#475569', marginTop: '2px' }}>{project && project.contractorB ? project.contractorB.toUpperCase() : "CÔNG TY CỔ PHẦN HYDROTECH"}</div>
               </div>
               <div style={{ textAlign: 'right' }}>
                 <div>CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</div>
@@ -592,7 +601,7 @@ export default function NKTCForm({
 
             {/* Layout Tables */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', fontSize: '0.85rem', flex: 1 }}>
-              <div>
+              <div className="avoid-break">
                 <h4 style={{ fontSize: '0.9rem', fontWeight: 'bold', color: '#0f2b48', borderBottom: '1px solid #e2e8f0', paddingBottom: '4px', marginBottom: '6px' }}>I. THÔNG TIN DỰ ÁN</h4>
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 'inherit' }}>
                   <tbody>
@@ -616,7 +625,7 @@ export default function NKTCForm({
                 </table>
               </div>
 
-              <div>
+              <div className="avoid-break">
                 <h4 style={{ fontSize: '0.9rem', fontWeight: 'bold', color: '#0f2b48', borderBottom: '1px solid #e2e8f0', paddingBottom: '4px', marginBottom: '6px' }}>II. THỜI TIẾT, NHÂN LỰC & THIẾT BỊ</h4>
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 'inherit' }}>
                   <tbody>
@@ -644,7 +653,7 @@ export default function NKTCForm({
                 </table>
               </div>
 
-              <div>
+              <div className="avoid-break">
                 <h4 style={{ fontSize: '0.9rem', fontWeight: 'bold', color: '#0f2b48', borderBottom: '1px solid #e2e8f0', paddingBottom: '4px', marginBottom: '6px' }}>III. TIẾN TRÌNH THI CÔNG CHI TIẾT</h4>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', paddingLeft: '8px' }}>
                   {tien_trinh_cong_viec.filter(l => l.trim() !== '').length === 0 ? (
@@ -657,19 +666,19 @@ export default function NKTCForm({
                 </div>
               </div>
 
-              <div>
+              <div className="avoid-break">
                 <h4 style={{ fontSize: '0.9rem', fontWeight: 'bold', color: '#0f2b48', borderBottom: '1px solid #e2e8f0', paddingBottom: '4px', marginBottom: '6px' }}>IV. AN TOÀN & VỆ SINH MÔI TRƯỜNG</h4>
                 <div>An toàn lao động: <strong>{an_toan_lao_dong}</strong> | Vệ sinh môi trường: <strong>{ve_sinh_moi_truong}</strong></div>
               </div>
 
-              <div>
+              <div className="avoid-break">
                 <h4 style={{ fontSize: '0.9rem', fontWeight: 'bold', color: '#0f2b48', borderBottom: '1px solid #e2e8f0', paddingBottom: '4px', marginBottom: '6px' }}>V. VƯỚNG MẮC & KIẾN NGHỊ</h4>
                 <div style={{ fontStyle: !ghi_chu_khac ? 'italic' : 'normal' }}>{ghi_chu_khac || 'Không có vướng mắc nào.'}</div>
               </div>
             </div>
 
             {/* Signatures */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', fontSize: '0.8rem', textAlign: 'center', marginTop: '32px', paddingTop: '16px', borderTop: '1px dashed #cbd5e1' }}>
+            <div className="avoid-break" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', fontSize: '0.8rem', textAlign: 'center', marginTop: '32px', paddingTop: '16px', borderTop: '1px dashed #cbd5e1' }}>
               <div>
                 <div style={{ fontWeight: 'bold' }}>ĐẠI DIỆN TỔNG THẦU</div>
                 <div style={{ fontStyle: 'italic', color: '#64748b', fontSize: '0.75rem' }}>(Ký, ghi rõ họ tên)</div>
@@ -683,7 +692,7 @@ export default function NKTCForm({
 
             {/* Photos inside print card */}
             {photos.length > 0 && (
-              <div className="photo-print-section" style={{ marginTop: '32px', paddingTop: '20px', borderTop: '2px solid #cbd5e1' }}>
+              <div className="photo-print-section html2pdf__page-break" style={{ marginTop: '32px', paddingTop: '20px', borderTop: '2px solid #cbd5e1' }}>
                 <div style={{ textAlign: 'center', fontSize: '0.9rem', fontWeight: 'bold', marginBottom: '12px' }}>HÌNH ẢNH MINH HỌA HIỆN TRƯỜNG</div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                   {photos.map((photo, idx) => (

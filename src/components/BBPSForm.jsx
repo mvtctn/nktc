@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { exportBBPStoWord } from '../utils/WordExporter';
-import { Save, FileText, Plus, Trash2, Calendar, FileSpreadsheet, Building, Users, AlertTriangle, Lightbulb, MoreVertical, Copy, Download, Printer } from 'lucide-react';
+import { Save, FileText, Plus, Trash2, Calendar, FileSpreadsheet, Building, Users, AlertTriangle, Lightbulb, MoreVertical, Copy, Download, Printer, Edit2 } from 'lucide-react';
 
 const getTodayDateString = () => {
   const today = new Date();
@@ -37,6 +37,8 @@ export default function BBPSForm({
   onSave,
   onToast,
   readOnly = false,
+  onEnableEdit,
+  isSuperAdmin = false,
 }) {
   const [activeTab, setActiveTab] = useState('input'); // 'input' or 'preview'
   const [actionsMenuOpen, setActionsMenuOpen] = useState(false);
@@ -133,7 +135,8 @@ export default function BBPSForm({
       filename:     `bbps_${ngay.replace(/\//g, '-')}_${(vi_tri || 'hien_truong').replace(/\s+/g, '_')}.pdf`,
       image:        { type: 'jpeg', quality: 0.98 },
       html2canvas:  { scale: 2, useCORS: true, letterRendering: true },
-      jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
+      pagebreak:    { mode: ['css', 'legacy'] }
     };
     
     import('html2pdf.js').then((html2pdfModule) => {
@@ -155,41 +158,46 @@ export default function BBPSForm({
   return (
     <div className="container-fluid" id="bbps-form-panel">
       {/* Top-level Tabs for BBPS Section */}
-      <div className="tabs" style={{ marginBottom: '20px' }}>
-        <div 
-          className={`tab ${activeTab === 'input' ? 'active' : ''}`}
-          onClick={() => setActiveTab('input')}
-          style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
-        >
-          <FileSpreadsheet size={16} /> Nhập Biên bản
+      <div className="tabs" style={{ marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <div 
+            className={`tab ${activeTab === 'input' ? 'active' : ''}`}
+            onClick={() => setActiveTab('input')}
+            style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
+          >
+            <FileSpreadsheet size={16} /> Nhập Biên bản
+          </div>
+          <div 
+            className={`tab ${activeTab === 'preview' ? 'active' : ''}`}
+            onClick={() => setActiveTab('preview')}
+            style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
+          >
+            <FileText size={16} /> Xem bản in thử (A4)
+          </div>
         </div>
-        <div 
-          className={`tab ${activeTab === 'preview' ? 'active' : ''}`}
-          onClick={() => setActiveTab('preview')}
-          style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
-        >
-          <FileText size={16} /> Xem bản in thử (A4)
-        </div>
-      </div>
 
-      {readOnly && (
-        <div className="glass-card" style={{ 
-          background: 'rgba(0, 229, 255, 0.05)',
-          border: '1px solid rgba(0, 229, 255, 0.25)',
-          padding: '12px 16px',
-          borderRadius: 'var(--radius-sm)',
-          fontSize: '0.85rem',
-          color: 'var(--accent)',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '8px',
-          fontWeight: '600',
-          maxWidth: '850px',
-          margin: '0 auto 16px'
-        }}>
-          ℹ️ Bạn đang xem chi tiết Biên bản hiện trường ở chế độ chỉ đọc. Không thể chỉnh sửa dữ liệu.
-        </div>
-      )}
+        {readOnly && isSuperAdmin && (
+          <button 
+            type="button"
+            className="btn btn-secondary btn-sm"
+            onClick={onEnableEdit}
+            style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: '6px', 
+              padding: '6px 12px', 
+              fontSize: '0.8rem', 
+              height: '34px', 
+              borderColor: 'var(--accent)', 
+              color: 'var(--accent)',
+              fontWeight: '700',
+              borderRadius: 'var(--radius-sm)'
+            }}
+          >
+            <Edit2 size={12} /> Chỉnh sửa
+          </button>
+        )}
+      </div>
 
       {activeTab === 'input' && (
         /* Giao diện Nhập liệu Biên bản (Full width, centered) */
@@ -408,8 +416,8 @@ export default function BBPSForm({
           <div ref={printAreaRef} className="printable-a4-area glass-card" style={{ padding: '24px', background: 'white', color: '#1e293b', border: '1px solid #cbd5e1', boxShadow: '0 4px 15px rgba(0,0,0,0.05)', fontFamily: '"Times New Roman", Times, serif', minHeight: '600px', display: 'flex', flexDirection: 'column', wordBreak: 'break-all', minWidth: '794px', maxWidth: '794px', margin: '0 auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', fontWeight: 'bold', borderBottom: '1px solid #94a3b8', paddingBottom: '10px', marginBottom: '16px' }}>
               <div>
-                <div>{project ? project.contractorB.toUpperCase() : "CÔNG TY CỔ PHẦN HYDROTECH"}</div>
-                <div style={{ fontStyle: 'italic', fontWeight: 'normal' }}>BĐH Dự án: {project ? project.name : "Hiện trường"}</div>
+                <div>{project && project.contractorA ? project.contractorA.toUpperCase() : "TỔNG THẦU"}</div>
+                <div style={{ fontWeight: 'normal', color: '#475569', marginTop: '2px' }}>{project && project.contractorB ? project.contractorB.toUpperCase() : "CÔNG TY CỔ PHẦN HYDROTECH"}</div>
               </div>
               <div style={{ textAlign: 'right' }}>
                 <div>CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</div>
@@ -425,17 +433,17 @@ export default function BBPSForm({
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', fontSize: '0.85rem', flex: 1, lineHeight: '1.4' }}>
-              <div>
+              <div className="avoid-break">
                 <div><strong>BÊN A (Tổng thầu):</strong> {project ? project.contractorA : '....................................................................'}</div>
                 <div style={{ textIndent: '20px' }}>Đại diện: {dai_dien_a || '.......................................................'} | Chức vụ: {chuc_vu_a || '....................................'}</div>
               </div>
 
-              <div>
+              <div className="avoid-break">
                 <div><strong>BÊN B (Nhà thầu):</strong> {project ? project.contractorB : 'CÔNG TY CỔ PHẦN HYDROTECH'}</div>
                 <div style={{ textIndent: '20px' }}>Đại diện: {dai_dien_b || '.......................................................'} | Chức vụ: {chuc_vu_b || '....................................'}</div>
               </div>
 
-              <div>
+              <div className="avoid-break">
                 <h4 style={{ fontSize: '0.9rem', fontWeight: 'bold', color: '#0f2b48', borderBottom: '1px solid #cbd5e1', paddingBottom: '2px', marginBottom: '4px' }}>I. NỘI DUNG SỰ VIỆC / PHÁT SINH</h4>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', paddingLeft: '8px' }}>
                   <div>- Vị trí: {vi_tri || '................................................................................'}</div>
@@ -445,14 +453,14 @@ export default function BBPSForm({
                 </div>
               </div>
 
-              <div>
+              <div className="avoid-break">
                 <h4 style={{ fontSize: '0.9rem', fontWeight: 'bold', color: '#0f2b48', borderBottom: '1px solid #cbd5e1', paddingBottom: '2px', marginBottom: '4px' }}>II. GIẢI PHÁP XỬ LÝ / ĐỀ XUẤT</h4>
                 <div style={{ paddingLeft: '8px', fontStyle: !de_xuat ? 'italic' : 'normal' }}>
                   {de_xuat || '....................................................................................................................................'}
                 </div>
               </div>
 
-              <div>
+              <div className="avoid-break">
                 <h4 style={{ fontSize: '0.9rem', fontWeight: 'bold', color: '#0f2b48', borderBottom: '1px solid #cbd5e1', paddingBottom: '2px', marginBottom: '4px' }}>III. KẾT LUẬN</h4>
                 <div style={{ paddingLeft: '8px', textAlign: 'justify' }}>
                   Căn cứ vào diễn biến thực tế, hai bên thống nhất xử lý theo phương án đã đề xuất nêu trên. Khối lượng phát sinh (nếu có) sẽ được tính toán và xác nhận vào hồ sơ hoàn công / quyết toán sau này. Biên bản được lập thành 04 bản, mỗi bên giữ 02 bản có giá trị pháp lý như nhau.
@@ -461,7 +469,7 @@ export default function BBPSForm({
             </div>
 
             {/* Signatures */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', fontSize: '0.8rem', textAlign: 'center', marginTop: '32px', paddingTop: '16px', borderTop: '1px dashed #cbd5e1' }}>
+            <div className="avoid-break" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', fontSize: '0.8rem', textAlign: 'center', marginTop: '32px', paddingTop: '16px', borderTop: '1px dashed #cbd5e1' }}>
               <div>
                 <div style={{ fontWeight: 'bold' }}>ĐẠI DIỆN TỔNG THẦU BÊN A</div>
                 <div style={{ fontStyle: 'italic', color: '#64748b', fontSize: '0.75rem' }}>(Ký, ghi rõ họ tên)</div>
