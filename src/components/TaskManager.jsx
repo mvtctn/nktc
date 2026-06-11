@@ -40,10 +40,12 @@ export default function TaskManager({
   // Form states for Job
   const [jobFormData, setJobFormData] = useState({
     name: '',
+    description: '',
     startDate: '',
     endDate: '',
     status: 'Chưa bắt đầu',
-    progress: 0
+    progress: 0,
+    assignees: []
   });
 
   // Form states for Task
@@ -96,18 +98,24 @@ export default function TaskManager({
       onToast('Vui lòng chọn hoặc tạo dự án trước.', true);
       return;
     }
+    handleEditJob(job);
+  };
+
+  const handleEditJob = (job) => {
     if (job) {
       setEditingJob(job);
       setJobFormData({
         name: job.name || '',
+        description: job.description || '',
         startDate: job.startDate || '',
         endDate: job.endDate || '',
         status: job.status || 'Chưa bắt đầu',
-        progress: job.progress || 0
+        progress: job.progress || 0,
+        assignees: job.assignees || []
       });
     } else {
       setEditingJob(null);
-      setJobFormData({ name: '', startDate: '', endDate: '', status: 'Chưa bắt đầu', progress: 0 });
+      setJobFormData({ name: '', description: '', startDate: '', endDate: '', status: 'Chưa bắt đầu', progress: 0, assignees: [] });
     }
     setCurrentView('job-form');
   };
@@ -127,6 +135,17 @@ export default function TaskManager({
     } else {
       setCurrentView('list');
     }
+  };
+
+  const handleToggleJobAssignee = (uid) => {
+    setJobFormData(prev => {
+      const isAssigned = prev.assignees.includes(uid);
+      if (isAssigned) {
+        return { ...prev, assignees: prev.assignees.filter(id => id !== uid) };
+      } else {
+        return { ...prev, assignees: [...prev.assignees, uid] };
+      }
+    });
   };
 
   // Task Handlers
@@ -492,6 +511,29 @@ export default function TaskManager({
                   <Calendar size={16} /> <strong>Kết thúc:</strong> {activeJob.endDate || 'Chưa định'}
                 </span>
               </div>
+              </div>
+              
+              {activeJob.description && (
+                <div style={{ marginTop: '16px', color: 'var(--text-secondary)', fontSize: '0.95rem', lineHeight: '1.5', whiteSpace: 'pre-wrap', backgroundColor: 'rgba(255,255,255,0.02)', padding: '12px', borderRadius: '8px', borderLeft: '3px solid var(--accent)' }}>
+                  {activeJob.description}
+                </div>
+              )}
+
+              {activeJob.assignees && activeJob.assignees.length > 0 && (
+                <div style={{ marginTop: '16px', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                  <span style={{ fontSize: '0.9rem', color: 'var(--text-light)', marginRight: '8px' }}>Nhân sự thực hiện:</span>
+                  {activeJob.assignees.map(uid => {
+                    const member = members.find(m => m.uid === uid);
+                    if (!member) return null;
+                    return (
+                      <div key={uid} style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'rgba(0,0,0,0.2)', padding: '4px 10px', borderRadius: '16px', border: '1px solid var(--border)', fontSize: '0.85rem' }}>
+                        <UserAvatar name={member.displayName || member.email} />
+                        <span style={{ color: 'var(--text-primary)' }}>{member.displayName || member.email}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
             
             <div style={{ display: 'flex', gap: '12px' }}>
@@ -612,6 +654,17 @@ export default function TaskManager({
               />
             </div>
 
+            <div className="form-group" style={{ margin: 0 }}>
+              <label>Mô tả công việc</label>
+              <textarea 
+                className="form-control" 
+                rows="3"
+                value={jobFormData.description} 
+                onChange={e => setJobFormData({...jobFormData, description: e.target.value})}
+                placeholder="Nhập mô tả chi tiết công việc..."
+              ></textarea>
+            </div>
+
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px' }}>
               <div className="form-group" style={{ margin: 0 }}>
                 <label>Ngày bắt đầu</label>
@@ -656,6 +709,37 @@ export default function TaskManager({
                   onChange={e => setJobFormData({...jobFormData, progress: e.target.value})}
                 />
                 <small style={{ color: 'var(--text-light)', display: 'block', marginTop: '6px' }}>Tự động tính nếu có Task con</small>
+              </div>
+            </div>
+
+            <div className="form-group" style={{ margin: 0 }}>
+              <label>Phân công nhân sự</label>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', padding: '16px', backgroundColor: 'rgba(0,0,0,0.2)', borderRadius: '6px', border: '1px solid var(--border)' }}>
+                {members.map(member => {
+                  const isAssigned = jobFormData.assignees.includes(member.uid);
+                  return (
+                    <div 
+                      key={member.uid} 
+                      onClick={() => handleToggleJobAssignee(member.uid)}
+                      style={{
+                        padding: '6px 12px',
+                        borderRadius: '20px',
+                        backgroundColor: isAssigned ? 'rgba(0, 229, 255, 0.15)' : 'rgba(255, 255, 255, 0.05)',
+                        color: isAssigned ? 'var(--accent)' : 'var(--text-secondary)',
+                        border: `1px solid ${isAssigned ? 'var(--accent)' : 'var(--border)'}`,
+                        cursor: 'pointer',
+                        fontSize: '0.85rem',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        transition: 'all 0.2s'
+                      }}
+                    >
+                      <UserAvatar name={member.displayName || member.email} />
+                      {member.displayName || member.email}
+                    </div>
+                  );
+                })}
               </div>
             </div>
 
