@@ -1,15 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Plus, 
-  ChevronDown, 
-  ChevronUp, 
+  ChevronRight, 
   Edit, 
   Trash2, 
   CheckCircle, 
   Clock, 
   AlertCircle,
   Users,
-  ArrowLeft
+  ArrowLeft,
+  MapPin,
+  FolderOpen,
+  Calendar
 } from 'lucide-react';
 
 export default function TaskManager({
@@ -28,11 +30,12 @@ export default function TaskManager({
   isOffline,
   isSuperAdmin
 }) {
-  const [expandedJobs, setExpandedJobs] = useState({});
-  const [currentView, setCurrentView] = useState('list'); // 'list' | 'job-form' | 'task-form'
+  const [currentView, setCurrentView] = useState(!activeProjectId ? 'project-list' : 'list'); 
+  // 'project-list' | 'list' | 'job-detail' | 'job-form' | 'task-form'
+  
+  const [activeJobId, setActiveJobId] = useState(null);
   const [editingJob, setEditingJob] = useState(null);
   const [editingTask, setEditingTask] = useState(null);
-  const [activeJobIdForTask, setActiveJobIdForTask] = useState(null);
 
   // Form states for Job
   const [jobFormData, setJobFormData] = useState({
@@ -53,11 +56,22 @@ export default function TaskManager({
     assignees: [] // Array of member UIDs
   });
 
+  const activeProject = projects.find(p => p.id === activeProjectId);
   const activeProjectJobs = jobs.filter(j => j.projectId === activeProjectId);
-  const activeProjectTasks = tasks.filter(t => t.projectId === activeProjectId);
+  const activeJob = jobs.find(j => j.id === activeJobId);
+  const activeJobTasks = tasks.filter(t => t.jobId === activeJobId);
 
-  const toggleJob = (jobId) => {
-    setExpandedJobs(prev => ({ ...prev, [jobId]: !prev[jobId] }));
+  // Sync current view if activeProjectId changes from outside
+  useEffect(() => {
+    if (activeProjectId && currentView === 'project-list') {
+      setCurrentView('list');
+    }
+  }, [activeProjectId]);
+
+  const getInitials = (name) => {
+    if (!name) return 'PJ';
+    const clean = name.replace(/Nhà máy|Dự án|Công trình/gi, '').trim();
+    return clean.split(' ').slice(0, 2).map(w => w[0]?.toUpperCase()).join('') || 'PJ';
   };
 
   const getStatusColor = (status) => {
@@ -77,7 +91,7 @@ export default function TaskManager({
   };
 
   const calculateJobProgress = (jobId) => {
-    const jobTasks = activeProjectTasks.filter(t => t.jobId === jobId);
+    const jobTasks = tasks.filter(t => t.jobId === jobId);
     if (jobTasks.length === 0) return 0;
     const totalProgress = jobTasks.reduce((sum, task) => sum + Number(task.progress), 0);
     return Math.round(totalProgress / jobTasks.length);
@@ -111,14 +125,21 @@ export default function TaskManager({
       onToast('Vui lòng nhập tên công việc', true);
       return;
     }
-    const data = { ...jobFormData, id: editingJob ? editingJob.id : null };
+    const data = { ...jobFormData, id: editingJob ? editingJob.id : null, projectId: activeProjectId };
     onSaveJob(data);
-    setCurrentView('list');
+    
+    // Return to appropriate view
+    if (editingJob && activeJobId === editingJob.id) {
+      setCurrentView('job-detail');
+    } else {
+      setCurrentView('list');
+    }
   };
 
   // Task Handlers
   const handleOpenTaskForm = (jobId, task = null) => {
-    setActiveJobIdForTask(jobId);
+    if (!jobId) return;
+    setActiveJobId(jobId);
     if (task) {
       setEditingTask(task);
       setTaskFormData({
@@ -145,10 +166,11 @@ export default function TaskManager({
     const data = { 
       ...taskFormData, 
       id: editingTask ? editingTask.id : null,
-      jobId: activeJobIdForTask 
+      jobId: activeJobId,
+      projectId: activeProjectId
     };
     onSaveTask(data);
-    setCurrentView('list');
+    setCurrentView('job-detail');
   };
 
   const handleToggleAssignee = (uid) => {
@@ -169,7 +191,7 @@ export default function TaskManager({
     if (p >= 70) color = '#4caf50'; // Green
 
     return (
-      <div className="progress-bar-bg" style={{ width: '100%', backgroundColor: '#333', borderRadius: '4px', height: '8px', marginTop: '8px' }}>
+      <div className="progress-bar-bg" style={{ width: '100%', backgroundColor: '#333', borderRadius: '4px', height: '8px', marginTop: '8px', overflow: 'hidden' }}>
         <div 
           className="progress-bar-fill" 
           style={{ 
@@ -184,12 +206,383 @@ export default function TaskManager({
     );
   };
 
+  // ============================================================================
+  // TẦNG 1: TRANG CHỦ - DANH SÁCH DỰ ÁN (PROJECT LIST)
+  // ============================================================================
+  if (currentView === 'project-list') {
+    return (
+      <div className="container-fluid task-manager" id="task-manager-panel">
+        <div className="section-header" style={{ marginBottom: '24px' }}>
+          <h2 style={{ fontSize: '1.25rem', fontWeight: '800', margin: 0, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <CheckCircle className="icon-blue" size={22} color="var(--accent)" />
+            Dự án đang triển khai
+          </h2>
+        </div>
+
+        {projects.length === 0 ? (
+          <div className="glass-card" style={{ padding: '60px', textAlign: 'center', color: 'var(--text-secondary)' }}>
+            Chưa có dự án nào. Vui lòng tạo dự án mới ở phần Cài đặt.
+          </div>
+        ) : (
+          <div className="project-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '20px' }}>
+            {projects.map(proj => {
+              const projJobs = jobs.filter(j => j.projectId === proj.id);
+              const projTasks = tasks.filter(t => t.projectId === proj.id);
+              return (
+                <div 
+                  key={proj.id} 
+                  className="glass-card clickable"
+                  onClick={() => {
+                    setActiveProjectId(proj.id);
+                    setCurrentView('list');
+                  }}
+                  style={{ 
+                    padding: '20px',
+                    borderLeft: '5px solid var(--secondary)',
+                    background: 'var(--bg-card)',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '12px'
+                  }}
+                >
+                  <div style={{ display: 'flex', gap: '14px', alignItems: 'flex-start' }}>
+                    <div style={{ 
+                      width: '46px', 
+                      height: '46px', 
+                      borderRadius: '10px', 
+                      background: 'linear-gradient(135deg, var(--secondary), #0077b6)', 
+                      color: 'white',
+                      fontWeight: '800',
+                      fontSize: '1rem',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexShrink: 0
+                    }}>
+                      {getInitials(proj.name)}
+                    </div>
+
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <h4 style={{ fontSize: '1.05rem', fontWeight: '700', color: 'var(--text-primary)', margin: '0 0 6px' }}>
+                        {proj.name}
+                      </h4>
+                      <div style={{ display: 'flex', alignItems: 'flex-start', gap: '4px', color: 'var(--text-secondary)', fontSize: '0.8rem', marginBottom: '8px' }}>
+                        <MapPin size={12} style={{ flexShrink: 0, marginTop: '2px' }} />
+                        <span style={{ wordBreak: 'break-word', whiteSpace: 'normal', lineHeight: '1.4' }}>
+                          {proj.address || 'Chưa cấu hình địa chỉ'}
+                        </span>
+                      </div>
+                      <div style={{ display: 'flex', gap: '12px', fontSize: '0.75rem', color: 'var(--text-light)', background: 'rgba(255,255,255,0.05)', padding: '6px 10px', borderRadius: '6px' }}>
+                        <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><FolderOpen size={12} /> <strong>{projJobs.length}</strong> Công việc</span>
+                        <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><CheckCircle size={12} /> <strong>{projTasks.length}</strong> Task con</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // ============================================================================
+  // TẦNG 2: CHI TIẾT DỰ ÁN & DANH SÁCH CÔNG VIỆC (JOB LIST)
+  // ============================================================================
+  if (currentView === 'list') {
+    return (
+      <div className="container-fluid task-manager" id="task-manager-panel">
+        {/* Header and Back Button */}
+        <div className="section-header" style={{ marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+          <button className="btn btn-secondary btn-sm" onClick={() => setCurrentView('project-list')} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <ArrowLeft size={16} /> Danh sách Dự án
+          </button>
+          <h2 style={{ fontSize: '1.25rem', fontWeight: '800', margin: 0, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            Chi tiết Dự án
+          </h2>
+        </div>
+
+        {/* Project Information Card */}
+        {activeProject ? (
+          <div className="glass-card" style={{ padding: '20px', marginBottom: '24px', display: 'flex', gap: '16px', alignItems: 'center', flexWrap: 'wrap' }}>
+            <div style={{ 
+              width: '56px', 
+              height: '56px', 
+              borderRadius: '12px', 
+              background: 'linear-gradient(135deg, var(--secondary), #0077b6)', 
+              color: 'white',
+              fontWeight: '800',
+              fontSize: '1.2rem',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0
+            }}>
+              {getInitials(activeProject.name)}
+            </div>
+            <div style={{ flex: 1, minWidth: '250px' }}>
+              <h3 style={{ margin: '0 0 6px 0', color: 'var(--text-primary)', fontSize: '1.2rem' }}>{activeProject.name}</h3>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
+                <MapPin size={14} />
+                <span>{activeProject.address || 'Chưa có địa chỉ'}</span>
+              </div>
+            </div>
+            <div style={{ display: 'flex', gap: '16px', background: 'rgba(255,255,255,0.05)', padding: '12px 20px', borderRadius: '8px' }}>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: '1.2rem', fontWeight: 'bold', color: 'var(--accent)' }}>{activeProjectJobs.length}</div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-light)', textTransform: 'uppercase' }}>Công việc</div>
+              </div>
+              <div style={{ width: '1px', background: 'var(--border)' }}></div>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: '1.2rem', fontWeight: 'bold', color: 'var(--accent)' }}>
+                  {tasks.filter(t => t.projectId === activeProject.id).length}
+                </div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-light)', textTransform: 'uppercase' }}>Task con</div>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="glass-card" style={{ padding: '20px', marginBottom: '24px', color: 'var(--text-secondary)' }}>
+            Dự án không tồn tại hoặc đã bị xóa.
+          </div>
+        )}
+
+        {/* Jobs Section Header */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
+          <h3 style={{ margin: 0, color: 'var(--text-primary)', fontSize: '1.1rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <FolderOpen className="icon-blue" size={20} />
+            Các Công việc đang triển khai
+          </h3>
+          <button className="btn btn-primary" onClick={() => handleOpenJobForm()}>
+            <Plus size={16} /> Thêm Công việc mới
+          </button>
+        </div>
+
+        {/* Job List */}
+        <div className="job-list" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          {activeProjectJobs.length === 0 ? (
+            <div className="glass-card" style={{ padding: '40px', textAlign: 'center', color: 'var(--text-secondary)' }}>
+              Chưa có công việc nào trong dự án này.
+            </div>
+          ) : (
+            activeProjectJobs.map(job => {
+              const jobTasks = tasks.filter(t => t.jobId === job.id);
+              const displayProgress = jobTasks.length > 0 ? calculateJobProgress(job.id) : job.progress;
+
+              return (
+                <div 
+                  key={job.id} 
+                  className="glass-card clickable" 
+                  onClick={() => {
+                    setActiveJobId(job.id);
+                    setCurrentView('job-detail');
+                  }}
+                  style={{ 
+                    padding: '20px', 
+                    cursor: 'pointer', 
+                    display: 'flex', 
+                    flexDirection: 'column', 
+                    gap: '12px',
+                    transition: 'transform 0.2s, box-shadow 0.2s',
+                  }}
+                  onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateX(4px)'; e.currentTarget.style.borderColor = 'var(--secondary)'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.borderColor = 'var(--border)'; }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '12px' }}>
+                    <div style={{ flex: 1, minWidth: '200px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap', marginBottom: '8px' }}>
+                        <h3 style={{ margin: 0, fontSize: '1.1rem', color: 'var(--text-primary)', fontWeight: 'bold' }}>{job.name}</h3>
+                        <span className="status-badge" style={{ backgroundColor: getStatusColor(job.status) + '22', color: getStatusColor(job.status), padding: '4px 10px', borderRadius: '12px', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '4px', border: `1px solid ${getStatusColor(job.status)}55` }}>
+                          {getStatusIcon(job.status)} {job.status}
+                        </span>
+                      </div>
+                      
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '16px', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+                        <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          <Calendar size={14} /> {job.startDate || '--'} đến {job.endDate || '--'}
+                        </span>
+                        <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          <CheckCircle size={14} /> {jobTasks.length} task con
+                        </span>
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                      <button className="btn-icon" onClick={(e) => { e.stopPropagation(); handleOpenJobForm(job); }} title="Sửa công việc">
+                        <Edit size={16} />
+                      </button>
+                      <button className="btn-icon danger" onClick={(e) => { e.stopPropagation(); if(window.confirm('Xóa công việc này và tất cả task con?')) onDeleteJob(job.id); }} title="Xóa công việc">
+                        <Trash2 size={16} />
+                      </button>
+                      <div style={{ display: 'flex', alignItems: 'center', color: 'var(--accent)', marginLeft: '8px' }}>
+                        <span style={{ fontSize: '0.9rem', fontWeight: 'bold', marginRight: '4px' }}>Chi tiết</span>
+                        <ChevronRight size={18} />
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <div style={{ flex: 1 }}>{renderProgressBar(displayProgress)}</div>
+                    <span style={{ fontWeight: 'bold', fontSize: '0.9rem', color: 'var(--text-primary)', width: '40px', textAlign: 'right' }}>{displayProgress}%</span>
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // ============================================================================
+  // TẦNG 3: CHI TIẾT CÔNG VIỆC & DANH SÁCH TASK (JOB DETAIL)
+  // ============================================================================
+  if (currentView === 'job-detail') {
+    if (!activeJob) {
+      return (
+        <div className="container-fluid task-manager" id="task-manager-panel">
+          <button className="btn btn-secondary btn-sm" onClick={() => setCurrentView('list')}>
+            <ArrowLeft size={16} /> Quay lại
+          </button>
+          <div className="glass-card" style={{ padding: '40px', textAlign: 'center', marginTop: '20px', color: 'var(--text-secondary)' }}>
+            Công việc không tồn tại.
+          </div>
+        </div>
+      );
+    }
+
+    const jobTasks = tasks.filter(t => t.jobId === activeJob.id);
+    const displayProgress = jobTasks.length > 0 ? calculateJobProgress(activeJob.id) : activeJob.progress;
+
+    return (
+      <div className="container-fluid task-manager" id="task-manager-panel">
+        {/* Header and Back Button */}
+        <div className="section-header" style={{ marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+          <button className="btn btn-secondary btn-sm" onClick={() => setCurrentView('list')} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <ArrowLeft size={16} /> Chi tiết Dự án
+          </button>
+          <h2 style={{ fontSize: '1.25rem', fontWeight: '800', margin: 0, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            Chi tiết Công việc
+          </h2>
+        </div>
+
+        {/* Job Information Section */}
+        <div className="glass-card" style={{ padding: '24px', marginBottom: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px' }}>
+            <div style={{ flex: 1, minWidth: '250px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px', flexWrap: 'wrap' }}>
+                <h3 style={{ margin: 0, color: 'var(--text-primary)', fontSize: '1.4rem' }}>{activeJob.name}</h3>
+                <span className="status-badge" style={{ backgroundColor: getStatusColor(activeJob.status) + '22', color: getStatusColor(activeJob.status), padding: '6px 12px', borderRadius: '12px', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '6px', border: `1px solid ${getStatusColor(activeJob.status)}55` }}>
+                  {getStatusIcon(activeJob.status)} {activeJob.status}
+                </span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '24px', color: 'var(--text-secondary)', fontSize: '0.95rem', flexWrap: 'wrap' }}>
+                <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <Calendar size={16} /> <strong>Bắt đầu:</strong> {activeJob.startDate || 'Chưa định'}
+                </span>
+                <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <Calendar size={16} /> <strong>Kết thúc:</strong> {activeJob.endDate || 'Chưa định'}
+                </span>
+              </div>
+            </div>
+            
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <button className="btn btn-secondary" onClick={() => handleOpenJobForm(activeJob)} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <Edit size={16} /> Chỉnh sửa
+              </button>
+            </div>
+          </div>
+
+          <div style={{ padding: '16px', background: 'rgba(0,0,0,0.2)', borderRadius: '8px', border: '1px solid var(--border)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+              <span style={{ color: 'var(--text-secondary)', fontWeight: 'bold' }}>Tiến độ tổng thể</span>
+              <span style={{ color: 'var(--accent)', fontWeight: 'bold' }}>{displayProgress}%</span>
+            </div>
+            {renderProgressBar(displayProgress)}
+          </div>
+        </div>
+
+        {/* Tasks Section */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
+          <h3 style={{ margin: 0, color: 'var(--text-primary)', fontSize: '1.1rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <CheckCircle className="icon-blue" size={20} />
+            Danh sách Task cần làm ({jobTasks.length})
+          </h3>
+          <button className="btn btn-primary" onClick={() => handleOpenTaskForm(activeJob.id)}>
+            <Plus size={16} /> Thêm Task mới
+          </button>
+        </div>
+
+        <div className="task-grid" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          {jobTasks.length === 0 ? (
+            <div className="glass-card" style={{ padding: '40px', textAlign: 'center', color: 'var(--text-secondary)' }}>
+              Chưa có task chi tiết nào cho công việc này.
+            </div>
+          ) : (
+            jobTasks.map(task => (
+              <div key={task.id} className="glass-card" style={{ padding: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
+                <div style={{ flex: 1, minWidth: '250px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px', flexWrap: 'wrap' }}>
+                    <span style={{ fontWeight: '600', color: 'var(--text-primary)', fontSize: '1.05rem' }}>{task.name}</span>
+                    <span className="status-badge" style={{ backgroundColor: getStatusColor(task.status) + '15', color: getStatusColor(task.status), border: `1px solid ${getStatusColor(task.status)}44`, padding: '4px 8px', borderRadius: '4px', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      {getStatusIcon(task.status)} {task.status}
+                    </span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '20px', fontSize: '0.85rem', color: 'var(--text-secondary)', flexWrap: 'wrap' }}>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <Calendar size={14} /> {task.startDate || '--'} đến {task.endDate || '--'}
+                    </span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <Users size={14} />
+                      {task.assignees && task.assignees.length > 0 ? (
+                        <div style={{ display: 'flex', gap: '6px' }}>
+                          {task.assignees.map(uid => {
+                            const member = members.find(m => m.uid === uid);
+                            return member ? (
+                              <span key={uid} style={{ background: 'rgba(255,255,255,0.05)', padding: '2px 8px', borderRadius: '12px', color: 'var(--text-primary)' }}>
+                                {member.displayName}
+                              </span>
+                            ) : null;
+                          })}
+                        </div>
+                      ) : (
+                        <span style={{ color: 'var(--text-light)', fontStyle: 'italic' }}>Chưa phân công</span>
+                      )}
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '12px' }}>
+                    <div style={{ flex: 1 }}>{renderProgressBar(task.progress)}</div>
+                    <span style={{ color: 'var(--accent)', fontWeight: 'bold', fontSize: '0.85rem', width: '35px', textAlign: 'right' }}>{task.progress}%</span>
+                  </div>
+                </div>
+                
+                <div style={{ display: 'flex', gap: '8px', borderLeft: '1px solid var(--border)', paddingLeft: '16px' }}>
+                  <button className="btn-icon" onClick={() => handleOpenTaskForm(activeJob.id, task)} title="Sửa Task">
+                    <Edit size={16} />
+                  </button>
+                  <button className="btn-icon danger" onClick={() => { if(window.confirm('Bạn có chắc chắn muốn xóa task này?')) onDeleteTask(task.id); }} title="Xóa Task">
+                    <Trash2 size={16} />
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // ============================================================================
   // Render Job Form View
+  // ============================================================================
   if (currentView === 'job-form') {
     return (
       <div className="container-fluid task-manager" id="task-manager-panel">
         <div className="section-header" style={{ marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <button className="btn btn-secondary btn-sm" onClick={() => setCurrentView('list')} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <button className="btn btn-secondary btn-sm" onClick={() => setCurrentView(activeJobId === editingJob?.id ? 'job-detail' : 'list')} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             <ArrowLeft size={16} /> Quay lại
           </button>
           <h2 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -261,7 +654,7 @@ export default function TaskManager({
               <button type="submit" className="btn btn-primary" style={{ flex: 1, justifyContent: 'center' }}>
                 Lưu Công việc
               </button>
-              <button type="button" className="btn btn-secondary" onClick={() => setCurrentView('list')} style={{ flex: 1, justifyContent: 'center' }}>
+              <button type="button" className="btn btn-secondary" onClick={() => setCurrentView(activeJobId === editingJob?.id ? 'job-detail' : 'list')} style={{ flex: 1, justifyContent: 'center' }}>
                 Hủy
               </button>
             </div>
@@ -271,12 +664,14 @@ export default function TaskManager({
     );
   }
 
+  // ============================================================================
   // Render Task Form View
+  // ============================================================================
   if (currentView === 'task-form') {
     return (
       <div className="container-fluid task-manager" id="task-manager-panel">
         <div className="section-header" style={{ marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <button className="btn btn-secondary btn-sm" onClick={() => setCurrentView('list')} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <button className="btn btn-secondary btn-sm" onClick={() => setCurrentView('job-detail')} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             <ArrowLeft size={16} /> Quay lại
           </button>
           <h2 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -379,7 +774,7 @@ export default function TaskManager({
               <button type="submit" className="btn btn-primary" style={{ flex: 1, justifyContent: 'center' }}>
                 Lưu Task
               </button>
-              <button type="button" className="btn btn-secondary" onClick={() => setCurrentView('list')} style={{ flex: 1, justifyContent: 'center' }}>
+              <button type="button" className="btn btn-secondary" onClick={() => setCurrentView('job-detail')} style={{ flex: 1, justifyContent: 'center' }}>
                 Hủy
               </button>
             </div>
@@ -389,147 +784,7 @@ export default function TaskManager({
     );
   }
 
-  // Render List View
-  return (
-    <div className="container-fluid task-manager" id="task-manager-panel">
-      <div className="section-header" style={{ marginBottom: '24px' }}>
-        <h2 style={{ fontSize: '1.25rem', fontWeight: '800', margin: 0, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <CheckCircle className="icon-blue" size={22} color="var(--accent)" />
-          Quản lý Công việc & Tiến độ
-        </h2>
-      </div>
-
-      {/* Project Selector */}
-      <div className="glass-card" style={{ padding: '20px', marginBottom: '24px' }}>
-        <div className="form-group" style={{ margin: 0 }}>
-          <label>Dự án hiện tại</label>
-          <select 
-            value={activeProjectId || ''} 
-            onChange={(e) => setActiveProjectId(e.target.value)}
-            className="form-input"
-          >
-            {projects.length === 0 && <option value="">-- Chưa có dự án nào --</option>}
-            {projects.map(p => (
-              <option key={p.id} value={p.id}>{p.name}</option>
-            ))}
-          </select>
-        </div>
-      </div>
-
-      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '16px' }}>
-        <button className="btn btn-primary" onClick={() => handleOpenJobForm()}>
-          <Plus size={18} /> Thêm Công việc mới
-        </button>
-      </div>
-
-      {/* Job List */}
-      <div className="job-list">
-        {activeProjectJobs.length === 0 ? (
-          <div className="empty-state">
-            <p>Chưa có công việc nào trong dự án này.</p>
-          </div>
-        ) : (
-          activeProjectJobs.map(job => {
-            const isExpanded = expandedJobs[job.id];
-            const jobTasks = activeProjectTasks.filter(t => t.jobId === job.id);
-            // Auto calculate progress if there are tasks, else use job's manually set progress
-            const displayProgress = jobTasks.length > 0 ? calculateJobProgress(job.id) : job.progress;
-
-            return (
-              <div key={job.id} className="job-card" style={{ backgroundColor: 'var(--bg-card)', borderRadius: '8px', marginBottom: '16px', border: '1px solid var(--border)', overflow: 'hidden' }}>
-                <div 
-                  className="job-header" 
-                  style={{ padding: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', borderBottom: isExpanded ? '1px solid var(--border)' : 'none' }}
-                  onClick={() => toggleJob(job.id)}
-                >
-                  <div style={{ flex: 1 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
-                      <h3 style={{ margin: 0, fontSize: '1.1rem', color: 'var(--text-primary)' }}>{job.name}</h3>
-                      <span className="status-badge" style={{ backgroundColor: getStatusColor(job.status) + '22', color: getStatusColor(job.status), padding: '4px 10px', borderRadius: '12px', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '4px', border: `1px solid ${getStatusColor(job.status)}55` }}>
-                        {getStatusIcon(job.status)} {job.status}
-                      </span>
-                    </div>
-                    <div style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginTop: '8px', display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
-                      <span>Bắt đầu: {job.startDate || '---'}</span>
-                      <span>Kết thúc: {job.endDate || '---'}</span>
-                      <span style={{ fontWeight: '600', color: 'var(--text-primary)' }}>Tiến độ: {displayProgress}%</span>
-                    </div>
-                    {renderProgressBar(displayProgress)}
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginLeft: '16px' }}>
-                    <button className="btn-icon" onClick={(e) => { e.stopPropagation(); handleOpenJobForm(job); }} title="Sửa công việc">
-                      <Edit size={16} />
-                    </button>
-                    <button className="btn-icon danger" onClick={(e) => { e.stopPropagation(); if(window.confirm('Xóa công việc này và tất cả task con?')) onDeleteJob(job.id); }} title="Xóa công việc">
-                      <Trash2 size={16} />
-                    </button>
-                    {isExpanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
-                  </div>
-                </div>
-
-                {isExpanded && (
-                  <div className="job-body" style={{ padding: '16px', backgroundColor: 'rgba(0,0,0,0.1)' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
-                      <h4 style={{ margin: 0, color: 'var(--text-secondary)' }}>Danh sách Task chi tiết ({jobTasks.length})</h4>
-                      <button className="btn btn-secondary btn-sm" onClick={() => handleOpenTaskForm(job.id)}>
-                        <Plus size={14} /> Thêm Task
-                      </button>
-                    </div>
-
-                    {jobTasks.length === 0 ? (
-                      <div style={{ color: 'var(--text-light)', fontStyle: 'italic', fontSize: '0.9rem' }}>Chưa có task chi tiết nào.</div>
-                    ) : (
-                      <div className="task-grid" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                        {jobTasks.map(task => (
-                          <div key={task.id} className="task-item" style={{ backgroundColor: 'var(--bg-card)', padding: '16px', borderRadius: '8px', border: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
-                            <div style={{ flex: 1, minWidth: '200px' }}>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px', flexWrap: 'wrap' }}>
-                                <span style={{ fontWeight: '600', color: 'var(--text-primary)' }}>{task.name}</span>
-                                <span className="status-badge" style={{ backgroundColor: getStatusColor(task.status) + '15', color: getStatusColor(task.status), border: `1px solid ${getStatusColor(task.status)}44`, padding: '2px 8px', borderRadius: '4px', fontSize: '0.75rem' }}>
-                                  {task.status}
-                                </span>
-                              </div>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '16px', fontSize: '0.85rem', color: 'var(--text-secondary)', flexWrap: 'wrap' }}>
-                                <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                  <Clock size={12} /> {task.startDate || '--'} đến {task.endDate || '--'}
-                                </span>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                  <Users size={12} />
-                                  {task.assignees && task.assignees.length > 0 ? (
-                                    <span style={{ color: 'var(--text-primary)' }}>
-                                      {task.assignees.map(uid => members.find(m => m.uid === uid)?.displayName || 'Unknown').join(', ')}
-                                    </span>
-                                  ) : (
-                                    <span style={{ color: 'var(--text-light)' }}>Chưa phân công</span>
-                                  )}
-                                </div>
-                                <span style={{ color: 'var(--accent)', fontWeight: 'bold' }}>{task.progress}%</span>
-                              </div>
-                              <div style={{ marginTop: '8px' }}>
-                                {renderProgressBar(task.progress)}
-                              </div>
-                            </div>
-                            <div style={{ display: 'flex', gap: '8px' }}>
-                              <button className="btn-icon small" onClick={() => handleOpenTaskForm(job.id, task)}>
-                                <Edit size={16} />
-                              </button>
-                              <button className="btn-icon danger small" onClick={() => { if(window.confirm('Xóa task này?')) onDeleteTask(task.id); }}>
-                                <Trash2 size={16} />
-                              </button>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            );
-          })
-        )}
-      </div>
-    </div>
-  );
+  return null;
 }
 
 function UserAvatar({ name }) {
