@@ -323,13 +323,14 @@ export default function TaskManager({
 
       {/* Modal Job */}
       {jobModalOpen && (
-        <div className="modal-overlay" style={{ zIndex: 1000 }}>
-          <div className="modal-content" style={{ maxWidth: '500px' }}>
+        <div className="modal-backdrop" style={{ zIndex: 1000 }}>
+          <div className="modal-card" style={{ maxWidth: '500px' }}>
             <div className="modal-header">
-              <h3>{editingJob ? 'Sửa Công việc' : 'Thêm Công việc mới'}</h3>
+              <h3 className="modal-title">{editingJob ? 'Sửa Công việc' : 'Thêm Công việc mới'}</h3>
             </div>
             <form onSubmit={handleSubmitJob}>
-              <div className="form-group">
+              <div className="modal-body">
+                <div className="form-group">
                 <label>Tên hạng mục công việc *</label>
                 <input 
                   type="text" 
@@ -384,7 +385,8 @@ export default function TaskManager({
                   <small style={{ color: '#8892b0' }}>Tự động tính nếu có Task con</small>
                 </div>
               </div>
-              <div className="modal-actions">
+              </div>
+              <div className="modal-footer">
                 <button type="button" className="btn btn-secondary" onClick={() => setJobModalOpen(false)}>Hủy</button>
                 <button type="submit" className="btn btn-primary">Lưu Công việc</button>
               </div>
@@ -395,13 +397,14 @@ export default function TaskManager({
 
       {/* Modal Task */}
       {taskModalOpen && (
-        <div className="modal-overlay" style={{ zIndex: 1000 }}>
-          <div className="modal-content" style={{ maxWidth: '600px' }}>
+        <div className="modal-backdrop" style={{ zIndex: 1000 }}>
+          <div className="modal-card" style={{ maxWidth: '600px' }}>
             <div className="modal-header">
-              <h3>{editingTask ? 'Sửa Task chi tiết' : 'Thêm Task mới'}</h3>
+              <h3 className="modal-title">{editingTask ? 'Sửa Task chi tiết' : 'Thêm Task mới'}</h3>
             </div>
             <form onSubmit={handleSubmitTask}>
-              <div className="form-group">
+              <div className="modal-body">
+                <div className="form-group">
                 <label>Tên task *</label>
                 <input 
                   type="text" 
@@ -485,7 +488,8 @@ export default function TaskManager({
                   {members.length === 0 && <span style={{ color: '#8892b0', fontSize: '0.9rem' }}>Chưa có thành viên nào trong hệ thống.</span>}
                 </div>
               </div>
-              <div className="modal-actions">
+              </div>
+              <div className="modal-footer">
                 <button type="button" className="btn btn-secondary" onClick={() => setTaskModalOpen(false)}>Hủy</button>
                 <button type="submit" className="btn btn-primary">Lưu Task</button>
               </div>

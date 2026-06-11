@@ -949,10 +949,10 @@ export default function App() {
             
             <div 
               onClick={() => handleSetTab('dashboard')} 
-              style={{ cursor: 'pointer' }}
+              style={{ cursor: 'pointer', flex: 1, minWidth: 0 }}
               title="Về trang chủ Dashboard"
             >
-              <span className="header-title">Project Construction diary</span>
+              <span className="header-title" style={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>Project Construction diary</span>
             </div>
           </div>
 

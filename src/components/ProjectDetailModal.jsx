@@ -277,6 +277,7 @@ export default function ProjectDetailModal({
           background: 'rgba(255,255,255,0.02)',
           borderBottom: '1px solid var(--border)',
           display: 'flex',
+          flexWrap: 'wrap',
           alignItems: 'center',
           gap: '12px',
           flexShrink: 0,

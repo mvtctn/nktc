@@ -235,9 +235,9 @@ export default function Dashboard({
                       )}
                     </h4>
                     
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--text-secondary)', fontSize: '0.78rem', marginBottom: '4px' }}>
-                      <MapPin size={12} style={{ flexShrink: 0 }} />
-                      <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '4px', color: 'var(--text-secondary)', fontSize: '0.78rem', marginBottom: '4px' }}>
+                      <MapPin size={12} style={{ flexShrink: 0, marginTop: '2px' }} />
+                      <span style={{ wordBreak: 'break-word', whiteSpace: 'normal' }}>
                         {proj.address || 'Chưa cấu hình địa chỉ'}
                       </span>
                     </div>
