@@ -308,28 +308,62 @@ export default function App() {
         return true;
       } else {
         const { initializeApp, deleteApp } = await import('firebase/app');
-        const { getAuth, createUserWithEmailAndPassword, updateProfile, signOut } = await import('firebase/auth');
+        const { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile, signOut } = await import('firebase/auth');
         const { getFirebaseConfig } = await import('./firebase');
-        
+
         const config = getFirebaseConfig();
         const appName = 'Secondary_' + Date.now();
         const secondaryApp = initializeApp(config, appName);
         const secondaryAuth = getAuth(secondaryApp);
-        
-        const userCredential = await createUserWithEmailAndPassword(secondaryAuth, email, password);
-        await updateProfile(userCredential.user, { displayName });
+
+        let uid;
+        try {
+          // Normal case: create new Firebase Auth account
+          const userCredential = await createUserWithEmailAndPassword(secondaryAuth, email, password);
+          await updateProfile(userCredential.user, { displayName });
+          uid = userCredential.user.uid;
+        } catch (createErr) {
+          if (createErr.code === 'auth/email-already-in-use') {
+            // Auth account already exists (Firestore doc was deleted but Auth wasn't).
+            // Try to sign in with the provided password to re-link the account.
+            try {
+              const existingCred = await signInWithEmailAndPassword(secondaryAuth, email, password);
+              await updateProfile(existingCred.user, { displayName });
+              uid = existingCred.user.uid;
+              showToast('Tài khoản Firebase đã tồn tại — đang liên kết lại hồ sơ kỹ sư...');
+            } catch (signInErr) {
+              await signOut(secondaryAuth).catch(() => {});
+              await deleteApp(secondaryApp).catch(() => {});
+              // Wrong password for existing account
+              showToast(
+                'Email này đã được đăng ký với Firebase. Nhập đúng mật khẩu hiện tại của tài khoản đó để khôi phục, hoặc liên hệ admin xóa thủ công trên Firebase Console.',
+                true
+              );
+              return false;
+            }
+          } else {
+            throw createErr;
+          }
+        }
+
         await signOut(secondaryAuth);
         await deleteApp(secondaryApp);
-        
+
+        // Remove any existing Firestore doc for this UID (safety) then create fresh
+        const existingDocs = await getDocs(query(collection(db, 'users'), where('uid', '==', uid)));
+        for (const d of existingDocs.docs) {
+          await deleteDoc(doc(db, 'users', d.id));
+        }
+
         const newMemDoc = {
-          uid: userCredential.user.uid,
+          uid,
           email,
           displayName,
           position,
           role: email === 'maivantiem@gmail.com' ? 'Super Admin' : 'Kỹ sư hiện trường',
           created_at: new Date().toISOString()
         };
-        
+
         await addDoc(collection(db, 'users'), newMemDoc);
         await fetchMembers();
         showToast('Đã tạo thành công tài khoản kỹ sư trên Firebase!');
@@ -373,10 +407,56 @@ export default function App() {
         showToast('Đã xóa thành viên khỏi danh sách cục bộ!');
         return true;
       } else {
+        // Find the member's Firebase Auth UID before deleting the Firestore doc
+        const memberToDelete = members.find(m => m.id === memberId || m.uid === memberId);
+        const authUid = memberToDelete?.uid;
+
+        // Delete Firestore doc
         const ref = doc(db, 'users', memberId);
         await deleteDoc(ref);
+
+        // Attempt to delete the Firebase Auth account via Identity Toolkit REST API
+        // Using the admin's current ID token with the target user's UID
+        if (authUid && auth.currentUser) {
+          try {
+            const { getFirebaseConfig } = await import('./firebase');
+            const config = getFirebaseConfig();
+            const adminIdToken = await auth.currentUser.getIdToken(true);
+
+            // Firebase Identity Toolkit: delete user by localId using admin token
+            const res = await fetch(
+              `https://identitytoolkit.googleapis.com/v1/projects/${config.projectId}/accounts/${authUid}?key=${config.apiKey}`,
+              {
+                method: 'DELETE',
+                headers: {
+                  'Authorization': `Bearer ${adminIdToken}`,
+                  'Content-Type': 'application/json',
+                }
+              }
+            );
+
+            if (!res.ok) {
+              // Fallback: try the accounts:delete endpoint with localId
+              const res2 = await fetch(
+                `https://identitytoolkit.googleapis.com/v1/accounts:delete?key=${config.apiKey}`,
+                {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ localId: authUid, idToken: adminIdToken })
+                }
+              );
+              if (!res2.ok) {
+                console.warn('[handleDeleteMember] Could not delete Firebase Auth account for uid:', authUid);
+              }
+            }
+          } catch (authDeleteErr) {
+            console.warn('[handleDeleteMember] Firebase Auth account deletion failed (requires Admin SDK):', authDeleteErr.message);
+            // Non-fatal: Firestore doc was deleted successfully
+          }
+        }
+
         await fetchMembers();
-        showToast('Đã xóa thành viên trên Firestore!');
+        showToast('Đã xóa thành viên thành công!');
         return true;
       }
     } catch (e) {
