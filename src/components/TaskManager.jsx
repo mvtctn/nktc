@@ -460,11 +460,16 @@ export default function TaskManager({
     return (
       <div className="container-fluid task-manager" id="task-manager-panel">
         {/* Header and Back Button */}
-        <div className="section-header" style={{ marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
-          <button className="btn btn-secondary btn-sm" onClick={() => setCurrentView('list')} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <ArrowLeft size={16} /> Chi tiết Dự án
+        <div className="section-header" style={{ marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <button 
+            className="btn-icon" 
+            onClick={() => setCurrentView('list')} 
+            style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border)' }}
+            title="Quay lại Chi tiết Dự án"
+          >
+            <ArrowLeft size={20} />
           </button>
-          <h2 style={{ fontSize: '1.25rem', fontWeight: '800', margin: 0, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <h2 style={{ fontSize: '1.25rem', fontWeight: '800', margin: 0, color: 'var(--text-primary)' }}>
             Chi tiết Công việc
           </h2>
         </div>
@@ -506,13 +511,17 @@ export default function TaskManager({
         </div>
 
         {/* Tasks Section */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
-          <h3 style={{ margin: 0, color: 'var(--text-primary)', fontSize: '1.1rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <CheckCircle className="icon-blue" size={20} />
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', gap: '12px' }}>
+          <h3 style={{ margin: 0, color: 'var(--text-primary)', fontSize: '1.05rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <CheckCircle className="icon-blue" size={18} />
             Danh sách Task cần làm ({jobTasks.length})
           </h3>
-          <button className="btn btn-primary" onClick={() => handleOpenTaskForm(activeJob.id)}>
-            <Plus size={16} /> Thêm Task mới
+          <button 
+            className="btn btn-primary btn-sm" 
+            onClick={() => handleOpenTaskForm(activeJob.id)}
+            style={{ display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap' }}
+          >
+            <Plus size={14} /> <span className="hide-on-mobile">Thêm Task mới</span>
           </button>
         </div>
 
