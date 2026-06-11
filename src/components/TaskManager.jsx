@@ -187,7 +187,7 @@ export default function TaskManager({
   // Render Job Form View
   if (currentView === 'job-form') {
     return (
-      <div className="task-manager">
+      <div className="container-fluid task-manager" id="task-manager-panel">
         <div className="section-header" style={{ marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '12px' }}>
           <button className="btn btn-secondary btn-sm" onClick={() => setCurrentView('list')} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             <ArrowLeft size={16} /> Quay lại
@@ -274,7 +274,7 @@ export default function TaskManager({
   // Render Task Form View
   if (currentView === 'task-form') {
     return (
-      <div className="task-manager">
+      <div className="container-fluid task-manager" id="task-manager-panel">
         <div className="section-header" style={{ marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '12px' }}>
           <button className="btn btn-secondary btn-sm" onClick={() => setCurrentView('list')} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             <ArrowLeft size={16} /> Quay lại
@@ -391,17 +391,17 @@ export default function TaskManager({
 
   // Render List View
   return (
-    <div className="task-manager">
-      <div className="section-header">
-        <h2 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <CheckCircle className="icon-blue" />
+    <div className="container-fluid task-manager" id="task-manager-panel">
+      <div className="section-header" style={{ marginBottom: '24px' }}>
+        <h2 style={{ fontSize: '1.25rem', fontWeight: '800', margin: 0, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <CheckCircle className="icon-blue" size={22} color="var(--accent)" />
           Quản lý Công việc & Tiến độ
         </h2>
       </div>
 
       {/* Project Selector */}
-      <div className="project-selector-container form-card">
-        <div className="form-group">
+      <div className="glass-card" style={{ padding: '20px', marginBottom: '24px' }}>
+        <div className="form-group" style={{ margin: 0 }}>
           <label>Dự án hiện tại</label>
           <select 
             value={activeProjectId || ''} 

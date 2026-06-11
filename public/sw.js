@@ -44,12 +44,13 @@ self.addEventListener('activate', event => {
 self.addEventListener('fetch', event => {
   const requestUrl = new URL(event.request.url);
 
-  // Bypass Firebase Auth, Firestore and Firestore emulator/API calls
+  // Bypass Firebase Auth, Firestore and Firestore emulator/API calls, and non-http schemes
   if (
     requestUrl.origin.includes('firestore.googleapis.com') ||
     requestUrl.origin.includes('identitytoolkit.googleapis.com') ||
     requestUrl.pathname.includes('/__/') ||
-    event.request.method !== 'GET'
+    event.request.method !== 'GET' ||
+    !requestUrl.protocol.startsWith('http')
   ) {
     return; // Let browser handle network request directly
   }
