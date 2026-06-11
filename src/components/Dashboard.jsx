@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { 
   Briefcase, 
   MapPin, 
@@ -11,7 +11,8 @@ import {
   Activity, 
   ArrowRight,
   Clock,
-  Eye
+  Eye,
+  MoreVertical
 } from 'lucide-react';
 
 export default function Dashboard({
@@ -29,6 +30,8 @@ export default function Dashboard({
   onViewProject,
   onNewDiary
 }) {
+  const [activeDropdown, setActiveDropdown] = useState(null);
+
   // Filter out diaries and minutes that belong to deleted projects
   const validProjectIds = new Set(projects.map(p => p.id));
   const validDiaries = diaries.filter(d => validProjectIds.has(d.projectId));
@@ -193,146 +196,104 @@ export default function Dashboard({
             return (
               <div 
                 key={proj.id} 
-                className={`glass-card ${isActive ? 'active' : ''}`}
+                className={`glass-card clickable ${isActive ? 'active' : ''}`}
+                onClick={() => onViewProject && onViewProject(proj)}
                 style={{ 
                   padding: '20px',
                   borderLeft: isActive ? '5px solid var(--secondary)' : '1px solid var(--border)',
                   background: isActive ? 'rgba(0, 180, 216, 0.02)' : 'var(--bg-card)',
-                  transition: 'all 0.2s ease',
+                  transition: 'transform 0.2s, box-shadow 0.2s, border-color 0.2s',
                   display: 'flex',
                   flexDirection: 'column',
-                  justifyContent: 'space-between',
-                  gap: '12px'
+                  gap: '16px',
+                  position: 'relative',
+                  cursor: 'pointer'
                 }}
+                onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 6px 12px rgba(0,0,0,0.15)'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = 'none'; setActiveDropdown(null); }}
               >
-                <div style={{ display: 'flex', gap: '14px', alignItems: 'flex-start' }}>
-                  {/* Project Logo Initial Bubble */}
-                  <div style={{ 
-                    width: '46px', 
-                    height: '46px', 
-                    borderRadius: '10px', 
-                    background: isActive ? 'linear-gradient(135deg, var(--secondary), #0077b6)' : 'linear-gradient(135deg, var(--primary-light), var(--primary))', 
-                    color: 'white',
-                    fontWeight: '800',
-                    fontSize: '1rem',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    flexShrink: 0,
-                    border: '1px solid rgba(255,255,255,0.05)'
-                  }}>
-                    {getInitials(proj.name)}
+                {/* Header Row: Logo, Name, Menu */}
+                <div style={{ display: 'flex', gap: '14px', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+                  <div style={{ display: 'flex', gap: '14px', alignItems: 'flex-start', flex: 1, minWidth: 0 }}>
+                    {/* Logo */}
+                    <div style={{ 
+                      width: '46px', height: '46px', borderRadius: '10px', 
+                      background: isActive ? 'linear-gradient(135deg, var(--secondary), #0077b6)' : 'linear-gradient(135deg, var(--primary-light), var(--primary))', 
+                      color: 'white', fontWeight: '800', fontSize: '1rem',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
+                    }}>
+                      {getInitials(proj.name)}
+                    </div>
+
+                    {/* Name & Address */}
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <h4 style={{ fontSize: '1.05rem', fontWeight: '700', color: 'var(--text-primary)', margin: '0 0 6px', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                        {proj.name}
+                        {isActive && (
+                          <span style={{ fontSize: '0.65rem', padding: '2px 8px', background: 'rgba(0, 229, 255, 0.15)', color: 'var(--accent)', borderRadius: '20px', fontWeight: '700', letterSpacing: '0.5px' }}>
+                            ĐANG CHỌN
+                          </span>
+                        )}
+                      </h4>
+                      <div style={{ display: 'flex', alignItems: 'flex-start', gap: '4px', color: 'var(--text-secondary)', fontSize: '0.8rem' }}>
+                        <MapPin size={12} style={{ flexShrink: 0, marginTop: '3px' }} />
+                        <span style={{ 
+                          display: '-webkit-box', 
+                          WebkitLineClamp: 2, 
+                          WebkitBoxOrient: 'vertical', 
+                          overflow: 'hidden',
+                          lineHeight: '1.4'
+                        }}>
+                          {proj.address || 'Chưa cấu hình địa chỉ'}
+                        </span>
+                      </div>
+                    </div>
                   </div>
 
-                  {/* Project Information */}
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <h4 style={{ fontSize: '1rem', fontWeight: '700', color: 'var(--text-primary)', margin: '0 0 4px', display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
-                      {proj.name}
-                      {isActive && (
-                        <span style={{ fontSize: '0.6rem', padding: '1px 6px', background: 'rgba(0, 229, 255, 0.15)', color: 'var(--accent)', border: '1px solid rgba(0, 229, 255, 0.25)', borderRadius: '20px', textTransform: 'uppercase', fontWeight: '700', letterSpacing: '0.5px' }}>
-                          Đang chọn
-                        </span>
-                      )}
-                    </h4>
+                  {/* Context Menu Button */}
+                  <div style={{ position: 'relative' }}>
+                    <button 
+                      className="btn-icon" 
+                      onClick={(e) => { 
+                        e.stopPropagation(); 
+                        setActiveDropdown(activeDropdown === proj.id ? null : proj.id); 
+                      }}
+                      style={{ padding: '4px', margin: '-4px -4px 0 0' }}
+                      title="Tùy chọn khác"
+                    >
+                      <MoreVertical size={20} />
+                    </button>
                     
-                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '4px', color: 'var(--text-secondary)', fontSize: '0.78rem', marginBottom: '4px' }}>
-                      <MapPin size={12} style={{ flexShrink: 0, marginTop: '2px' }} />
-                      <span style={{ wordBreak: 'break-word', whiteSpace: 'normal' }}>
-                        {proj.address || 'Chưa cấu hình địa chỉ'}
-                      </span>
-                    </div>
-
-                    {/* Project Statistics Counts */}
-                    <div style={{ display: 'flex', gap: '12px', fontSize: '0.72rem', color: 'var(--text-light)' }}>
-                      <span><strong>Nhật ký:</strong> {projectDiaries.length} bản</span>
-                      <span>•</span>
-                      <span><strong>Phát sinh:</strong> {projectMinutes.length} bản</span>
-                    </div>
+                    {activeDropdown === proj.id && (
+                      <div style={{ 
+                        position: 'absolute', right: 0, top: '100%', marginTop: '4px',
+                        background: 'var(--bg-panel)', border: '1px solid var(--border)',
+                        borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+                        zIndex: 10, minWidth: '160px', padding: '4px'
+                      }}>
+                        <button className="dropdown-item" onClick={(e) => { e.stopPropagation(); setActiveDropdown(null); handleQuickModule(proj.id, 'nktc'); }}>
+                          <FileText size={14} color="#10b981" /> Viết Nhật ký
+                        </button>
+                        <button className="dropdown-item" onClick={(e) => { e.stopPropagation(); setActiveDropdown(null); handleQuickModule(proj.id, 'bbps'); }}>
+                          <FileSpreadsheet size={14} color="#ef4444" /> Biên bản phát sinh
+                        </button>
+                        <div style={{ height: '1px', background: 'var(--border)', margin: '4px 0' }}></div>
+                        <button className="dropdown-item" onClick={(e) => { e.stopPropagation(); setActiveDropdown(null); handleQuickModule(proj.id, 'settings'); }}>
+                          <Settings size={14} color="var(--accent)" /> Cài đặt dự án
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
 
-                {/* Module Buttons Grid */}
-                <div className="project-card-actions">
-                  <button 
-                    onClick={() => onViewProject && onViewProject(proj)}
-                    className="btn btn-secondary btn-sm" 
-                    style={{ 
-                      display: 'inline-flex', 
-                      alignItems: 'center', 
-                      justifyContent: 'center', 
-                      gap: '4px',
-                      background: 'rgba(0, 229, 255, 0.06)',
-                      border: '1px solid rgba(0, 229, 255, 0.2)',
-                      fontSize: '0.75rem',
-                      fontWeight: '600',
-                      padding: '8px 4px',
-                      minHeight: '34px'
-                    }}
-                    title="Xem chi tiết dự án"
-                  >
-                    <Eye size={13} color="var(--accent)" />
-                    <span>Xem</span>
-                  </button>
-
-                  <button 
-                    onClick={() => handleQuickModule(proj.id, 'nktc')}
-                    className="btn btn-secondary btn-sm" 
-                    style={{ 
-                      display: 'inline-flex', 
-                      alignItems: 'center', 
-                      justifyContent: 'center', 
-                      gap: '4px',
-                      background: 'rgba(255, 255, 255, 0.02)',
-                      fontSize: '0.75rem',
-                      fontWeight: '600',
-                      padding: '8px 4px',
-                      minHeight: '34px'
-                    }}
-                    title="Nhật ký thi công"
-                  >
-                    <FileText size={13} color="#10b981" />
-                    <span>Nhật ký</span>
-                  </button>
-
-                  <button 
-                    onClick={() => handleQuickModule(proj.id, 'bbps')}
-                    className="btn btn-secondary btn-sm" 
-                    style={{ 
-                      display: 'inline-flex', 
-                      alignItems: 'center', 
-                      justifyContent: 'center', 
-                      gap: '4px',
-                      background: 'rgba(255, 255, 255, 0.02)',
-                      fontSize: '0.75rem',
-                      fontWeight: '600',
-                      padding: '8px 4px',
-                      minHeight: '34px'
-                    }}
-                    title="Biên bản phát sinh"
-                  >
-                    <FileSpreadsheet size={13} color="#ef4444" />
-                    <span>Phát sinh</span>
-                  </button>
-
-                  <button 
-                    onClick={() => handleQuickModule(proj.id, 'settings')}
-                    className="btn btn-secondary btn-sm" 
-                    style={{ 
-                      display: 'inline-flex', 
-                      alignItems: 'center', 
-                      justifyContent: 'center', 
-                      gap: '4px',
-                      background: 'rgba(255, 255, 255, 0.02)',
-                      fontSize: '0.75rem',
-                      fontWeight: '600',
-                      padding: '8px 4px',
-                      minHeight: '34px'
-                    }}
-                    title="Cài đặt & Cấu hình dự án"
-                  >
-                    <Settings size={13} color="var(--accent)" />
-                    <span>Cài đặt</span>
-                  </button>
+                {/* Stats Badges */}
+                <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', padding: '6px 12px', borderRadius: '20px', fontSize: '0.8rem', fontWeight: '600', border: '1px solid rgba(16, 185, 129, 0.2)' }}>
+                    <FileText size={14} /> {projectDiaries.length} Nhật ký
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', padding: '6px 12px', borderRadius: '20px', fontSize: '0.8rem', fontWeight: '600', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
+                    <FileSpreadsheet size={14} /> {projectMinutes.length} Phát sinh
+                  </div>
                 </div>
               </div>
             );
