@@ -434,7 +434,6 @@ export default function App() {
           </button>
         </header>
 
-        {/* Tab switcher renderer */}
         {currentTab === 'dashboard' && (
           <Dashboard
             user={user}
@@ -448,7 +447,33 @@ export default function App() {
             onSelectDiary={setActiveDiary}
             onSelectMinute={setActiveMinute}
             onToast={showToast}
-            onViewProject={setViewingProject}
+            onViewProject={(proj) => {
+              setViewingProject(proj);
+              setCurrentTab('project-detail');
+            }}
+          />
+        )}
+
+        {currentTab === 'project-detail' && viewingProject && (
+          <ProjectDetailModal
+            project={viewingProject}
+            diaries={diaries}
+            minutes={minutes}
+            onClose={() => {
+              setViewingProject(null);
+              setCurrentTab('dashboard');
+            }}
+            onOpenDiary={(diary) => {
+              setActiveDiary(diary);
+              setActiveProjectId(diary.projectId);
+              setCurrentTab('nktc');
+            }}
+            onOpenMinute={(minute) => {
+              setActiveMinute(minute);
+              setActiveProjectId(minute.projectId);
+              setCurrentTab('bbps');
+            }}
+            onToast={showToast}
           />
         )}
 
@@ -521,26 +546,6 @@ export default function App() {
         )}
       </div>
 
-      {/* Project Detail Modal */}
-      {viewingProject && (
-        <ProjectDetailModal
-          project={viewingProject}
-          diaries={diaries}
-          minutes={minutes}
-          onClose={() => setViewingProject(null)}
-          onOpenDiary={(diary) => {
-            setActiveDiary(diary);
-            setActiveProjectId(diary.projectId);
-            setCurrentTab('nktc');
-          }}
-          onOpenMinute={(minute) => {
-            setActiveMinute(minute);
-            setActiveProjectId(minute.projectId);
-            setCurrentTab('bbps');
-          }}
-          onToast={showToast}
-        />
-      )}
 
     </div>
   );

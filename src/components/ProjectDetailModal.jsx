@@ -1,6 +1,5 @@
-import React, { useState, useRef, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import {
-  X,
   FileText,
   FileSpreadsheet,
   MapPin,
@@ -9,6 +8,7 @@ import {
   Briefcase,
   Calendar,
   ArrowRight,
+  ArrowLeft,
   Download,
   ChevronDown,
 } from 'lucide-react';
@@ -24,13 +24,6 @@ export default function ProjectDetailModal({
   onToast,
 }) {
   const [activeTab, setActiveTab] = useState('diary');
-  const backdropRef = useRef(null);
-  const sheetRef = useRef(null);
-
-  // Close on backdrop click
-  const handleBackdropClick = (e) => {
-    if (e.target === backdropRef.current) onClose();
-  };
 
   // Close on Escape
   useEffect(() => {
@@ -38,19 +31,6 @@ export default function ProjectDetailModal({
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
   }, [onClose]);
-
-  // Animate in
-  useEffect(() => {
-    const el = sheetRef.current;
-    if (!el) return;
-    el.style.transform = 'translateY(60px)';
-    el.style.opacity = '0';
-    requestAnimationFrame(() => {
-      el.style.transition = 'transform 0.3s cubic-bezier(0.34,1.2,0.64,1), opacity 0.25s ease';
-      el.style.transform = 'translateY(0)';
-      el.style.opacity = '1';
-    });
-  }, []);
 
   const projectDiaries = diaries
     .filter((d) => d.projectId === project.id)
@@ -189,60 +169,39 @@ export default function ProjectDetailModal({
   );
 
   return (
-    <div
-      ref={backdropRef}
-      onClick={handleBackdropClick}
-      style={{
-        position: 'fixed',
-        inset: 0,
-        background: 'rgba(0,0,0,0.6)',
-        backdropFilter: 'blur(5px)',
-        zIndex: 500,
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        /* On mobile: align bottom; on desktop: center */
-        justifyContent: 'flex-end',
-        padding: 0,
-      }}
-    >
+    <div className="container-fluid" id="project-detail-panel" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+      {/* ── Quay lại Dashboard ── */}
+      <div>
+        <button
+          onClick={onClose}
+          className="btn btn-secondary btn-sm"
+          style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', minHeight: '38px' }}
+        >
+          <ArrowLeft size={16} /> Quay lại Dashboard
+        </button>
+      </div>
+
       <div
-        ref={sheetRef}
+        className="glass-card"
         style={{
           background: 'var(--bg-card)',
           border: '1px solid var(--border)',
-          /* Mobile: bottom sheet with top radius; desktop: centered card */
-          borderRadius: '20px 20px 0 0',
+          borderRadius: 'var(--radius-md)',
           width: '100%',
-          maxWidth: '100vw',
-          /* Allow taller on desktop */
-          maxHeight: '92vh',
           display: 'flex',
           flexDirection: 'column',
-          boxShadow: '0 -8px 40px rgba(0,0,0,0.45)',
           overflow: 'hidden',
+          padding: 0,
         }}
-        /* Prevent backdrop click from firing inside the sheet */
-        onClick={(e) => e.stopPropagation()}
       >
-
-        {/* ── Drag handle indicator ── */}
-        <div style={{ display: 'flex', justifyContent: 'center', padding: '10px 0 4px' }}>
-          <div style={{
-            width: '36px', height: '4px',
-            borderRadius: '99px',
-            background: 'rgba(255,255,255,0.15)',
-          }} />
-        </div>
-
         {/* ── Header ── */}
         <div style={{
-          padding: '12px 16px 14px',
+          padding: '16px 20px',
           background: 'linear-gradient(135deg, rgba(0,180,216,0.07) 0%, transparent 100%)',
           borderBottom: '1px solid var(--border)',
           flexShrink: 0,
         }}>
-          {/* Row 1: name + close */}
+          {/* Row 1: name + back icon */}
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '10px', marginBottom: '8px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1, minWidth: 0 }}>
               <div style={{
@@ -256,35 +215,19 @@ export default function ProjectDetailModal({
               </div>
               <div style={{ minWidth: 0 }}>
                 <h2 style={{
-                  fontSize: '1rem', fontWeight: '800',
+                  fontSize: '1.1rem', fontWeight: '800',
                   color: 'var(--text-primary)', margin: 0,
                   whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
                 }}>
                   {project.name}
                 </h2>
                 {project.packageName && (
-                  <p style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', margin: 0, marginTop: '1px' }}>
+                  <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', margin: 0, marginTop: '2px' }}>
                     {project.packageName}
                   </p>
                 )}
               </div>
             </div>
-
-            <button
-              onClick={onClose}
-              style={{
-                flexShrink: 0,
-                background: 'rgba(255,255,255,0.06)',
-                border: '1px solid var(--border)',
-                borderRadius: '50%',
-                width: '30px', height: '30px',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                cursor: 'pointer', color: 'var(--text-secondary)',
-              }}
-              title="Đóng"
-            >
-              <X size={16} />
-            </button>
           </div>
 
           {/* Row 2: meta info chips */}
