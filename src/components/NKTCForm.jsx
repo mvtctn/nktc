@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import PhotoStamper from './PhotoStamper';
 import SmartTagInput from './SmartTagInput';
 import { exportNKTCtoWord, exportAllNKTCtoWord } from '../utils/WordExporter';
@@ -18,7 +18,8 @@ import {
   MessageSquare,
   RefreshCw,
   Code,
-  MoreVertical
+  MoreVertical,
+  Printer
 } from 'lucide-react';
 
 const getTodayDateString = () => {
@@ -62,6 +63,7 @@ export default function NKTCForm({
 }) {
   const [activeTab, setActiveTab] = useState('input'); // 'input', 'preview', or 'json'
   const [actionsMenuOpen, setActionsMenuOpen] = useState(false);
+  const printAreaRef = useRef(null);
 
   // Form Fields
   const [trang, setTrang] = useState('1');
@@ -253,6 +255,33 @@ export default function NKTCForm({
       console.error(err);
       onToast('Lỗi khi xuất toàn bộ nhật ký', true);
     }
+  };
+
+  const handleExportPDF = () => {
+    if (!printAreaRef.current) return;
+    onToast('Đang tạo và tải file PDF...');
+    const element = printAreaRef.current;
+    const opt = {
+      margin:       0,
+      filename:     `nktc_${ngay.replace(/\//g, '-')}_trang_${trang}.pdf`,
+      image:        { type: 'jpeg', quality: 0.98 },
+      html2canvas:  { scale: 2, useCORS: true, letterRendering: true },
+      jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    };
+    import('html2pdf.js').then((html2pdfModule) => {
+      const html2pdf = html2pdfModule.default;
+      html2pdf().set(opt).from(element).save()
+        .then(() => {
+          onToast('Đã tải xuống file PDF thành công!');
+        })
+        .catch((err) => {
+          console.error(err);
+          onToast('Lỗi khi xuất file PDF', true);
+        });
+    }).catch(err => {
+      console.error(err);
+      onToast('Lỗi khi tải thư viện PDF', true);
+    });
   };
 
   return (
@@ -532,7 +561,17 @@ export default function NKTCForm({
       {activeTab === 'preview' && (
         /* Printable PDF Preview centered */
         <div className="preview-scroll-container">
-          <div className="glass-card" style={{ padding: '24px', background: 'white', color: '#1e293b', border: '1px solid #cbd5e1', boxShadow: '0 4px 15px rgba(0,0,0,0.05)', fontFamily: '"Times New Roman", Times, serif', minHeight: '600px', display: 'flex', flexDirection: 'column', wordBreak: 'break-all', minWidth: '794px', maxWidth: '794px', margin: '0 auto' }}>
+          <div className="no-print" style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
+            <button
+              type="button"
+              className="btn btn-accent"
+              onClick={handleExportPDF}
+              style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 20px', fontWeight: 'bold' }}
+            >
+              <Printer size={16} /> Xuất file PDF chuẩn (A4)
+            </button>
+          </div>
+          <div ref={printAreaRef} className="printable-a4-area glass-card" style={{ padding: '24px', background: 'white', color: '#1e293b', border: '1px solid #cbd5e1', boxShadow: '0 4px 15px rgba(0,0,0,0.05)', fontFamily: '"Times New Roman", Times, serif', minHeight: '600px', display: 'flex', flexDirection: 'column', wordBreak: 'break-all', minWidth: '794px', maxWidth: '794px', margin: '0 auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', fontWeight: 'bold', borderBottom: '1px solid #94a3b8', paddingBottom: '10px', marginBottom: '16px' }}>
               <div>
                 <div>{project ? project.contractorB.toUpperCase() : "CÔNG TY CỔ PHẦN HYDROTECH"}</div>
@@ -547,7 +586,7 @@ export default function NKTCForm({
             <div style={{ textAlign: 'center', margin: '20px 0' }}>
               <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', margin: '0', fontFamily: 'inherit' }}>NHẬT KÝ THI CÔNG</h2>
               <div style={{ fontStyle: 'italic', fontSize: '0.85rem', fontWeight: 'bold', marginTop: '4px' }}>
-                Ngày: {ngay} | Số trang: {trang}
+                Ngày: {ngay} | Trang số: {trang}
               </div>
             </div>
 
@@ -644,7 +683,7 @@ export default function NKTCForm({
 
             {/* Photos inside print card */}
             {photos.length > 0 && (
-              <div style={{ marginTop: '32px', paddingTop: '20px', borderTop: '2px solid #cbd5e1' }}>
+              <div className="photo-print-section" style={{ marginTop: '32px', paddingTop: '20px', borderTop: '2px solid #cbd5e1' }}>
                 <div style={{ textAlign: 'center', fontSize: '0.9rem', fontWeight: 'bold', marginBottom: '12px' }}>HÌNH ẢNH MINH HỌA HIỆN TRƯỜNG</div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                   {photos.map((photo, idx) => (

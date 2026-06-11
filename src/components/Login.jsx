@@ -1,12 +1,11 @@
 import React, { useState } from 'react';
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
+import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth, isValidConfig } from '../firebase';
 import { LogIn, Key, WifiOff, Settings } from 'lucide-react';
 
 export default function Login({ onLoginSuccess, onOpenConfig }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [isRegistering, setIsRegistering] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -21,13 +20,8 @@ export default function Login({ onLoginSuccess, onOpenConfig }) {
     setLoading(true);
 
     try {
-      if (isRegistering) {
-        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-        onLoginSuccess(userCredential.user);
-      } else {
-        const userCredential = await signInWithEmailAndPassword(auth, email, password);
-        onLoginSuccess(userCredential.user);
-      }
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      onLoginSuccess(userCredential.user);
     } catch (err) {
       console.error(err);
       let errMsg = `Đăng nhập/Đăng ký thất bại: ${err.message} (${err.code})`;
@@ -109,18 +103,8 @@ export default function Login({ onLoginSuccess, onOpenConfig }) {
             </div>
 
             <button type="submit" className="btn btn-accent btn-block" disabled={loading}>
-              {loading ? <div className="spinner"></div> : (isRegistering ? 'Đăng ký tài khoản mới' : 'Đăng nhập hệ thống')}
+              {loading ? <div className="spinner"></div> : 'Đăng nhập hệ thống'}
             </button>
-
-            <div style={{ marginTop: '16px', fontSize: '0.825rem' }}>
-              <a
-                href="#"
-                onClick={(e) => { e.preventDefault(); setIsRegistering(!isRegistering); }}
-                style={{ color: '#00e5ff', textDecoration: 'none' }}
-              >
-                {isRegistering ? 'Đã có tài khoản? Đăng nhập' : 'Chưa có tài khoản? Đăng ký kỹ sư mới'}
-              </a>
-            </div>
           </form>
         ) : (
           <div style={{ padding: '16px', background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.2)', borderRadius: '6px', marginBottom: '24px', fontSize: '0.875rem', textAlign: 'left', lineHeight: '1.4' }}>

@@ -29,32 +29,37 @@ export default function Dashboard({
   onViewProject,
   onNewDiary
 }) {
+  // Filter out diaries and minutes that belong to deleted projects
+  const validProjectIds = new Set(projects.map(p => p.id));
+  const validDiaries = diaries.filter(d => validProjectIds.has(d.projectId));
+  const validMinutes = minutes.filter(m => validProjectIds.has(m.projectId));
+
   // 1. Calculate General Stats
   const totalProjects = projects.length;
-  const totalDiaries = diaries.length;
-  const totalMinutes = minutes.length;
+  const totalDiaries = validDiaries.length;
+  const totalMinutes = validMinutes.length;
   
   // Calculate average worker count from recent diaries
-  const recentDiariesWithWorkers = diaries.filter(d => parseInt(d.so_luong_cong_nhan, 10) > 0);
+  const recentDiariesWithWorkers = validDiaries.filter(d => parseInt(d.so_luong_cong_nhan, 10) > 0);
   const averageWorkers = recentDiariesWithWorkers.length > 0 
     ? Math.round(recentDiariesWithWorkers.reduce((acc, curr) => acc + (parseInt(curr.so_luong_cong_nhan, 10) || 0), 0) / recentDiariesWithWorkers.length)
     : 0;
 
   // 2. Prepare Recent Activities
   const mergedActivities = [
-    ...diaries.map(d => ({
+    ...validDiaries.map(d => ({
       id: d.id,
       type: 'nktc',
       date: d.ngay,
       updatedAt: d.updated_at || d.created_at,
       projectId: d.projectId,
-      title: `Nhật ký thi công (Trang ${d.trang || '1'})`,
+      title: `Nhật ký thi công (Ngày thi công ${d.trang || '1'})`,
       desc: d.tien_trinh_cong_viec && d.tien_trinh_cong_viec[0] 
         ? d.tien_trinh_cong_viec[0] 
         : 'Ghi nhận tiến trình thi công trong ngày.',
       raw: d
     })),
-    ...minutes.map(m => ({
+    ...validMinutes.map(m => ({
       id: m.id,
       type: 'bbps',
       date: m.ngay,
@@ -333,37 +338,7 @@ export default function Dashboard({
             );
           })}
 
-          {/* Add Project Card at the end of grid */}
-          <div 
-            onClick={() => {
-              setCurrentTab('settings');
-              setSettingsSubTab('project');
-            }}
-            className="glass-card add-project-card"
-            style={{ 
-              padding: '20px',
-              border: '2px dashed var(--border)',
-              background: 'rgba(255, 255, 255, 0.01)',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '12px',
-              cursor: 'pointer',
-              minHeight: '160px',
-              transition: 'all 0.2s ease',
-            }}
-          >
-            <PlusCircle size={32} color="var(--accent)" style={{ opacity: 0.8 }} />
-            <div style={{ textAlign: 'center' }}>
-              <span style={{ fontSize: '0.95rem', fontWeight: '700', color: 'var(--text-primary)', display: 'block', marginBottom: '4px' }}>
-                Tạo Dự án Mới
-              </span>
-              <span style={{ fontSize: '0.75rem', color: 'var(--text-light)' }}>
-                Thêm dự án thi công vào hệ thống quản lý
-              </span>
-            </div>
-          </div>
+
         </div>
       )}
 
@@ -522,11 +497,11 @@ export default function Dashboard({
               <div style={{ borderTop: '1px dashed var(--border)', paddingTop: '10px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
                   <span>Chỉ số An toàn lao động (Tốt)</span>
-                  <strong>{totalDiaries > 0 ? Math.round((diaries.filter(d => d.an_toan_lao_dong === 'Tốt').length / totalDiaries) * 100) : 100}%</strong>
+                  <strong>{totalDiaries > 0 ? Math.round((validDiaries.filter(d => d.an_toan_lao_dong === 'Tốt').length / totalDiaries) * 100) : 100}%</strong>
                 </div>
                 <div style={{ height: '6px', background: 'rgba(255,255,255,0.05)', borderRadius: '3px', overflow: 'hidden' }}>
                   <div style={{ 
-                    width: `${totalDiaries > 0 ? Math.round((diaries.filter(d => d.an_toan_lao_dong === 'Tốt').length / totalDiaries) * 100) : 100}%`, 
+                    width: `${totalDiaries > 0 ? Math.round((validDiaries.filter(d => d.an_toan_lao_dong === 'Tốt').length / totalDiaries) * 100) : 100}%`, 
                     height: '100%', 
                     background: '#10b981' 
                   }}></div>
@@ -536,11 +511,11 @@ export default function Dashboard({
               <div style={{ borderTop: '1px dashed var(--border)', paddingTop: '10px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
                   <span>Chỉ số Vệ sinh môi trường (Tốt)</span>
-                  <strong>{totalDiaries > 0 ? Math.round((diaries.filter(d => d.ve_sinh_moi_truong === 'Tốt').length / totalDiaries) * 100) : 100}%</strong>
+                  <strong>{totalDiaries > 0 ? Math.round((validDiaries.filter(d => d.ve_sinh_moi_truong === 'Tốt').length / totalDiaries) * 100) : 100}%</strong>
                 </div>
                 <div style={{ height: '6px', background: 'rgba(255,255,255,0.05)', borderRadius: '3px', overflow: 'hidden' }}>
                   <div style={{ 
-                    width: `${totalDiaries > 0 ? Math.round((diaries.filter(d => d.ve_sinh_moi_truong === 'Tốt').length / totalDiaries) * 100) : 100}%`, 
+                    width: `${totalDiaries > 0 ? Math.round((validDiaries.filter(d => d.ve_sinh_moi_truong === 'Tốt').length / totalDiaries) * 100) : 100}%`, 
                     height: '100%', 
                     background: '#00b4d8' 
                   }}></div>

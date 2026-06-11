@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { exportBBPStoWord } from '../utils/WordExporter';
-import { Save, FileText, Plus, Trash2, Calendar, FileSpreadsheet, Building, Users, AlertTriangle, Lightbulb, MoreVertical, Copy, Download } from 'lucide-react';
+import { Save, FileText, Plus, Trash2, Calendar, FileSpreadsheet, Building, Users, AlertTriangle, Lightbulb, MoreVertical, Copy, Download, Printer } from 'lucide-react';
 
 const getTodayDateString = () => {
   const today = new Date();
@@ -35,10 +35,12 @@ export default function BBPSForm({
   project,
   initialData,
   onSave,
-  onToast
+  onToast,
+  readOnly = false,
 }) {
   const [activeTab, setActiveTab] = useState('input'); // 'input' or 'preview'
   const [actionsMenuOpen, setActionsMenuOpen] = useState(false);
+  const printAreaRef = useRef(null);
   
   // Form State
   const [ngay, setNgay] = useState(getTodayDateString());
@@ -121,6 +123,35 @@ export default function BBPSForm({
     onToast('Xuất Biên bản hiện trường (.docx) thành công!');
   };
 
+  const handleExportPDF = () => {
+    if (!printAreaRef.current) return;
+    onToast('Đang tạo và tải file PDF...');
+    const element = printAreaRef.current;
+    
+    const opt = {
+      margin:       0,
+      filename:     `bbps_${ngay.replace(/\//g, '-')}_${(vi_tri || 'hien_truong').replace(/\s+/g, '_')}.pdf`,
+      image:        { type: 'jpeg', quality: 0.98 },
+      html2canvas:  { scale: 2, useCORS: true, letterRendering: true },
+      jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    };
+    
+    import('html2pdf.js').then((html2pdfModule) => {
+      const html2pdf = html2pdfModule.default;
+      html2pdf().set(opt).from(element).save()
+        .then(() => {
+          onToast('Đã tải xuống file PDF thành công!');
+        })
+        .catch((err) => {
+          console.error(err);
+          onToast('Lỗi khi xuất file PDF', true);
+        });
+    }).catch(err => {
+      console.error(err);
+      onToast('Lỗi khi tải thư viện PDF', true);
+    });
+  };
+
   return (
     <div className="container-fluid" id="bbps-form-panel">
       {/* Top-level Tabs for BBPS Section */}
@@ -141,6 +172,25 @@ export default function BBPSForm({
         </div>
       </div>
 
+      {readOnly && (
+        <div className="glass-card" style={{ 
+          background: 'rgba(0, 229, 255, 0.05)',
+          border: '1px solid rgba(0, 229, 255, 0.25)',
+          padding: '12px 16px',
+          borderRadius: 'var(--radius-sm)',
+          fontSize: '0.85rem',
+          color: 'var(--accent)',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+          fontWeight: '600',
+          maxWidth: '850px',
+          margin: '0 auto 16px'
+        }}>
+          ℹ️ Bạn đang xem chi tiết Biên bản hiện trường ở chế độ chỉ đọc. Không thể chỉnh sửa dữ liệu.
+        </div>
+      )}
+
       {activeTab === 'input' && (
         /* Giao diện Nhập liệu Biên bản (Full width, centered) */
         <div className="glass-card" style={{ display: 'flex', flexDirection: 'column', gap: '18px', maxWidth: '850px', margin: '0 auto', width: '100%' }}>
@@ -155,6 +205,7 @@ export default function BBPSForm({
               className="form-control"
               value={convertToInputDate(ngay)}
               onChange={(e) => setNgay(convertToDisplayDate(e.target.value))}
+              disabled={readOnly}
             />
           </div>
 
@@ -173,6 +224,7 @@ export default function BBPSForm({
                   placeholder="Họ và tên..."
                   value={dai_dien_a}
                   onChange={(e) => setDaiDienA(e.value || e.target.value)}
+                  disabled={readOnly}
                 />
               </div>
               <div className="form-group">
@@ -183,6 +235,7 @@ export default function BBPSForm({
                   placeholder="Kỹ sư giám sát..."
                   value={chuc_vu_a}
                   onChange={(e) => setChucVuA(e.value || e.target.value)}
+                  disabled={readOnly}
                 />
               </div>
             </div>
@@ -196,6 +249,7 @@ export default function BBPSForm({
                   placeholder="Họ và tên..."
                   value={dai_dien_b}
                   onChange={(e) => setDaiDienB(e.value || e.target.value)}
+                  disabled={readOnly}
                 />
               </div>
               <div className="form-group" style={{ marginBottom: '0' }}>
@@ -206,6 +260,7 @@ export default function BBPSForm({
                   placeholder="Chỉ huy trưởng..."
                   value={chuc_vu_b}
                   onChange={(e) => setChucVuB(e.value || e.target.value)}
+                  disabled={readOnly}
                 />
               </div>
             </div>
@@ -226,6 +281,7 @@ export default function BBPSForm({
                 value={vi_tri}
                 onChange={(e) => setViTri(e.value || e.target.value)}
                 required
+                disabled={readOnly}
               />
             </div>
 
@@ -237,6 +293,7 @@ export default function BBPSForm({
                 value={su_viec}
                 onChange={(e) => setSuViec(e.value || e.target.value)}
                 required
+                disabled={readOnly}
               />
             </div>
 
@@ -248,6 +305,7 @@ export default function BBPSForm({
                 placeholder="Nhập nguyên nhân..."
                 value={nguyen_nhan}
                 onChange={(e) => setNguyenNhan(e.value || e.target.value)}
+                disabled={readOnly}
               />
             </div>
 
@@ -259,6 +317,7 @@ export default function BBPSForm({
                 placeholder="Ví dụ: Chậm tiến độ thi công lắp đặt 2 ngày..."
                 value={anh_huong}
                 onChange={(e) => setAnhHuong(e.value || e.target.value)}
+                disabled={readOnly}
               />
             </div>
           </div>
@@ -274,15 +333,22 @@ export default function BBPSForm({
                 placeholder="Ví dụ: Đề xuất chuyển dịch tim ống Siphonic sang trái 300mm hoặc nâng cao độ gá treo thêm 150mm..."
                 value={de_xuat}
                 onChange={(e) => setDeXuat(e.value || e.target.value)}
+                disabled={readOnly}
               />
             </div>
           </div>
 
           {/* Action Buttons */}
           <div style={{ display: 'flex', gap: '10px', marginTop: '16px', position: 'relative' }}>
-            <button type="button" onClick={handleSave} className="btn btn-accent" style={{ flex: 1 }}>
-              <Save size={18} /> Lưu Biên bản (Database)
-            </button>
+            {!readOnly ? (
+              <button type="button" onClick={handleSave} className="btn btn-accent" style={{ flex: 1 }}>
+                <Save size={18} /> Lưu Biên bản (Database)
+              </button>
+            ) : (
+              <div style={{ flex: 1, display: 'flex', alignItems: 'center', color: 'var(--text-light)', fontSize: '0.85rem', fontWeight: '600' }}>
+                * Bạn đang xem Biên bản ở chế độ chỉ đọc.
+              </div>
+            )}
             
             <div style={{ position: 'relative' }}>
               <button 
@@ -329,7 +395,17 @@ export default function BBPSForm({
       {activeTab === 'preview' && (
         /* Printable PDF Preview centered */
         <div className="preview-scroll-container">
-          <div className="glass-card" style={{ padding: '24px', background: 'white', color: '#1e293b', border: '1px solid #cbd5e1', boxShadow: '0 4px 15px rgba(0,0,0,0.05)', fontFamily: '"Times New Roman", Times, serif', minHeight: '600px', display: 'flex', flexDirection: 'column', wordBreak: 'break-all', minWidth: '794px', maxWidth: '794px', margin: '0 auto' }}>
+          <div className="no-print" style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
+            <button
+              type="button"
+              className="btn btn-accent"
+              onClick={handleExportPDF}
+              style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 20px', fontWeight: 'bold' }}
+            >
+              <Printer size={16} /> Xuất file PDF chuẩn (A4)
+            </button>
+          </div>
+          <div ref={printAreaRef} className="printable-a4-area glass-card" style={{ padding: '24px', background: 'white', color: '#1e293b', border: '1px solid #cbd5e1', boxShadow: '0 4px 15px rgba(0,0,0,0.05)', fontFamily: '"Times New Roman", Times, serif', minHeight: '600px', display: 'flex', flexDirection: 'column', wordBreak: 'break-all', minWidth: '794px', maxWidth: '794px', margin: '0 auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', fontWeight: 'bold', borderBottom: '1px solid #94a3b8', paddingBottom: '10px', marginBottom: '16px' }}>
               <div>
                 <div>{project ? project.contractorB.toUpperCase() : "CÔNG TY CỔ PHẦN HYDROTECH"}</div>

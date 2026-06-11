@@ -24,8 +24,64 @@ import NKTCParser from './components/NKTCParser';
 import BBPSForm from './components/BBPSForm';
 import Dashboard from './components/Dashboard';
 import ProjectDetailModal from './components/ProjectDetailModal';
+import AdminPanel from './components/AdminPanel';
 
 import { Menu, X, User } from 'lucide-react';
+
+// Helper to parse date "DD/MM/YYYY" to Date object
+const parseDate = (dateStr) => {
+  if (!dateStr) return new Date(0);
+  const parts = dateStr.split('/');
+  if (parts.length !== 3) return new Date(0);
+  return new Date(parseInt(parts[2], 10), parseInt(parts[1], 10) - 1, parseInt(parts[0], 10));
+};
+
+const processDiaries = (diariesList) => {
+  if (!diariesList || diariesList.length === 0) return [];
+
+  // Group diaries by projectId to calculate page numbers
+  const groups = {};
+  diariesList.forEach(d => {
+    const pId = d.projectId || 'unknown';
+    if (!groups[pId]) {
+      groups[pId] = [];
+    }
+    groups[pId].push(d);
+  });
+
+  // For each project, sort diaries by date ascending to assign chronological page numbers
+  Object.keys(groups).forEach(pId => {
+    groups[pId].sort((a, b) => {
+      const dateA = parseDate(a.ngay);
+      const dateB = parseDate(b.ngay);
+      if (dateA.getTime() === dateB.getTime()) {
+        const timeA = a.created_at ? new Date(a.created_at).getTime() : 0;
+        const timeB = b.created_at ? new Date(b.created_at).getTime() : 0;
+        return timeA - timeB || (a.id || '').localeCompare(b.id || '');
+      }
+      return dateA - dateB;
+    });
+
+    // Assign trang = index + 1
+    groups[pId].forEach((d, idx) => {
+      d.trang = (idx + 1).toString();
+    });
+  });
+
+  // Sort the global list by date descending (newest diary date first)
+  const sortedGlobalList = [...diariesList].sort((a, b) => {
+    const dateA = parseDate(a.ngay);
+    const dateB = parseDate(b.ngay);
+    if (dateA.getTime() === dateB.getTime()) {
+      const timeA = a.created_at ? new Date(a.created_at).getTime() : 0;
+      const timeB = b.created_at ? new Date(b.created_at).getTime() : 0;
+      return timeB - timeA || (b.id || '').localeCompare(a.id || '');
+    }
+    return dateB - dateA;
+  });
+
+  return sortedGlobalList;
+};
 
 export default function App() {
   const [user, setUser] = useState(null);
@@ -56,14 +112,28 @@ export default function App() {
   const [minutes, setMinutes] = useState([]);
   const [activeMinute, setActiveMinute] = useState(null);
 
+  // Keep activeDiary synchronized with the list of processed diaries
+  useEffect(() => {
+    if (activeDiary && activeDiary.id) {
+      const updated = diaries.find(d => d.id === activeDiary.id);
+      if (updated && (updated.trang !== activeDiary.trang || updated.ngay !== activeDiary.ngay)) {
+        setActiveDiary(updated);
+      }
+    }
+  }, [diaries, activeDiary]);
+
   // Global shared equipment & material master lists
   const [equipmentMaster, setEquipmentMaster] = useState([]);
   const [materialMaster, setMaterialMaster] = useState([]);
+
+  // Registered members list
+  const [members, setMembers] = useState([]);
 
   // Project detail modal
   const [viewingProject, setViewingProject] = useState(null);
 
   const isOffline = user && user.uid === 'offline_local_user';
+  const isSuperAdmin = user && user.email === 'maivantiem@gmail.com';
 
   // 1. Auth Listener
   useEffect(() => {
@@ -151,12 +221,115 @@ export default function App() {
     localStorage.setItem('hydrotech_material_master', JSON.stringify(list));
   };
 
+  const fetchMembers = async () => {
+    try {
+      if (isOffline || !isValidConfig) {
+        const localMembers = localStorage.getItem('hydrotech_members');
+        if (localMembers) {
+          setMembers(JSON.parse(localMembers));
+        } else {
+          const seed = [{
+            uid: 'admin_uid',
+            email: 'maivantiem@gmail.com',
+            displayName: 'Mai Văn Tiệm',
+            position: 'Chỉ huy trưởng / Super Admin',
+            role: 'Super Admin',
+            created_at: new Date().toISOString()
+          }];
+          localStorage.setItem('hydrotech_members', JSON.stringify(seed));
+          setMembers(seed);
+        }
+      } else {
+        const querySnapshot = await getDocs(collection(db, 'users'));
+        const list = [];
+        querySnapshot.forEach((doc) => {
+          list.push({ id: doc.id, ...doc.data() });
+        });
+        if (list.length === 0 && user) {
+          const defaultAdmin = {
+            uid: user.uid,
+            email: user.email,
+            displayName: user.displayName || 'Mai Văn Tiệm',
+            position: 'Chỉ huy trưởng / Super Admin',
+            role: user.email === 'maivantiem@gmail.com' ? 'Super Admin' : 'Kỹ sư hiện trường',
+            created_at: new Date().toISOString()
+          };
+          const docRef = await addDoc(collection(db, 'users'), defaultAdmin);
+          list.push({ id: docRef.id, ...defaultAdmin });
+        }
+        setMembers(list);
+      }
+    } catch (e) {
+      console.error('Lỗi khi tải danh sách thành viên:', e);
+    }
+  };
+
+  const handleCreateMember = async (email, password, displayName, position) => {
+    try {
+      if (isOffline || !isValidConfig) {
+        let updated = [...members];
+        if (updated.some(m => m.email === email)) {
+          showToast('Email này đã tồn tại trong danh sách thành viên cục bộ', true);
+          return false;
+        }
+        const newMem = {
+          uid: 'mem_' + Date.now(),
+          email,
+          displayName,
+          position,
+          role: email === 'maivantiem@gmail.com' ? 'Super Admin' : 'Kỹ sư hiện trường',
+          created_at: new Date().toISOString()
+        };
+        updated.push(newMem);
+        localStorage.setItem('hydrotech_members', JSON.stringify(updated));
+        setMembers(updated);
+        showToast('Tạo thành viên mới ngoại tuyến thành công!');
+        return true;
+      } else {
+        const { initializeApp, deleteApp } = await import('firebase/app');
+        const { getAuth, createUserWithEmailAndPassword, updateProfile, signOut } = await import('firebase/auth');
+        const { getFirebaseConfig } = await import('./firebase');
+        
+        const config = getFirebaseConfig();
+        const appName = 'Secondary_' + Date.now();
+        const secondaryApp = initializeApp(config, appName);
+        const secondaryAuth = getAuth(secondaryApp);
+        
+        const userCredential = await createUserWithEmailAndPassword(secondaryAuth, email, password);
+        await updateProfile(userCredential.user, { displayName });
+        await signOut(secondaryAuth);
+        await deleteApp(secondaryApp);
+        
+        const newMemDoc = {
+          uid: userCredential.user.uid,
+          email,
+          displayName,
+          position,
+          role: email === 'maivantiem@gmail.com' ? 'Super Admin' : 'Kỹ sư hiện trường',
+          created_at: new Date().toISOString()
+        };
+        
+        await addDoc(collection(db, 'users'), newMemDoc);
+        await fetchMembers();
+        showToast('Đã tạo thành công tài khoản kỹ sư trên Firebase!');
+        return true;
+      }
+    } catch (err) {
+      console.error(err);
+      showToast(`Lỗi khi tạo thành viên mới: ${err.message || err}`, true);
+      return false;
+    }
+  };
+
   // 2. Data Listener (Projects, Diaries, Minutes)
   useEffect(() => {
     if (!user) return;
     
     // Load projects
     fetchProjects();
+
+    // Load members
+    fetchMembers();
 
     // Setup listener/fetcher for diaries and minutes
     let unsubscribeDiaries = () => {};
@@ -178,7 +351,7 @@ export default function App() {
           snapshot.forEach((doc) => {
             list.push({ id: doc.id, ...doc.data() });
           });
-          setDiaries(list);
+          setDiaries(processDiaries(list));
         });
 
         // Minutes Listener
@@ -236,7 +409,7 @@ export default function App() {
     // Diaries
     const localDiaries = localStorage.getItem('hydrotech_diaries');
     if (localDiaries) {
-      setDiaries(JSON.parse(localDiaries));
+      setDiaries(processDiaries(JSON.parse(localDiaries)));
     } else {
       setDiaries([]);
     }
@@ -319,7 +492,7 @@ export default function App() {
           showToast('Lưu mới Nhật ký thi công thành công!');
         }
         localStorage.setItem('hydrotech_diaries', JSON.stringify(updatedDiaries));
-        setDiaries(updatedDiaries);
+        setDiaries(processDiaries(updatedDiaries));
       } else {
         // Save to Firestore
         if (activeDiary && activeDiary.id) {
@@ -335,7 +508,7 @@ export default function App() {
       }
     } catch (e) {
       console.error(e);
-      showToast('Lỗi khi lưu nhật ký thi công', true);
+      showToast(`Lỗi khi lưu nhật ký thi công: ${e.message || e}`, true);
     }
   };
 
@@ -383,7 +556,7 @@ export default function App() {
       }
     } catch (e) {
       console.error(e);
-      showToast('Lỗi khi lưu biên bản hiện trường', true);
+      showToast(`Lỗi khi lưu biên bản hiện trường: ${e.message || e}`, true);
     }
   };
 
@@ -534,11 +707,13 @@ export default function App() {
               setActiveDiary(diary);
               setActiveProjectId(diary.projectId);
               setDiaryReadOnly(true);
+              setViewingProject(null);
               setCurrentTab('nktc');
             }}
             onOpenMinute={(minute) => {
               setActiveMinute(minute);
               setActiveProjectId(minute.projectId);
+              setViewingProject(null);
               handleSetTab('bbps');
             }}
             onToast={showToast}
@@ -547,7 +722,7 @@ export default function App() {
 
         {currentTab === 'nktc' && (
           <div className="container-fluid" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            {!diaryReadOnly && (
+            {!diaryReadOnly && (!activeDiary || !activeDiary.id || isSuperAdmin) && (
               <NKTCParser 
                 onParsed={(parsedData) => setActiveDiary(parsedData)} 
                 onToast={showToast} 
@@ -564,7 +739,7 @@ export default function App() {
               diaries={diaries}
               equipmentMaster={equipmentMaster}
               materialMaster={materialMaster}
-              readOnly={diaryReadOnly}
+              readOnly={!isSuperAdmin && activeDiary && activeDiary.id ? true : diaryReadOnly}
             />
           </div>
         )}
@@ -576,6 +751,7 @@ export default function App() {
             initialData={activeMinute}
             onSave={handleSaveMinute}
             onToast={showToast}
+            readOnly={!isSuperAdmin && activeMinute && activeMinute.id ? true : false}
           />
         )}
 
@@ -594,9 +770,17 @@ export default function App() {
               >
                 Hồ sơ Kỹ sư & Cấu hình AI
               </div>
+              {isSuperAdmin && (
+                <div 
+                  className={`tab ${settingsSubTab === 'admin' ? 'active' : ''}`}
+                  onClick={() => setSettingsSubTab('admin')}
+                >
+                  Quản trị Admin
+                </div>
+              )}
             </div>
             
-            {settingsSubTab === 'project' ? (
+            {settingsSubTab === 'project' && (
               <ProjectSettings
                 user={user}
                 activeProjectId={activeProjectId}
@@ -606,11 +790,25 @@ export default function App() {
                 onSaveEquipmentMaster={saveEquipmentMaster}
                 materialMaster={materialMaster}
                 onSaveMaterialMaster={saveMaterialMaster}
+                isSuperAdmin={isSuperAdmin}
               />
-            ) : (
+            )}
+            
+            {settingsSubTab === 'user' && (
               <UserSettings
                 user={user}
                 onToast={showToast}
+              />
+            )}
+
+            {settingsSubTab === 'admin' && isSuperAdmin && (
+              <AdminPanel
+                user={user}
+                projects={projects}
+                diaries={diaries}
+                minutes={minutes}
+                members={members}
+                onCreateMember={handleCreateMember}
               />
             )}
           </div>

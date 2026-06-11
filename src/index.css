@@ -1499,4 +1499,56 @@ pre code.json-code {
   }
 }
 
+/* Print Styles for A4 PDF Export */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 0;
+  }
+  
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Hide all interactive UI */
+  body * {
+    visibility: hidden;
+  }
+
+  /* Show only A4 print preview card and its content */
+  .printable-a4-area,
+  .printable-a4-area * {
+    visibility: visible;
+  }
+
+  .printable-a4-area {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 210mm !important;
+    min-height: 297mm !important;
+    padding: 20mm 20mm !important; /* Professional document standard margins */
+    margin: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+    box-sizing: border-box !important;
+    page-break-after: always;
+  }
+  
+  .no-print {
+    display: none !important;
+  }
+  
+  .photo-print-section {
+    page-break-before: always !important;
+  }
+}
+
 

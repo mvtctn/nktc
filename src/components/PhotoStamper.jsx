@@ -20,8 +20,8 @@ export default function PhotoStamper({ photos, setPhotos, project, date, weather
     onToast(`Đang tải và xử lý ${files.length} ảnh hiện trường...`);
 
     const options = {
-      maxSizeMB: 0.5, // Target max 500KB
-      maxWidthOrHeight: 1024, // Resize to max 1024px
+      maxSizeMB: 0.1, // Target max 100KB to stay under Firestore's 1MB document limit
+      maxWidthOrHeight: 800, // Resize to max 800px for mobile-friendly size
       useWebWorker: true
     };
 
@@ -129,8 +129,8 @@ export default function PhotoStamper({ photos, setPhotos, project, date, weather
           });
         }
 
-        // Export as base64
-        resolve(canvas.toDataURL('image/jpeg', 0.85));
+        // Export as base64 with optimized quality
+        resolve(canvas.toDataURL('image/jpeg', 0.7));
       };
     });
   };

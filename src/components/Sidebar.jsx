@@ -197,7 +197,7 @@ export default function Sidebar({
                       onClick={() => onSelectDiary(d)}
                     >
                       <div className="history-card-header">
-                        <span>Trang {d.trang || '1'}</span>
+                        <span>Ngày thi công {d.trang || '1'}</span>
                         <span>{d.ngay}</span>
                       </div>
                       <div className="history-card-desc">

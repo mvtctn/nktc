@@ -61,10 +61,9 @@ export default function ProjectDetailModal({
     }
   };
 
-  // Shared diary card renderer
   const DiaryCard = ({ d }) => (
     <div
-      onClick={() => { onOpenDiary(d); onClose(); }}
+      onClick={() => onOpenDiary(d)}
       style={{
         padding: '12px 14px',
         borderRadius: 'var(--radius-sm)',
@@ -91,7 +90,7 @@ export default function ProjectDetailModal({
         alignItems: 'center',
         justifyContent: 'center',
       }}>
-        <span style={{ fontSize: '0.6rem', color: '#10b981', fontWeight: '700', letterSpacing: '0.05em' }}>Trang</span>
+        <span style={{ fontSize: '0.6rem', color: '#10b981', fontWeight: '700', letterSpacing: '0.05em' }}>Ngày TC</span>
         <span style={{ fontSize: '1rem', color: '#10b981', fontWeight: '800', lineHeight: 1 }}>{d.trang || '1'}</span>
       </div>
 
@@ -119,7 +118,7 @@ export default function ProjectDetailModal({
   // Shared minute card renderer
   const MinuteCard = ({ m }) => (
     <div
-      onClick={() => { onOpenMinute(m); onClose(); }}
+      onClick={() => onOpenMinute(m)}
       style={{
         padding: '12px 14px',
         borderRadius: 'var(--radius-sm)',

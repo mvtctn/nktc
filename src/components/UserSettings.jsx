@@ -27,6 +27,7 @@ export default function UserSettings({ user, onToast }) {
   const [updatingPassword, setUpdatingPassword] = useState(false);
 
   const isOffline = user.uid === 'offline_local_user';
+  const isSuperAdmin = user && user.email === 'maivantiem@gmail.com';
 
   useEffect(() => {
     if (user) {
@@ -137,6 +138,28 @@ export default function UserSettings({ user, onToast }) {
                 disabled
                 style={{ opacity: 0.6, background: 'rgba(255,255,255,0.03)' }}
               />
+            </div>
+
+            <div className="form-group">
+              <label className="form-label"><ShieldCheck size={14} /> Vai trò hệ thống</label>
+              <div style={{
+                padding: '10px 14px',
+                borderRadius: 'var(--radius-sm)',
+                background: isSuperAdmin ? 'rgba(245, 158, 11, 0.08)' : 'rgba(0, 229, 255, 0.05)',
+                border: isSuperAdmin ? '1px solid rgba(245, 158, 11, 0.3)' : '1px solid rgba(0, 229, 255, 0.2)',
+                color: isSuperAdmin ? '#f59e0b' : 'var(--accent)',
+                fontSize: '0.85rem',
+                fontWeight: '700',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
+              }}>
+                {isSuperAdmin ? (
+                  <>🔑 Super Admin (Toàn quyền quản trị, chỉnh sửa và xóa dữ liệu)</>
+                ) : (
+                  <>👷 Kỹ sư thành viên (Chỉ xem và tạo mới, không được sửa/xóa dữ liệu đã lưu)</>
+                )}
+              </div>
             </div>
 
             <div className="form-group">

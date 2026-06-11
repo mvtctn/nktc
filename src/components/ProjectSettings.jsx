@@ -12,6 +12,7 @@ export default function ProjectSettings({
   onSaveEquipmentMaster,
   materialMaster = [],
   onSaveMaterialMaster,
+  isSuperAdmin = false,
 }) {
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -43,6 +44,10 @@ export default function ProjectSettings({
   };
 
   const removeEquipmentMaster = (idx) => {
+    if (!isSuperAdmin) {
+      onToast('Bạn không có quyền xóa thiết bị khỏi danh mục dùng chung. Chỉ Super Admin mới có quyền này.', true);
+      return;
+    }
     onSaveEquipmentMaster(equipmentMaster.filter((_, i) => i !== idx));
   };
 
@@ -56,6 +61,10 @@ export default function ProjectSettings({
   };
 
   const removeMaterialMaster = (idx) => {
+    if (!isSuperAdmin) {
+      onToast('Bạn không có quyền xóa vật liệu khỏi danh mục dùng chung. Chỉ Super Admin mới có quyền này.', true);
+      return;
+    }
     onSaveMaterialMaster(materialMaster.filter((_, i) => i !== idx));
   };
 
@@ -114,6 +123,11 @@ export default function ProjectSettings({
     e.preventDefault();
     if (!name.trim()) return;
 
+    if (editingId && !isSuperAdmin) {
+      onToast('Bạn không có quyền chỉnh sửa thông tin dự án này. Chỉ Super Admin mới có quyền này.', true);
+      return;
+    }
+
     const projectData = {
       name,
       address,
@@ -160,6 +174,10 @@ export default function ProjectSettings({
   };
 
   const handleDelete = async (id) => {
+    if (!isSuperAdmin) {
+      onToast('Bạn không có quyền xóa dự án. Chỉ Super Admin mới có quyền này.', true);
+      return;
+    }
     if (!window.confirm('Bạn có chắc chắn muốn xóa dự án này? Tất cả nhật ký liên kết có thể bị ảnh hưởng.')) return;
     try {
       if (isOffline || !isValidConfig) {
@@ -373,14 +391,16 @@ export default function ProjectSettings({
                       </div>
                     </div>
 
-                    <div style={{ display: 'flex', gap: '4px' }}>
-                      <button onClick={() => handleEdit(proj)} className="btn btn-secondary btn-sm" style={{ padding: '4px 8px' }} title="Sửa">
-                        <Edit2 size={12} />
-                      </button>
-                      <button onClick={() => handleDelete(proj.id)} className="btn btn-danger btn-sm" style={{ padding: '4px 8px' }} title="Xóa">
-                        <Trash2 size={12} />
-                      </button>
-                    </div>
+                    {isSuperAdmin && (
+                      <div style={{ display: 'flex', gap: '4px' }}>
+                        <button onClick={() => handleEdit(proj)} className="btn btn-secondary btn-sm" style={{ padding: '4px 8px' }} title="Sửa">
+                          <Edit2 size={12} />
+                        </button>
+                        <button onClick={() => handleDelete(proj.id)} className="btn btn-danger btn-sm" style={{ padding: '4px 8px' }} title="Xóa">
+                          <Trash2 size={12} />
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}
@@ -447,14 +467,16 @@ export default function ProjectSettings({
                     }}
                   >
                     {item}
-                    <button
-                      type="button"
-                      onClick={() => removeEquipmentMaster(i)}
-                      style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center' }}
-                      title="Xóa"
-                    >
-                      <X size={12} color="#ef4444" />
-                    </button>
+                    {isSuperAdmin && (
+                      <button
+                        type="button"
+                        onClick={() => removeEquipmentMaster(i)}
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center' }}
+                        title="Xóa"
+                      >
+                        <X size={12} color="#ef4444" />
+                      </button>
+                    )}
                   </span>
                 ))
               )}
@@ -507,14 +529,16 @@ export default function ProjectSettings({
                     }}
                   >
                     {item}
-                    <button
-                      type="button"
-                      onClick={() => removeMaterialMaster(i)}
-                      style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center' }}
-                      title="Xóa"
-                    >
-                      <X size={12} color="#ef4444" />
-                    </button>
+                    {isSuperAdmin && (
+                      <button
+                        type="button"
+                        onClick={() => removeMaterialMaster(i)}
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center' }}
+                        title="Xóa"
+                      >
+                        <X size={12} color="#ef4444" />
+                      </button>
+                    )}
                   </span>
                 ))
               )}
