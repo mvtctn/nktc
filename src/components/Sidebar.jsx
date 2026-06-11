@@ -10,7 +10,8 @@ import {
   PlusCircle,
   FolderOpen,
   X,
-  LayoutDashboard
+  LayoutDashboard,
+  Kanban
 } from 'lucide-react';
 
 export default function Sidebar({
@@ -160,6 +161,14 @@ export default function Sidebar({
         >
           <FileSpreadsheet size={18} />
           <span>Biên bản phát sinh (BBPS)</span>
+        </div>
+
+        <div 
+          className={`menu-item ${currentTab === 'tasks' ? 'active' : ''}`}
+          onClick={() => setCurrentTab('tasks')}
+        >
+          <Kanban size={18} />
+          <span>Quản lý Tiến độ</span>
         </div>
 
         <div 

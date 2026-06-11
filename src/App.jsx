@@ -25,7 +25,7 @@ import BBPSForm from './components/BBPSForm';
 import Dashboard from './components/Dashboard';
 import ProjectDetailModal from './components/ProjectDetailModal';
 import AdminPanel from './components/AdminPanel';
-
+import TaskManager from './components/TaskManager';
 import { Menu, X, User } from 'lucide-react';
 
 // Helper to parse date "DD/MM/YYYY" to Date object
@@ -111,6 +111,9 @@ export default function App() {
   
   const [minutes, setMinutes] = useState([]);
   const [activeMinute, setActiveMinute] = useState(null);
+
+  const [jobs, setJobs] = useState([]);
+  const [tasks, setTasks] = useState([]);
 
   // Keep activeDiary synchronized with the list of processed diaries
   useEffect(() => {
@@ -502,6 +505,8 @@ export default function App() {
     // Setup listener/fetcher for diaries and minutes
     let unsubscribeDiaries = () => {};
     let unsubscribeMinutes = () => {};
+    let unsubscribeJobs = () => {};
+    let unsubscribeTasks = () => {};
 
     if (isOffline || !isValidConfig) {
       // LocalStorage data load
@@ -534,6 +539,22 @@ export default function App() {
           });
           setMinutes(list);
         });
+
+        // Jobs Listener
+        const jobsQuery = query(collection(db, 'jobs'), orderBy('created_at', 'desc'));
+        unsubscribeJobs = onSnapshot(jobsQuery, (snapshot) => {
+          const list = [];
+          snapshot.forEach(doc => list.push({ id: doc.id, ...doc.data() }));
+          setJobs(list);
+        });
+
+        // Tasks Listener
+        const tasksQuery = query(collection(db, 'tasks'), orderBy('created_at', 'desc'));
+        unsubscribeTasks = onSnapshot(tasksQuery, (snapshot) => {
+          const list = [];
+          snapshot.forEach(doc => list.push({ id: doc.id, ...doc.data() }));
+          setTasks(list);
+        });
       } catch (err) {
         console.error('Lỗi khi thiết lập Firestore listener:', err);
         loadLocalData(); // Fallback to local
@@ -543,6 +564,8 @@ export default function App() {
     return () => {
       unsubscribeDiaries();
       unsubscribeMinutes();
+      unsubscribeJobs();
+      unsubscribeTasks();
     };
   }, [user, activeProjectId]);
 
@@ -589,6 +612,16 @@ export default function App() {
     } else {
       setMinutes([]);
     }
+
+    // Jobs
+    const localJobs = localStorage.getItem('hydrotech_jobs');
+    if (localJobs) setJobs(JSON.parse(localJobs));
+    else setJobs([]);
+
+    // Tasks
+    const localTasks = localStorage.getItem('hydrotech_tasks');
+    if (localTasks) setTasks(JSON.parse(localTasks));
+    else setTasks([]);
   };
 
   // 3. User actions
@@ -725,6 +758,113 @@ export default function App() {
     } catch (e) {
       console.error(e);
       showToast(`Lỗi khi lưu biên bản hiện trường: ${e.message || e}`, true);
+    }
+  };
+
+  // JOB CRUD ACTIONS
+  const handleSaveJob = async (jobData) => {
+    const fullData = { ...jobData, updated_at: new Date().toISOString(), user_id: user.uid };
+    if (!fullData.projectId) fullData.projectId = activeProjectId;
+    try {
+      if (isOffline || !isValidConfig) {
+        let updatedJobs = [...jobs];
+        if (jobData.id) {
+          updatedJobs = updatedJobs.map(j => j.id === jobData.id ? { ...j, ...fullData } : j);
+          showToast('Cập nhật Công việc thành công!');
+        } else {
+          const newJob = { id: 'job_' + Date.now(), created_at: new Date().toISOString(), ...fullData };
+          updatedJobs.unshift(newJob);
+          showToast('Thêm Công việc thành công!');
+        }
+        localStorage.setItem('hydrotech_jobs', JSON.stringify(updatedJobs));
+        setJobs(updatedJobs);
+      } else {
+        if (jobData.id) {
+          await updateDoc(doc(db, 'jobs', jobData.id), fullData);
+          showToast('Cập nhật Công việc trực tuyến thành công!');
+        } else {
+          const newDoc = { created_at: new Date().toISOString(), ...fullData };
+          await addDoc(collection(db, 'jobs'), newDoc);
+          showToast('Thêm Công việc trực tuyến thành công!');
+        }
+      }
+    } catch (e) {
+      console.error(e);
+      showToast(`Lỗi khi lưu công việc: ${e.message}`, true);
+    }
+  };
+
+  const handleDeleteJob = async (jobId) => {
+    try {
+      if (isOffline || !isValidConfig) {
+        const updatedJobs = jobs.filter(j => j.id !== jobId);
+        const updatedTasks = tasks.filter(t => t.jobId !== jobId);
+        localStorage.setItem('hydrotech_jobs', JSON.stringify(updatedJobs));
+        localStorage.setItem('hydrotech_tasks', JSON.stringify(updatedTasks));
+        setJobs(updatedJobs);
+        setTasks(updatedTasks);
+        showToast('Xóa công việc thành công!');
+      } else {
+        await deleteDoc(doc(db, 'jobs', jobId));
+        const tasksToDelete = tasks.filter(t => t.jobId === jobId);
+        for (const t of tasksToDelete) {
+          await deleteDoc(doc(db, 'tasks', t.id));
+        }
+        showToast('Xóa công việc thành công!');
+      }
+    } catch (e) {
+      console.error(e);
+      showToast(`Lỗi khi xóa: ${e.message}`, true);
+    }
+  };
+
+  // TASK CRUD ACTIONS
+  const handleSaveTask = async (taskData) => {
+    const fullData = { ...taskData, updated_at: new Date().toISOString(), user_id: user.uid };
+    if (!fullData.projectId) fullData.projectId = activeProjectId;
+    try {
+      if (isOffline || !isValidConfig) {
+        let updatedTasks = [...tasks];
+        if (taskData.id) {
+          updatedTasks = updatedTasks.map(t => t.id === taskData.id ? { ...t, ...fullData } : t);
+          showToast('Cập nhật Task thành công!');
+        } else {
+          const newTask = { id: 'task_' + Date.now(), created_at: new Date().toISOString(), ...fullData };
+          updatedTasks.unshift(newTask);
+          showToast('Thêm Task thành công!');
+        }
+        localStorage.setItem('hydrotech_tasks', JSON.stringify(updatedTasks));
+        setTasks(updatedTasks);
+      } else {
+        if (taskData.id) {
+          await updateDoc(doc(db, 'tasks', taskData.id), fullData);
+          showToast('Cập nhật Task trực tuyến thành công!');
+        } else {
+          const newDoc = { created_at: new Date().toISOString(), ...fullData };
+          await addDoc(collection(db, 'tasks'), newDoc);
+          showToast('Thêm Task trực tuyến thành công!');
+        }
+      }
+    } catch (e) {
+      console.error(e);
+      showToast(`Lỗi khi lưu task: ${e.message}`, true);
+    }
+  };
+
+  const handleDeleteTask = async (taskId) => {
+    try {
+      if (isOffline || !isValidConfig) {
+        const updatedTasks = tasks.filter(t => t.id !== taskId);
+        localStorage.setItem('hydrotech_tasks', JSON.stringify(updatedTasks));
+        setTasks(updatedTasks);
+        showToast('Xóa Task thành công!');
+      } else {
+        await deleteDoc(doc(db, 'tasks', taskId));
+        showToast('Xóa Task thành công!');
+      }
+    } catch (e) {
+      console.error(e);
+      showToast(`Lỗi khi xóa task: ${e.message}`, true);
     }
   };
 
@@ -885,6 +1025,25 @@ export default function App() {
               handleSetTab('bbps');
             }}
             onToast={showToast}
+          />
+        )}
+
+        {currentTab === 'tasks' && (
+          <TaskManager
+            user={user}
+            projects={projects}
+            activeProjectId={activeProjectId}
+            setActiveProjectId={setActiveProjectId}
+            jobs={jobs}
+            tasks={tasks}
+            members={members}
+            onSaveJob={handleSaveJob}
+            onSaveTask={handleSaveTask}
+            onDeleteJob={handleDeleteJob}
+            onDeleteTask={handleDeleteTask}
+            onToast={showToast}
+            isOffline={isOffline}
+            isSuperAdmin={isSuperAdmin}
           />
         )}
 
