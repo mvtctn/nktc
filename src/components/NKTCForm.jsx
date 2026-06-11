@@ -58,6 +58,7 @@ export default function NKTCForm({
   diaries = [],
   equipmentMaster = [],
   materialMaster = [],
+  readOnly = false,
 }) {
   const [activeTab, setActiveTab] = useState('input'); // 'input', 'preview', or 'json'
   const [actionsMenuOpen, setActionsMenuOpen] = useState(false);
@@ -274,6 +275,25 @@ export default function NKTCForm({
         </div>
       </div>
 
+      {readOnly && (
+        <div className="glass-card" style={{ 
+          background: 'rgba(0, 229, 255, 0.05)',
+          border: '1px solid rgba(0, 229, 255, 0.25)',
+          padding: '12px 16px',
+          borderRadius: 'var(--radius-sm)',
+          fontSize: '0.85rem',
+          color: 'var(--accent)',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+          fontWeight: '600',
+          maxWidth: '850px',
+          margin: '0 auto 16px'
+        }}>
+          ℹ️ Bạn đang xem chi tiết Nhật ký thi công ở chế độ chỉ đọc. Không thể chỉnh sửa dữ liệu.
+        </div>
+      )}
+
       {activeTab === 'input' && (
         /* Giao diện Nhập liệu Nhật ký (Full width, centered) */
         <div className="glass-card" style={{ display: 'flex', flexDirection: 'column', gap: '18px', maxWidth: '850px', margin: '0 auto', width: '100%' }}>
@@ -290,11 +310,12 @@ export default function NKTCForm({
                 className="form-control"
                 value={convertToInputDate(ngay)}
                 onChange={(e) => setNgay(convertToDisplayDate(e.target.value))}
+                disabled={readOnly}
               />
             </div>
             <div className="form-group">
               <label className="form-label">Thời tiết Sáng</label>
-              <select className="form-control" value={thoi_tiet_sang} onChange={(e) => setThoiTietSang(e.target.value)}>
+              <select className="form-control" value={thoi_tiet_sang} onChange={(e) => setThoiTietSang(e.target.value)} disabled={readOnly}>
                 <option value="Nắng">Nắng</option>
                 <option value="Mưa">Mưa</option>
                 <option value="Bình thường">Bình thường</option>
@@ -302,7 +323,7 @@ export default function NKTCForm({
             </div>
             <div className="form-group">
               <label className="form-label">Thời tiết Chiều</label>
-              <select className="form-control" value={thoi_tiet_chieu} onChange={(e) => setThoiTietChieu(e.target.value)}>
+              <select className="form-control" value={thoi_tiet_chieu} onChange={(e) => setThoiTietChieu(e.target.value)} disabled={readOnly}>
                 <option value="Nắng">Nắng</option>
                 <option value="Mưa">Mưa</option>
                 <option value="Bình thường">Bình thường</option>
@@ -320,6 +341,7 @@ export default function NKTCForm({
               placeholder="Nhập số lượng công nhân..."
               value={so_luong_cong_nhan}
               onChange={(e) => setSoLuongCongNhan(parseInt(e.target.value || 0, 10))}
+              disabled={readOnly}
             />
           </div>
 
@@ -332,6 +354,7 @@ export default function NKTCForm({
               setItems={setThietBi}
               namePlaceholder="Chọn thiết bị hoặc gõ tên..."
               quantityPlaceholder="Số lượng (vd: 02 cái)"
+              readOnly={readOnly}
             />
           </div>
 
@@ -344,6 +367,7 @@ export default function NKTCForm({
               setItems={setVatLieu}
               namePlaceholder="Chọn vật liệu hoặc gõ tên..."
               quantityPlaceholder="Khối lượng (vd: 50m)"
+              readOnly={readOnly}
             />
           </div>
 
@@ -351,9 +375,11 @@ export default function NKTCForm({
           <div className="form-group">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
               <label className="form-label" style={{ marginBottom: '0' }}>Nội dung hoạt động & Vị trí</label>
-              <button type="button" onClick={addProgressLine} className="btn btn-secondary btn-sm" style={{ padding: '4px 8px' }}>
-                <Plus size={12} /> Thêm đầu việc
-              </button>
+              {!readOnly && (
+                <button type="button" onClick={addProgressLine} className="btn btn-secondary btn-sm" style={{ padding: '4px 8px' }}>
+                  <Plus size={12} /> Thêm đầu việc
+                </button>
+              )}
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {tien_trinh_cong_viec.map((line, index) => (
@@ -365,10 +391,13 @@ export default function NKTCForm({
                     placeholder="Ví dụ: Lắp đặt ống HDPE thoát nước mưa tại Xưởng 1"
                     value={line}
                     onChange={(e) => updateProgressLine(index, e.value || e.target.value)}
+                    disabled={readOnly}
                   />
-                  <button type="button" onClick={() => removeProgressLine(index)} className="btn btn-secondary" style={{ padding: '10px' }}>
-                    <Trash2 size={14} color="#ef4444" />
-                  </button>
+                  {!readOnly && (
+                    <button type="button" onClick={() => removeProgressLine(index)} className="btn btn-secondary" style={{ padding: '10px' }}>
+                      <Trash2 size={14} color="#ef4444" />
+                    </button>
+                  )}
                 </div>
               ))}
             </div>
@@ -378,14 +407,14 @@ export default function NKTCForm({
           <div className="input-row">
             <div className="form-group">
               <label className="form-label"><Shield size={14} /> An toàn lao động</label>
-              <select className="form-control" value={an_toan_lao_dong} onChange={(e) => setAnToanLaoDong(e.target.value)}>
+              <select className="form-control" value={an_toan_lao_dong} onChange={(e) => setAnToanLaoDong(e.target.value)} disabled={readOnly}>
                 <option value="Tốt">Tốt</option>
                 <option value="Không tốt">Không tốt</option>
               </select>
             </div>
             <div className="form-group">
               <label className="form-label"><Leaf size={14} /> Vệ sinh môi trường</label>
-              <select className="form-control" value={ve_sinh_moi_truong} onChange={(e) => setVeSinhMoiTruong(e.target.value)}>
+              <select className="form-control" value={ve_sinh_moi_truong} onChange={(e) => setVeSinhMoiTruong(e.target.value)} disabled={readOnly}>
                 <option value="Tốt">Tốt</option>
                 <option value="Trung bình">Trung bình</option>
                 <option value="Xấu">Xấu</option>
@@ -401,6 +430,7 @@ export default function NKTCForm({
               placeholder="Nhập các vướng mắc hiện trường..."
               value={ghi_chu_khac}
               onChange={(e) => setGhiChuKhac(e.value || e.target.value)}
+              disabled={readOnly}
             />
           </div>
 
@@ -413,13 +443,20 @@ export default function NKTCForm({
             weather={thoi_tiet_sang === thoi_tiet_chieu ? thoi_tiet_sang : `Sáng ${thoi_tiet_sang}, chiều ${thoi_tiet_chieu}`}
             engineer={project ? project.supervisor : user.displayName || 'Kỹ sư'}
             onToast={onToast}
+            readOnly={readOnly}
           />
 
           {/* Action buttons with dropdown menu */}
           <div style={{ display: 'flex', gap: '10px', marginTop: '16px', position: 'relative' }}>
-            <button type="button" onClick={handleSaveDiary} className="btn btn-accent" style={{ flex: 1 }}>
-              <Save size={18} /> Lưu Nhật ký (Cloud/Local)
-            </button>
+            {!readOnly ? (
+              <button type="button" onClick={handleSaveDiary} className="btn btn-accent" style={{ flex: 1 }}>
+                <Save size={18} /> Lưu Nhật ký (Cloud/Local)
+              </button>
+            ) : (
+              <div style={{ flex: 1, display: 'flex', alignItems: 'center', color: 'var(--text-light)', fontSize: '0.85rem', fontWeight: '600' }}>
+                * Bạn đang xem Nhật ký ở chế độ chỉ đọc.
+              </div>
+            )}
             
             <div style={{ position: 'relative' }}>
               <button 

@@ -40,6 +40,9 @@ export default function App() {
   const [showInstallBanner, setShowInstallBanner] = useState(false);
   const [isIOSDevice, setIsIOSDevice] = useState(false);
 
+  // Read-only state for diaries opened from ProjectDetailModal
+  const [diaryReadOnly, setDiaryReadOnly] = useState(false);
+
   // Toast Alert State
   const [toast, setToast] = useState({ show: false, message: '', isError: false });
 
@@ -384,6 +387,13 @@ export default function App() {
     }
   };
 
+  const handleSetTab = (tab) => {
+    setCurrentTab(tab);
+    if (tab !== 'nktc') {
+      setDiaryReadOnly(false);
+    }
+  };
+
   if (authLoading) {
     return (
       <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0a192f' }}>
@@ -416,7 +426,7 @@ export default function App() {
         user={user}
         onLogout={handleLogout}
         currentTab={currentTab}
-        setCurrentTab={setCurrentTab}
+        setCurrentTab={handleSetTab}
         theme={theme}
         toggleTheme={toggleTheme}
         projects={projects}
@@ -424,8 +434,8 @@ export default function App() {
         setActiveProjectId={setActiveProjectId}
         diaries={diaries}
         activeDiaryId={activeDiary ? activeDiary.id : null}
-        onSelectDiary={(diary) => { setActiveDiary(diary); setMobileMenuOpen(false); }}
-        onNewDiary={() => { setActiveDiary(null); setMobileMenuOpen(false); }}
+        onSelectDiary={(diary) => { setActiveDiary(diary); setDiaryReadOnly(false); setMobileMenuOpen(false); }}
+        onNewDiary={() => { setActiveDiary(null); setDiaryReadOnly(false); setMobileMenuOpen(false); }}
         minutes={minutes}
         activeMinuteId={activeMinute ? activeMinute.id : null}
         onSelectMinute={(minute) => { setActiveMinute(minute); setMobileMenuOpen(false); }}
@@ -457,7 +467,7 @@ export default function App() {
             </button>
             
             <div 
-              onClick={() => setCurrentTab('dashboard')} 
+              onClick={() => handleSetTab('dashboard')} 
               style={{ cursor: 'pointer' }}
               title="Về trang chủ Dashboard"
             >
@@ -494,17 +504,18 @@ export default function App() {
             setActiveProjectId={setActiveProjectId}
             diaries={diaries}
             minutes={minutes}
-            setCurrentTab={setCurrentTab}
+            setCurrentTab={handleSetTab}
             setSettingsSubTab={setSettingsSubTab}
             onSelectDiary={setActiveDiary}
             onSelectMinute={setActiveMinute}
             onToast={showToast}
             onViewProject={(proj) => {
               setViewingProject(proj);
-              setCurrentTab('project-detail');
+              handleSetTab('project-detail');
             }}
             onNewDiary={() => {
               setActiveDiary(null);
+              setDiaryReadOnly(false);
               setCurrentTab('nktc');
             }}
           />
@@ -517,17 +528,18 @@ export default function App() {
             minutes={minutes}
             onClose={() => {
               setViewingProject(null);
-              setCurrentTab('dashboard');
+              handleSetTab('dashboard');
             }}
             onOpenDiary={(diary) => {
               setActiveDiary(diary);
               setActiveProjectId(diary.projectId);
+              setDiaryReadOnly(true);
               setCurrentTab('nktc');
             }}
             onOpenMinute={(minute) => {
               setActiveMinute(minute);
               setActiveProjectId(minute.projectId);
-              setCurrentTab('bbps');
+              handleSetTab('bbps');
             }}
             onToast={showToast}
           />
@@ -535,12 +547,14 @@ export default function App() {
 
         {currentTab === 'nktc' && (
           <div className="container-fluid" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <NKTCParser 
-              onParsed={(parsedData) => setActiveDiary(parsedData)} 
-              onToast={showToast} 
-              date={activeDiary ? activeDiary.ngay : ''}
-              page={activeDiary ? activeDiary.trang : ''}
-            />
+            {!diaryReadOnly && (
+              <NKTCParser 
+                onParsed={(parsedData) => setActiveDiary(parsedData)} 
+                onToast={showToast} 
+                date={activeDiary ? activeDiary.ngay : ''}
+                page={activeDiary ? activeDiary.trang : ''}
+              />
+            )}
             <NKTCForm
               user={user}
               project={activeProject}
@@ -550,6 +564,7 @@ export default function App() {
               diaries={diaries}
               equipmentMaster={equipmentMaster}
               materialMaster={materialMaster}
+              readOnly={diaryReadOnly}
             />
           </div>
         )}

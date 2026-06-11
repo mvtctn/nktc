@@ -190,6 +190,7 @@ body {
 /* Form Styles */
 .form-group {
   margin-bottom: 20px;
+  min-width: 0;
 }
 
 .form-label {
@@ -211,6 +212,14 @@ body {
   border-radius: var(--radius-sm);
   outline: none;
   transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+/* Custom styling to prevent iOS/browser date inputs from expanding past container */
+input[type="date"].form-control {
+  min-width: 0 !important;
+  max-width: 100% !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
 }
 
 .form-control:focus {
@@ -1117,6 +1126,7 @@ pre code.json-code {
 
   .form-group {
     margin-bottom: 16px !important;
+    min-width: 0 !important;
   }
 
   .input-row {

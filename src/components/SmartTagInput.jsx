@@ -13,6 +13,7 @@ export default function SmartTagInput({
   setItems,
   namePlaceholder = 'Chọn hoặc gõ tên...',
   quantityPlaceholder = 'Số lượng, đơn vị...',
+  readOnly = false,
 }) {
   const [nameText, setNameText] = useState('');
   const [quantityText, setQuantityText] = useState('');
@@ -100,106 +101,108 @@ export default function SmartTagInput({
   return (
     <div>
       {/* Input row: [Name dropdown] [Quantity] [+ button] */}
-      <div className="tag-input-row" ref={containerRef}>
-        {/* === Field 1: Name combobox === */}
-        <div className="tag-input-name-col">
-          <input
-            ref={nameInputRef}
-            type="text"
-            className="form-control"
-            placeholder={namePlaceholder}
-            value={nameText}
-            autoComplete="off"
-            onChange={(e) => {
-              setNameText(e.target.value);
-              setShowDropdown(true);
-              setHighlightIndex(-1);
-            }}
-            onFocus={() => setShowDropdown(true)}
-            onKeyDown={handleNameKeyDown}
-          />
-
-          {/* Dropdown */}
-          {showDropdown && filtered.length > 0 && (
-            <div
-              className="tag-input-dropdown"
-              style={{
-                position: 'absolute',
-                top: 'calc(100% + 4px)',
-                left: 0,
-                right: 0,
-                zIndex: 300,
-                background: 'var(--bg-card)',
-                border: '1px solid rgba(0, 180, 216, 0.35)',
-                borderRadius: 'var(--radius-sm)',
-                boxShadow: '0 8px 24px rgba(0,0,0,0.4)',
-                maxHeight: '200px',
-                overflowY: 'auto',
+      {!readOnly && (
+        <div className="tag-input-row" ref={containerRef}>
+          {/* === Field 1: Name combobox === */}
+          <div className="tag-input-name-col">
+            <input
+              ref={nameInputRef}
+              type="text"
+              className="form-control"
+              placeholder={namePlaceholder}
+              value={nameText}
+              autoComplete="off"
+              onChange={(e) => {
+                setNameText(e.target.value);
+                setShowDropdown(true);
+                setHighlightIndex(-1);
               }}
-            >
-              {filtered.map((s, i) => (
-                <div
-                  key={i}
-                  onMouseDown={(e) => {
-                    e.preventDefault();
-                    selectSuggestion(s);
-                  }}
-                  onMouseEnter={() => setHighlightIndex(i)}
-                  style={{
-                    padding: '9px 14px',
-                    cursor: 'pointer',
-                    fontSize: '0.845rem',
-                    color: 'var(--text-primary)',
-                    background:
-                      highlightIndex === i
-                        ? 'rgba(0, 180, 216, 0.18)'
-                        : 'transparent',
-                    borderBottom:
-                      i < filtered.length - 1
-                        ? '1px solid rgba(255,255,255,0.04)'
-                        : 'none',
-                    transition: 'background 0.1s',
-                  }}
-                >
-                  {s}
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+              onFocus={() => setShowDropdown(true)}
+              onKeyDown={handleNameKeyDown}
+            />
 
-        {/* === Field 2: Quantity === */}
-        <div className="tag-input-qty-col">
-          <input
-            ref={quantityInputRef}
-            type="text"
-            className="form-control"
-            placeholder={quantityPlaceholder}
-            value={quantityText}
-            onChange={(e) => setQuantityText(e.target.value)}
-            onKeyDown={handleQuantityKeyDown}
-          />
-        </div>
+            {/* Dropdown */}
+            {showDropdown && filtered.length > 0 && (
+              <div
+                className="tag-input-dropdown"
+                style={{
+                  position: 'absolute',
+                  top: 'calc(100% + 4px)',
+                  left: 0,
+                  right: 0,
+                  zIndex: 300,
+                  background: 'var(--bg-card)',
+                  border: '1px solid rgba(0, 180, 216, 0.35)',
+                  borderRadius: 'var(--radius-sm)',
+                  boxShadow: '0 8px 24px rgba(0,0,0,0.4)',
+                  maxHeight: '200px',
+                  overflowY: 'auto',
+                }}
+              >
+                {filtered.map((s, i) => (
+                  <div
+                    key={i}
+                    onMouseDown={(e) => {
+                      e.preventDefault();
+                      selectSuggestion(s);
+                    }}
+                    onMouseEnter={() => setHighlightIndex(i)}
+                    style={{
+                      padding: '9px 14px',
+                      cursor: 'pointer',
+                      fontSize: '0.845rem',
+                      color: 'var(--text-primary)',
+                      background:
+                        highlightIndex === i
+                          ? 'rgba(0, 180, 216, 0.18)'
+                          : 'transparent',
+                      borderBottom:
+                        i < filtered.length - 1
+                          ? '1px solid rgba(255,255,255,0.04)'
+                          : 'none',
+                      transition: 'background 0.1s',
+                    }}
+                  >
+                    {s}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
 
-        {/* === Add button === */}
-        <button
-          type="button"
-          onClick={handleAdd}
-          className="btn btn-secondary tag-input-btn-col"
-          title="Thêm vào danh sách (Enter)"
-        >
-          <Plus size={16} />
-        </button>
-      </div>
+          {/* === Field 2: Quantity === */}
+          <div className="tag-input-qty-col">
+            <input
+              ref={quantityInputRef}
+              type="text"
+              className="form-control"
+              placeholder={quantityPlaceholder}
+              value={quantityText}
+              onChange={(e) => setQuantityText(e.target.value)}
+              onKeyDown={handleQuantityKeyDown}
+            />
+          </div>
+
+          {/* === Add button === */}
+          <button
+            type="button"
+            onClick={handleAdd}
+            className="btn btn-secondary tag-input-btn-col"
+            title="Thêm vào danh sách (Enter)"
+          >
+            <Plus size={16} />
+          </button>
+        </div>
+      )}
 
       {/* Pill tags */}
       {items.length > 0 && (
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: !readOnly ? '8px' : '0' }}>
           {items.map((item, index) => (
             <span
               key={index}
               style={{
-                padding: '5px 10px 5px 14px',
+                padding: readOnly ? '5px 12px' : '5px 10px 5px 14px',
                 background: 'rgba(0, 180, 216, 0.08)',
                 border: '1px solid rgba(0, 180, 216, 0.25)',
                 borderRadius: '20px',
@@ -211,33 +214,35 @@ export default function SmartTagInput({
               }}
             >
               {item}
-              <button
-                type="button"
-                onClick={() => handleRemove(index)}
-                style={{
-                  background: 'rgba(239,68,68,0.15)',
-                  border: 'none',
-                  borderRadius: '50%',
-                  width: '18px',
-                  height: '18px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  cursor: 'pointer',
-                  padding: 0,
-                  flexShrink: 0,
-                  transition: 'background 0.15s',
-                }}
-                onMouseOver={(e) =>
-                  (e.currentTarget.style.background = 'rgba(239,68,68,0.35)')
-                }
-                onMouseOut={(e) =>
-                  (e.currentTarget.style.background = 'rgba(239,68,68,0.15)')
-                }
-                title="Xóa"
-              >
-                <X size={11} color="#ef4444" />
-              </button>
+              {!readOnly && (
+                <button
+                  type="button"
+                  onClick={() => handleRemove(index)}
+                  style={{
+                    background: 'rgba(239,68,68,0.15)',
+                    border: 'none',
+                    borderRadius: '50%',
+                    width: '18px',
+                    height: '18px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer',
+                    padding: 0,
+                    flexShrink: 0,
+                    transition: 'background 0.15s',
+                  }}
+                  onMouseOver={(e) =>
+                    (e.currentTarget.style.background = 'rgba(239,68,68,0.35)')
+                  }
+                  onMouseOut={(e) =>
+                    (e.currentTarget.style.background = 'rgba(239,68,68,0.15)')
+                  }
+                  title="Xóa"
+                >
+                  <X size={11} color="#ef4444" />
+                </button>
+              )}
             </span>
           ))}
         </div>

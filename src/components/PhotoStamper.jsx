@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import imageCompression from 'browser-image-compression';
 import { Camera, Trash2, CheckSquare, Square, RefreshCw } from 'lucide-react';
 
-export default function PhotoStamper({ photos, setPhotos, project, date, weather, engineer, onToast }) {
+export default function PhotoStamper({ photos, setPhotos, project, date, weather, engineer, onToast, readOnly = false }) {
   const [compressing, setCompressing] = useState(false);
   
   // Watermark Toggles
@@ -145,70 +145,82 @@ export default function PhotoStamper({ photos, setPhotos, project, date, weather
       <label className="form-label">Ảnh chụp hiện trường & Đóng dấu nước</label>
       
       {/* Checkbox settings */}
-      <div className="options-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', margin: '8px 0 16px' }}>
-        <div className="option-checkbox-card" onClick={() => setStampProject(!stampProject)}>
-          {stampProject ? <CheckSquare size={16} color="var(--secondary)" /> : <Square size={16} />}
-          <span>Đóng dấu Dự án</span>
+      {!readOnly && (
+        <div className="options-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', margin: '8px 0 16px' }}>
+          <div className="option-checkbox-card" onClick={() => setStampProject(!stampProject)}>
+            {stampProject ? <CheckSquare size={16} color="var(--secondary)" /> : <Square size={16} />}
+            <span>Đóng dấu Dự án</span>
+          </div>
+          <div className="option-checkbox-card" onClick={() => setStampDate(!stampDate)}>
+            {stampDate ? <CheckSquare size={16} color="var(--secondary)" /> : <Square size={16} />}
+            <span>Đóng dấu Ngày/Giờ</span>
+          </div>
+          <div className="option-checkbox-card" onClick={() => setStampEngineer(!stampEngineer)}>
+            {stampEngineer ? <CheckSquare size={16} color="var(--secondary)" /> : <Square size={16} />}
+            <span>Đóng dấu Kỹ sư</span>
+          </div>
+          <div className="option-checkbox-card" onClick={() => setStampWeather(!stampWeather)}>
+            {stampWeather ? <CheckSquare size={16} color="var(--secondary)" /> : <Square size={16} />}
+            <span>Đóng dấu Thời tiết</span>
+          </div>
+          <div className="option-checkbox-card" onClick={() => setStampGPS(!stampGPS)}>
+            {stampGPS ? <CheckSquare size={16} color="var(--secondary)" /> : <Square size={16} />}
+            <span>Tọa độ GPS</span>
+          </div>
         </div>
-        <div className="option-checkbox-card" onClick={() => setStampDate(!stampDate)}>
-          {stampDate ? <CheckSquare size={16} color="var(--secondary)" /> : <Square size={16} />}
-          <span>Đóng dấu Ngày/Giờ</span>
-        </div>
-        <div className="option-checkbox-card" onClick={() => setStampEngineer(!stampEngineer)}>
-          {stampEngineer ? <CheckSquare size={16} color="var(--secondary)" /> : <Square size={16} />}
-          <span>Đóng dấu Kỹ sư</span>
-        </div>
-        <div className="option-checkbox-card" onClick={() => setStampWeather(!stampWeather)}>
-          {stampWeather ? <CheckSquare size={16} color="var(--secondary)" /> : <Square size={16} />}
-          <span>Đóng dấu Thời tiết</span>
-        </div>
-        <div className="option-checkbox-card" onClick={() => setStampGPS(!stampGPS)}>
-          {stampGPS ? <CheckSquare size={16} color="var(--secondary)" /> : <Square size={16} />}
-          <span>Tọa độ GPS</span>
-        </div>
-      </div>
+      )}
 
       {/* Upload button area */}
-      <label className="photo-upload-container" style={{ display: 'block' }}>
-        <input 
-          type="file" 
-          multiple 
-          accept="image/*" 
-          style={{ display: 'none', position: 'absolute', width: 0, height: 0, opacity: 0 }}
-          onChange={handlePhotoUpload} 
-          disabled={compressing}
-        />
-        {compressing ? (
-          <div>
-            <RefreshCw className="spinner photo-upload-icon" style={{ animation: 'spin 1s linear infinite' }} />
-            <p style={{ fontSize: '0.875rem', fontWeight: '600' }}>Đang nén và đóng dấu ảnh...</p>
-          </div>
-        ) : (
-          <div>
-            <Camera className="photo-upload-icon" />
-            <p style={{ fontSize: '0.875rem', fontWeight: '600' }}>Bấm hoặc kéo thả ảnh để tải lên</p>
-            <span style={{ fontSize: '0.725rem', color: 'var(--text-light)' }}>Hỗ trợ nhiều ảnh (.jpg, .png). Tự động nén tối ưu.</span>
-          </div>
-        )}
-      </label>
+      {!readOnly && (
+        <label className="photo-upload-container" style={{ display: 'block' }}>
+          <input 
+            type="file" 
+            multiple 
+            accept="image/*" 
+            style={{ display: 'none', position: 'absolute', width: 0, height: 0, opacity: 0 }}
+            onChange={handlePhotoUpload} 
+            disabled={compressing}
+          />
+          {compressing ? (
+            <div>
+              <RefreshCw className="spinner photo-upload-icon" style={{ animation: 'spin 1s linear infinite' }} />
+              <p style={{ fontSize: '0.875rem', fontWeight: '600' }}>Đang nén và đóng dấu ảnh...</p>
+            </div>
+          ) : (
+            <div>
+              <Camera className="photo-upload-icon" />
+              <p style={{ fontSize: '0.875rem', fontWeight: '600' }}>Bấm hoặc kéo thả ảnh để tải lên</p>
+              <span style={{ fontSize: '0.725rem', color: 'var(--text-light)' }}>Hỗ trợ nhiều ảnh (.jpg, .png). Tự động nén tối ưu.</span>
+            </div>
+          )}
+        </label>
+      )}
 
       {/* Grid of uploaded images */}
-      {photos.length > 0 && (
-        <div className="photo-grid">
+      {photos.length > 0 ? (
+        <div className="photo-grid" style={{ marginTop: readOnly ? '8px' : '0' }}>
           {photos.map((photoBase64, index) => (
             <div key={index} className="photo-item">
               <img src={photoBase64} alt={`Ảnh hiện trường ${index + 1}`} />
-              <button 
-                type="button" 
-                onClick={() => removePhoto(index)} 
-                className="photo-delete-btn"
-                title="Xóa ảnh này"
-              >
-                <Trash2 size={12} />
-              </button>
+              {!readOnly && (
+                <button 
+                  type="button" 
+                  onClick={() => removePhoto(index)} 
+                  className="photo-delete-btn"
+                  title="Xóa ảnh này"
+                >
+                  <Trash2 size={12} />
+                </button>
+              )}
             </div>
           ))}
         </div>
+      ) : (
+        readOnly && (
+          <div style={{ fontSize: '0.775rem', color: 'var(--text-light)', fontStyle: 'italic', marginTop: '4px' }}>
+            Không có ảnh chụp hiện trường nào được tải lên cho ngày này.
+          </div>
+        )
       )}
     </div>
   );
