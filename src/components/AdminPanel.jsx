@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ShieldCheck, Database, Users, Check, X, Award, Activity, Lock, Unlock, FileText, FileSpreadsheet, Briefcase, Plus, UserPlus, Edit2, Trash2, KeyRound, Send } from 'lucide-react';
+import { ShieldCheck, Database, Users, Check, X, Award, Activity, Lock, Unlock, FileText, FileSpreadsheet, Briefcase, Plus, UserPlus, Edit2, Trash2, KeyRound } from 'lucide-react';
 
 export default function AdminPanel({ 
   user, 
@@ -59,11 +59,16 @@ export default function AdminPanel({
     }
   };
 
-  const handleSendPasswordReset = async () => {
+  const handleSetNewPassword = async () => {
     if (!editingMember) return;
+    if (!editNewPassword || editNewPassword.trim().length < 6) {
+      alert('Mật khẩu phải có ít nhất 6 ký tự.');
+      return;
+    }
     setPwLoading(true);
-    await onChangePassword(editingMember.email);
+    const success = await onChangePassword(editingMember.id || editingMember.uid, editNewPassword.trim());
     setPwLoading(false);
+    if (success) setEditNewPassword('');
   };
 
   const confirmDelete = async (eng) => {
@@ -533,43 +538,54 @@ export default function AdminPanel({
               borderTop: '1px solid var(--border)',
               paddingTop: '14px',
               marginTop: '4px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '8px',
             }}>
-              <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px' }}>
-                <KeyRound size={14} color="#f59e0b" /> Đặt lại mật khẩu
+              <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '2px' }}>
+                <KeyRound size={14} color="#f59e0b" /> Đặt mật khẩu mới (Admin)
               </label>
-              <p style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', margin: '0 0 10px 0', lineHeight: '1.4' }}>
-                Hệ thống sẽ gửi email hướng dẫn đặt lại mật khẩu tới địa chỉ email của kỹ sư.
-                Yêu cầu kỹ sư kiểm tra hộp thư (kể cả thư rác).
+              <p style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', margin: 0, lineHeight: '1.4' }}>
+                Mật khẩu mới sẽ có hiệu lực sau khi kỹ sư đăng nhập lại lần tiếp theo.
               </p>
-              <button
-                type="button"
-                onClick={handleSendPasswordReset}
-                disabled={pwLoading}
-                style={{
-                  width: '100%',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '8px',
-                  padding: '9px 14px',
-                  borderRadius: 'var(--radius-sm)',
-                  background: 'rgba(245,158,11,0.08)',
-                  border: '1px solid rgba(245,158,11,0.3)',
-                  color: '#f59e0b',
-                  cursor: pwLoading ? 'not-allowed' : 'pointer',
-                  fontSize: '0.82rem',
-                  fontWeight: '600',
-                  opacity: pwLoading ? 0.7 : 1,
-                  transition: 'all 0.15s',
-                }}
-              >
-                {pwLoading ? (
-                  <div className="spinner" style={{ width: '14px', height: '14px', borderTopColor: '#f59e0b' }} />
-                ) : (
-                  <Send size={14} />
-                )}
-                {pwLoading ? 'Đang gửi...' : `Gửi email đặt lại mật khẩu`}
-              </button>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <input
+                  type="password"
+                  className="form-control"
+                  placeholder="Nhập mật khẩu mới (tối thiểu 6 ký tự)..."
+                  value={editNewPassword}
+                  onChange={(e) => setEditNewPassword(e.target.value)}
+                  style={{ flex: 1 }}
+                />
+                <button
+                  type="button"
+                  onClick={handleSetNewPassword}
+                  disabled={pwLoading || !editNewPassword || editNewPassword.length < 6}
+                  style={{
+                    flexShrink: 0,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    padding: '0 14px',
+                    borderRadius: 'var(--radius-sm)',
+                    background: (!editNewPassword || editNewPassword.length < 6) ? 'rgba(245,158,11,0.04)' : 'rgba(245,158,11,0.12)',
+                    border: '1px solid rgba(245,158,11,0.35)',
+                    color: '#f59e0b',
+                    cursor: (pwLoading || !editNewPassword || editNewPassword.length < 6) ? 'not-allowed' : 'pointer',
+                    fontSize: '0.8rem',
+                    fontWeight: '700',
+                    opacity: (pwLoading || !editNewPassword || editNewPassword.length < 6) ? 0.55 : 1,
+                    transition: 'all 0.15s',
+                    whiteSpace: 'nowrap',
+                    height: '42px',
+                  }}
+                >
+                  {pwLoading
+                    ? <div className="spinner" style={{ width: '13px', height: '13px', borderTopColor: '#f59e0b' }} />
+                    : <KeyRound size={13} />}
+                  {'Đặt mật khẩu'}
+                </button>
+              </div>
             </div>
 
             <div style={{ display: 'flex', gap: '10px', marginTop: '8px' }}>

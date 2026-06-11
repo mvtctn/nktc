@@ -12,7 +12,7 @@ import {
   orderBy,
   onSnapshot 
 } from 'firebase/firestore';
-import { onAuthStateChanged, signOut } from 'firebase/auth';
+import { onAuthStateChanged, signOut, updatePassword } from 'firebase/auth';
 
 // Component Imports
 import Sidebar from './components/Sidebar';
@@ -149,7 +149,28 @@ export default function App() {
     }
 
     if (isValidConfig) {
-      const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+        if (currentUser) {
+          // Check & apply pending password change set by admin
+          try {
+            const { getDocs: _getDocs, collection: _col, query: _q, where: _w, updateDoc: _upd, doc: _doc } = await import('firebase/firestore');
+            const snap = await _getDocs(_q(_col(db, 'users'), _w('uid', '==', currentUser.uid)));
+            if (!snap.empty) {
+              const userDocSnap = snap.docs[0];
+              const data = userDocSnap.data();
+              if (data.pendingPassword) {
+                try {
+                  await updatePassword(currentUser, data.pendingPassword);
+                  await _upd(_doc(db, 'users', userDocSnap.id), { pendingPassword: null });
+                } catch (pwErr) {
+                  console.warn('Could not apply pendingPassword (re-auth required):', pwErr);
+                }
+              }
+            }
+          } catch (e) {
+            console.warn('pendingPassword check failed:', e);
+          }
+        }
         setUser(currentUser);
         setAuthLoading(false);
       });
@@ -365,15 +386,21 @@ export default function App() {
     }
   };
 
-  const handleChangePassword = async (memberEmail) => {
+  const handleChangePassword = async (memberId, newPassword) => {
+    if (!newPassword || newPassword.trim().length < 6) {
+      showToast('Mật khẩu phải có ít nhất 6 ký tự', true);
+      return false;
+    }
     if (isOffline || !isValidConfig) {
-      showToast('Không thể gửi email đặt lại mật khẩu ở chế độ ngoại tuyến', true);
+      showToast('Không thể đổi mật khẩu ở chế độ ngoại tuyến', true);
       return false;
     }
     try {
-      const { sendPasswordResetEmail } = await import('firebase/auth');
-      await sendPasswordResetEmail(auth, memberEmail);
-      showToast(`Đã gửi email đặt lại mật khẩu tới ${memberEmail}`);
+      // Save pendingPassword to Firestore user doc.
+      // It will be applied automatically when the user next logs in (auth listener above).
+      const ref = doc(db, 'users', memberId);
+      await updateDoc(ref, { pendingPassword: newPassword.trim() });
+      showToast('Dầu mật khẩu mới đã được lưu. Khả dụng sau khi kỹ sư đăng nhập lại.');
       return true;
     } catch (err) {
       console.error(err);
