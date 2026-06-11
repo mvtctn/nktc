@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import PhotoStamper from './PhotoStamper';
 import SmartTagInput from './SmartTagInput';
 import { exportNKTCtoWord, exportAllNKTCtoWord } from '../utils/WordExporter';
+import { exportAllNKTCtoPDF } from '../utils/PDFExporter';
 import { 
   Save, 
   Copy, 
@@ -258,6 +259,20 @@ export default function NKTCForm({
       console.error(err);
       onToast('Lỗi khi xuất toàn bộ nhật ký', true);
     }
+  };
+
+  const handleExportAllPDF = async () => {
+    if (!project) {
+      onToast('Vui lòng chọn dự án trước khi xuất toàn bộ nhật ký', true);
+      return;
+    }
+    const projectDiaries = diaries.filter(d => d.projectId === project.id);
+    if (projectDiaries.length === 0) {
+      onToast('Dự án này chưa có trang nhật ký nào để xuất', true);
+      return;
+    }
+    onToast(`Đang xuất ${projectDiaries.length} nhật ký ra PDF...`);
+    await exportAllNKTCtoPDF(projectDiaries, project, onToast);
   };
 
   const handleExportPDF = () => {
@@ -539,6 +554,15 @@ export default function NKTCForm({
                   >
                     <Download size={14} style={{ color: '#10b981' }} />
                     <span>Xuất toàn bộ Nhật ký (.docx)</span>
+                  </button>
+
+                  <button 
+                    type="button" 
+                    onClick={() => { handleExportAllPDF(); setActionsMenuOpen(false); }} 
+                    className="menu-item-action"
+                  >
+                    <Download size={14} style={{ color: '#f97316' }} />
+                    <span>Xuất toàn bộ Nhật ký (.pdf)</span>
                   </button>
 
                   <hr style={{ border: 'none', borderTop: '1px solid var(--border)', margin: '4px 0' }} />

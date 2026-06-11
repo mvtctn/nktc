@@ -13,6 +13,7 @@ import {
   ChevronDown,
 } from 'lucide-react';
 import { exportAllNKTCtoWord } from '../utils/WordExporter';
+import { exportAllNKTCtoPDF } from '../utils/PDFExporter';
 
 export default function ProjectDetailModal({
   project,
@@ -59,6 +60,15 @@ export default function ProjectDetailModal({
       console.error(err);
       onToast('Lỗi khi xuất nhật ký', true);
     }
+  };
+
+  const handleExportAllPDF = async () => {
+    if (projectDiaries.length === 0) {
+      onToast('Dự án này chưa có nhật ký nào để xuất', true);
+      return;
+    }
+    onToast(`Đang xuất ${projectDiaries.length} nhật ký ra PDF...`);
+    await exportAllNKTCtoPDF(projectDiaries, project, onToast);
   };
 
   const DiaryCard = ({ d }) => (
@@ -307,7 +317,7 @@ export default function ProjectDetailModal({
             </div>
           </div>
 
-          {/* Export button: icon only on narrow, with text on wider */}
+          {/* Export buttons */}
           <button
             onClick={handleExportAll}
             style={{
@@ -326,7 +336,27 @@ export default function ProjectDetailModal({
             title="Xuất toàn bộ nhật ký ra Word"
           >
             <Download size={15} />
-            <span className="hide-on-xs">Xuất .docx</span>
+            <span className="hide-on-xs">.docx</span>
+          </button>
+          <button
+            onClick={handleExportAllPDF}
+            style={{
+              flexShrink: 0,
+              display: 'flex', alignItems: 'center', gap: '6px',
+              padding: '8px 12px',
+              borderRadius: '10px',
+              background: 'rgba(249,115,22,0.1)',
+              border: '1px solid rgba(249,115,22,0.3)',
+              color: '#f97316',
+              cursor: 'pointer',
+              fontSize: '0.78rem',
+              fontWeight: '600',
+              whiteSpace: 'nowrap',
+            }}
+            title="Xuất toàn bộ nhật ký ra PDF"
+          >
+            <Download size={15} />
+            <span className="hide-on-xs">.pdf</span>
           </button>
         </div>
 
