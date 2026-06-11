@@ -456,7 +456,11 @@ export default function App() {
               <Menu size={24} />
             </button>
             
-            <div>
+            <div 
+              onClick={() => setCurrentTab('dashboard')} 
+              style={{ cursor: 'pointer' }}
+              title="Về trang chủ Dashboard"
+            >
               <span className="header-title">Project Construction diary</span>
             </div>
           </div>

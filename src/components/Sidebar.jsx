@@ -40,17 +40,26 @@ export default function Sidebar({
     <aside className={`sidebar ${mobileOpen ? 'open' : ''}`}>
       {/* Sidebar Header */}
       <div className="sidebar-header">
-        <svg className="sidebar-logo" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <defs>
-            <linearGradient id="logoS" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0%" stopColor="#00f0ff" />
-              <stop offset="100%" stopColor="#0072ff" />
-            </linearGradient>
-          </defs>
-          <circle cx="256" cy="256" r="230" stroke="url(#logoS)" strokeWidth="20" opacity="0.3" />
-          <path d="M256,120 C256,120 330,220 330,280 A74,74 0 1,1 182,280 C182,220 256,120 256,120 Z" fill="url(#logoS)" />
-        </svg>
-        <div className="sidebar-logo-text" style={{ flexGrow: 1 }}>HYDROTECH</div>
+        <div 
+          onClick={() => {
+            setCurrentTab('dashboard');
+            onCloseMobile && onCloseMobile();
+          }}
+          style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', flexGrow: 1 }}
+          title="Về trang chủ Dashboard"
+        >
+          <svg className="sidebar-logo" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="logoS" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stopColor="#00f0ff" />
+                <stop offset="100%" stopColor="#0072ff" />
+              </linearGradient>
+            </defs>
+            <circle cx="256" cy="256" r="230" stroke="url(#logoS)" strokeWidth="20" opacity="0.3" />
+            <path d="M256,120 C256,120 330,220 330,280 A74,74 0 1,1 182,280 C182,220 256,120 256,120 Z" fill="url(#logoS)" />
+          </svg>
+          <div className="sidebar-logo-text" style={{ margin: 0 }}>HYDROTECH</div>
+        </div>
         <button 
           onClick={onCloseMobile} 
           className="sidebar-close-mobile-btn"
