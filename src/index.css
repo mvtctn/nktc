@@ -1617,6 +1617,24 @@ pre code.json-code {
   100% { transform: translateX(100%); }
 }
 
+.btn-icon {
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  outline: none;
+}
+.btn-icon:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--accent);
+}
+
 .btn-icon.small {
   padding: 4px;
 }
