@@ -196,27 +196,6 @@ export default function TaskManager({
     });
   };
 
-  const renderProgressBar = (progress) => {
-    const p = Math.min(Math.max(Number(progress), 0), 100);
-    let color = '#f44336'; // Red for low progress
-    if (p >= 30 && p < 70) color = '#ff9800'; // Orange
-    if (p >= 70) color = '#4caf50'; // Green
-
-    return (
-      <div className="progress-bar-bg" style={{ width: '100%', backgroundColor: '#333', borderRadius: '4px', height: '8px', marginTop: '8px', overflow: 'hidden' }}>
-        <div 
-          className="progress-bar-fill" 
-          style={{ 
-            width: `${p}%`, 
-            backgroundColor: color, 
-            height: '100%', 
-            borderRadius: '4px',
-            transition: 'width 0.3s ease'
-          }}
-        ></div>
-      </div>
-    );
-  };
 
   // ============================================================================
   // TẦNG 1: TRANG CHỦ - DANH SÁCH DỰ ÁN (PROJECT LIST)
@@ -444,7 +423,16 @@ export default function TaskManager({
                   </div>
                   
                   <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <div style={{ flex: 1 }}>{renderProgressBar(displayProgress)}</div>
+                    <div style={{ flex: 1 }}>
+                      <InteractiveProgressBar 
+                        value={displayProgress} 
+                        onSave={(newProgress) => {
+                          if (newProgress === job.progress) return;
+                          const newStatus = newProgress === 100 ? 'Hoàn thành' : (newProgress === 0 ? 'Chưa bắt đầu' : 'Đang thực hiện');
+                          onSaveJob({ ...job, progress: newProgress, status: newStatus });
+                        }}
+                      />
+                    </div>
                     <span style={{ fontWeight: 'bold', fontSize: '0.9rem', color: 'var(--text-primary)', width: '40px', textAlign: 'right' }}>{displayProgress}%</span>
                   </div>
                 </div>
@@ -547,7 +535,14 @@ export default function TaskManager({
               <span style={{ color: 'var(--text-secondary)', fontWeight: 'bold' }}>Tiến độ tổng thể</span>
               <span style={{ color: 'var(--accent)', fontWeight: 'bold' }}>{displayProgress}%</span>
             </div>
-            {renderProgressBar(displayProgress)}
+            <InteractiveProgressBar 
+              value={displayProgress} 
+              onSave={(newProgress) => {
+                if (newProgress === activeJob.progress) return;
+                const newStatus = newProgress === 100 ? 'Hoàn thành' : (newProgress === 0 ? 'Chưa bắt đầu' : 'Đang thực hiện');
+                onSaveJob({ ...activeJob, progress: newProgress, status: newStatus });
+              }}
+            />
           </div>
         </div>
 
@@ -608,7 +603,16 @@ export default function TaskManager({
                     </div>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '12px' }}>
-                    <div style={{ flex: 1 }}>{renderProgressBar(task.progress)}</div>
+                    <div style={{ flex: 1 }}>
+                      <InteractiveProgressBar 
+                        value={task.progress} 
+                        onSave={(newProgress) => {
+                          if (newProgress === task.progress) return;
+                          const newStatus = newProgress === 100 ? 'Hoàn thành' : (newProgress === 0 ? 'Chưa bắt đầu' : 'Đang thực hiện');
+                          onSaveTask({ ...task, progress: newProgress, status: newStatus });
+                        }}
+                      />
+                    </div>
                     <span style={{ color: 'var(--accent)', fontWeight: 'bold', fontSize: '0.85rem', width: '35px', textAlign: 'right' }}>{task.progress}%</span>
                   </div>
                 </div>
@@ -899,6 +903,66 @@ function UserAvatar({ name }) {
       fontWeight: 'bold'
     }}>
       {initial}
+    </div>
+  );
+}
+
+function InteractiveProgressBar({ value, onChange, onSave }) {
+  const [progress, setProgress] = useState(value || 0);
+
+  // Update local state when prop changes (from DB)
+  useEffect(() => {
+    setProgress(value || 0);
+  }, [value]);
+
+  const p = Math.min(Math.max(Number(progress), 0), 100);
+  let color = '#f44336'; // Red
+  if (p >= 30 && p < 70) color = '#ff9800'; // Orange
+  if (p >= 70) color = '#4caf50'; // Green
+
+  return (
+    <div style={{ position: 'relative', width: '100%', height: '10px', marginTop: '8px', padding: '1px 0' }} title="Kéo để cập nhật tiến độ">
+      <div className="progress-bar-bg" style={{ position: 'absolute', top: '1px', left: 0, width: '100%', backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: '5px', height: '8px', overflow: 'hidden' }}>
+        <div 
+          className="progress-bar-fill" 
+          style={{ 
+            width: `${p}%`, 
+            backgroundColor: color, 
+            height: '100%', 
+            borderRadius: '5px',
+            transition: 'width 0.1s linear'
+          }}
+        ></div>
+      </div>
+      {/* Invisible range slider layered on top */}
+      <input
+        type="range"
+        min="0"
+        max="100"
+        value={p}
+        onChange={(e) => {
+          const val = Number(e.target.value);
+          setProgress(val);
+          if (onChange) onChange(val);
+        }}
+        onMouseUp={() => {
+          if (onSave) onSave(p);
+        }}
+        onTouchEnd={() => {
+          if (onSave) onSave(p);
+        }}
+        style={{
+          position: 'absolute',
+          top: '-5px',
+          left: 0,
+          width: '100%',
+          height: '20px',
+          opacity: 0,
+          cursor: 'pointer',
+          margin: 0,
+          zIndex: 10
+        }}
+      />
     </div>
   );
 }
