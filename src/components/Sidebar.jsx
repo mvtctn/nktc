@@ -90,7 +90,11 @@ export default function Sidebar({
 
         <div 
           className={`menu-item ${currentTab === 'nktc' ? 'active' : ''}`}
-          onClick={() => { setCurrentTab('nktc'); onCloseMobile && onCloseMobile(); }}
+          onClick={() => { 
+            if (currentTab === 'nktc') setActiveProjectId('');
+            setCurrentTab('nktc'); 
+            onCloseMobile && onCloseMobile(); 
+          }}
         >
           <FileText size={18} />
           <span>Nhật ký thi công (NKTC)</span>
@@ -98,7 +102,11 @@ export default function Sidebar({
 
         <div 
           className={`menu-item ${currentTab === 'bbps' ? 'active' : ''}`}
-          onClick={() => { setCurrentTab('bbps'); onCloseMobile && onCloseMobile(); }}
+          onClick={() => { 
+            if (currentTab === 'bbps') setActiveProjectId('');
+            setCurrentTab('bbps'); 
+            onCloseMobile && onCloseMobile(); 
+          }}
         >
           <FileSpreadsheet size={18} />
           <span>Biên bản phát sinh (BBPS)</span>
@@ -106,7 +114,11 @@ export default function Sidebar({
 
         <div 
           className={`menu-item ${currentTab === 'tasks' ? 'active' : ''}`}
-          onClick={() => { setCurrentTab('tasks'); onCloseMobile && onCloseMobile(); }}
+          onClick={() => { 
+            if (currentTab === 'tasks') setActiveProjectId('');
+            setCurrentTab('tasks'); 
+            onCloseMobile && onCloseMobile(); 
+          }}
         >
           <Kanban size={18} />
           <span>Quản lý Tiến độ</span>
