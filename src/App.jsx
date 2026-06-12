@@ -775,7 +775,9 @@ export default function App() {
 
   // JOB CRUD ACTIONS
   const handleSaveJob = async (jobData) => {
-    const fullData = { ...jobData, updated_at: new Date().toISOString(), user_id: user.uid };
+    // Copy jobData and remove null id to prevent overriding generated IDs
+    const { id, ...restJobData } = jobData;
+    const fullData = { ...restJobData, updated_at: new Date().toISOString(), user_id: user.uid };
     if (!fullData.projectId) fullData.projectId = activeProjectId;
     try {
       if (isOffline || !isValidConfig) {
@@ -832,7 +834,9 @@ export default function App() {
 
   // TASK CRUD ACTIONS
   const handleSaveTask = async (taskData) => {
-    const fullData = { ...taskData, updated_at: new Date().toISOString(), user_id: user.uid };
+    // Copy taskData and remove null id to prevent overriding generated IDs
+    const { id, ...restTaskData } = taskData;
+    const fullData = { ...restTaskData, updated_at: new Date().toISOString(), user_id: user.uid };
     if (!fullData.projectId) fullData.projectId = activeProjectId;
     try {
       if (isOffline || !isValidConfig) {

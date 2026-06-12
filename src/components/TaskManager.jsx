@@ -552,7 +552,7 @@ export default function TaskManager({
         </div>
 
         {/* Tasks Section */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', gap: '12px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', gap: '12px', position: 'relative', zIndex: 20 }}>
           <h3 style={{ margin: 0, color: 'var(--text-primary)', fontSize: '1.05rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
             <CheckCircle className="icon-blue" size={18} />
             Danh sách Task cần làm ({jobTasks.length})
@@ -560,12 +560,8 @@ export default function TaskManager({
           <button 
             type="button"
             className="btn btn-primary btn-sm" 
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              handleOpenTaskForm(activeJob.id);
-            }}
-            style={{ whiteSpace: 'nowrap', position: 'relative', zIndex: 10, cursor: 'pointer' }}
+            onClick={() => handleOpenTaskForm(activeJobId)}
+            style={{ whiteSpace: 'nowrap', cursor: 'pointer', pointerEvents: 'auto' }}
           >
             <Plus size={14} /> <span className="hide-on-mobile">Thêm Task mới</span>
           </button>
