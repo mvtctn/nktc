@@ -47,7 +47,8 @@ if (isValidConfig) {
     db = initializeFirestore(app, {
       localCache: persistentLocalCache({
         tabManager: persistentMultipleTabManager()
-      })
+      }),
+      experimentalAutoDetectLongPolling: true
     });
     
     auth = getAuth(app);

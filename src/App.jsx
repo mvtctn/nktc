@@ -134,6 +134,8 @@ export default function App() {
 
   const [jobs, setJobs] = useState([]);
   const [tasks, setTasks] = useState([]);
+  const [projectFiles, setProjectFiles] = useState([]);
+  const [jobFiles, setJobFiles] = useState([]);
 
   // Keep activeDiary synchronized with the list of processed diaries
   useEffect(() => {
@@ -569,6 +571,8 @@ export default function App() {
     let unsubscribeMinutes = () => {};
     let unsubscribeJobs = () => {};
     let unsubscribeTasks = () => {};
+    let unsubscribeProjectFiles = () => {};
+    let unsubscribeJobFiles = () => {};
 
     if (isOffline || !isValidConfig) {
       // LocalStorage data load
@@ -617,9 +621,26 @@ export default function App() {
           snapshot.forEach(doc => list.push({ id: doc.id, ...doc.data() }));
           setTasks(list);
         });
+
+        // Project Files Listener
+        const projectFilesQuery = query(collection(db, 'project_files'), orderBy('uploadedAt', 'desc'));
+        unsubscribeProjectFiles = onSnapshot(projectFilesQuery, (snapshot) => {
+          const list = [];
+          snapshot.forEach(doc => list.push({ id: doc.id, ...doc.data() }));
+          setProjectFiles(list);
+        });
+
+        // Job Files Listener
+        const jobFilesQuery = query(collection(db, 'job_files'), orderBy('uploadedAt', 'desc'));
+        unsubscribeJobFiles = onSnapshot(jobFilesQuery, (snapshot) => {
+          const list = [];
+          snapshot.forEach(doc => list.push({ id: doc.id, ...doc.data() }));
+          setJobFiles(list);
+        });
+
       } catch (err) {
         console.error('Lỗi khi thiết lập Firestore listener:', err);
-        loadLocalData(); // Fallback to local
+        loadLocalData();
       }
     }
 
@@ -628,6 +649,8 @@ export default function App() {
       unsubscribeMinutes();
       unsubscribeJobs();
       unsubscribeTasks();
+      unsubscribeProjectFiles();
+      unsubscribeJobFiles();
     };
   }, [user, activeProjectId]);
 
@@ -1156,6 +1179,9 @@ export default function App() {
             project={viewingProject}
             diaries={diaries}
             minutes={minutes}
+            projectFiles={projectFiles.filter(f => f.projectId === viewingProject?.id)}
+            user={user}
+            isSuperAdmin={isSuperAdmin}
             onClose={() => {
               setViewingProject(null);
               handleSetTab('dashboard');
@@ -1185,6 +1211,7 @@ export default function App() {
             setActiveProjectId={setActiveProjectId}
             jobs={jobs}
             tasks={tasks}
+            jobFiles={jobFiles}
             members={members}
             onSaveJob={handleSaveJob}
             onSaveTask={handleSaveTask}
