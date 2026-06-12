@@ -95,6 +95,9 @@ export default function App() {
   const location = useLocation();
   const currentTab = location.pathname.substring(1) || 'dashboard';
 
+  const searchParams = new URLSearchParams(location.search);
+  const urlProjectId = searchParams.get('projectId');
+
   useEffect(() => {
     if (location.pathname === '/') {
       navigate('/dashboard', { replace: true });
@@ -877,6 +880,46 @@ export default function App() {
   };
 
   // TASK CRUD ACTIONS
+  const syncJobProgress = async (jobId, modifiedTaskData, isDelete = false) => {
+    if (!jobId) return;
+    const parentJob = jobs.find(j => j.id === jobId);
+    if (!parentJob) return;
+
+    let jobTasks = tasks.filter(t => t.jobId === jobId);
+    if (isDelete) {
+      jobTasks = jobTasks.filter(t => t.id !== modifiedTaskData.id);
+    } else {
+      const existingIdx = jobTasks.findIndex(t => t.id === modifiedTaskData.id);
+      if (existingIdx >= 0) {
+        jobTasks[existingIdx] = { ...jobTasks[existingIdx], ...modifiedTaskData };
+      } else {
+        jobTasks.push(modifiedTaskData);
+      }
+    }
+
+    const newProgress = jobTasks.length > 0 
+      ? Math.round(jobTasks.reduce((sum, t) => sum + Number(t.progress || 0), 0) / jobTasks.length)
+      : parentJob.progress;
+    
+    const newStatus = newProgress === 100 ? 'Hoàn thành' : (newProgress === 0 ? 'Chưa bắt đầu' : 'Đang thực hiện');
+
+    if (parentJob.progress !== newProgress || parentJob.status !== newStatus) {
+      const jobUpdate = { progress: newProgress, status: newStatus, updated_at: new Date().toISOString() };
+      if (isOffline || !isValidConfig) {
+        const updatedJobs = jobs.map(j => j.id === jobId ? { ...j, ...jobUpdate } : j);
+        localStorage.setItem('hydrotech_jobs', JSON.stringify(updatedJobs));
+        setJobs(updatedJobs);
+      } else {
+        try {
+          await updateDoc(doc(db, 'jobs', jobId), jobUpdate);
+        } catch (e) {
+          console.error("Error syncing job progress:", e);
+        }
+      }
+    }
+  };
+
+
   const handleSaveTask = async (taskData) => {
     // Copy taskData and remove null id to prevent overriding generated IDs
     const { id, ...restTaskData } = taskData;
@@ -901,9 +944,14 @@ export default function App() {
           showToast('Cập nhật Task trực tuyến thành công!');
         } else {
           const newDoc = { created_at: new Date().toISOString(), ...fullData };
-          await addDoc(collection(db, 'tasks'), newDoc);
+          const docRef = await addDoc(collection(db, 'tasks'), newDoc);
+          fullData.id = docRef.id;
           showToast('Thêm Task trực tuyến thành công!');
         }
+      }
+      // Sync job progress
+      if (fullData.jobId) {
+        await syncJobProgress(fullData.jobId, { id: taskData.id || fullData.id, ...fullData });
       }
     } catch (e) {
       console.error(e);
@@ -922,6 +970,12 @@ export default function App() {
         await deleteDoc(doc(db, 'tasks', taskId));
         showToast('Xóa Task thành công!');
       }
+      
+      // Sync job progress
+      const deletedTask = tasks.find(t => t.id === taskId);
+      if (deletedTask && deletedTask.jobId) {
+        await syncJobProgress(deletedTask.jobId, { id: taskId }, true);
+      }
     } catch (e) {
       console.error(e);
       showToast(`Lỗi khi xóa task: ${e.message}`, true);
@@ -929,11 +983,31 @@ export default function App() {
   };
 
   const handleSetTab = (tab) => {
-    navigate(`/${tab}`);
+    if (activeProjectId && (tab === 'nktc' || tab === 'tasks' || tab === 'bbps' || tab === 'materials')) {
+      navigate(`/${tab}?projectId=${activeProjectId}`);
+    } else {
+      navigate(`/${tab}`);
+    }
     if (tab !== 'nktc') {
       setDiaryReadOnly(false);
     }
   };
+
+  // Sync activeProjectId with URL
+  useEffect(() => {
+    if (urlProjectId && projects.some(p => p.id === urlProjectId) && urlProjectId !== activeProjectId) {
+      setActiveProjectId(urlProjectId);
+    }
+  }, [urlProjectId, projects, activeProjectId]);
+
+  useEffect(() => {
+    if (activeProjectId && (currentTab === 'nktc' || currentTab === 'tasks' || currentTab === 'bbps' || currentTab === 'materials')) {
+      const currentUrlProjectId = new URLSearchParams(location.search).get('projectId');
+      if (currentUrlProjectId !== activeProjectId) {
+        navigate(`/${currentTab}?projectId=${activeProjectId}`, { replace: true });
+      }
+    }
+  }, [activeProjectId, currentTab, navigate, location.search]);
 
   if (authLoading) {
     return (

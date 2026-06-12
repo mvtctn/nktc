@@ -90,7 +90,7 @@ export default function ProjectDetailModal({
       {/* Page badge */}
       <div style={{
         flexShrink: 0,
-        width: '42px',
+        width: '50px',
         height: '42px',
         borderRadius: '10px',
         background: 'rgba(16,185,129,0.12)',
@@ -100,7 +100,7 @@ export default function ProjectDetailModal({
         alignItems: 'center',
         justifyContent: 'center',
       }}>
-        <span style={{ fontSize: '0.6rem', color: '#10b981', fontWeight: '700', letterSpacing: '0.05em' }}>Ngày TC</span>
+        <span style={{ fontSize: '0.6rem', color: '#10b981', fontWeight: '700', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>Ngày TC</span>
         <span style={{ fontSize: '1rem', color: '#10b981', fontWeight: '800', lineHeight: 1 }}>{d.trang || '1'}</span>
       </div>
 

@@ -1650,3 +1650,71 @@ pre code.json-code {
 .dropdown-item:hover { background: rgba(255, 255, 255, 0.1); }
 
 @media (max-width: 480px) { .hide-on-mobile { display: none !important; } }
+
+/* ==========================================================================
+   MOBILE RESPONSIVENESS FIXES (PANELS, TABLES, FLEX)
+   ========================================================================== */
+
+/* Fix Panel Header squishing on small screens */
+@media (max-width: 768px) {
+  .panel-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .panel-title {
+    font-size: 1.25rem !important; /* Slightly smaller title on mobile but not squished */
+    flex-wrap: wrap;
+  }
+  .section-header {
+    flex-direction: column;
+    align-items: flex-start !important;
+    gap: 12px;
+  }
+  .section-header > div, .section-header > button {
+    width: 100%;
+  }
+}
+
+/* Ensure tables do not overflow the card container */
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin-bottom: 16px;
+  border-radius: var(--radius-sm);
+}
+
+.table {
+  width: 100%;
+  min-width: 600px; /* Force scroll on very small screens instead of squeezing columns */
+  border-collapse: collapse;
+}
+
+/* General flex wrapping utilities */
+.flex-wrap-mobile {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+@media (max-width: 576px) {
+  .form-actions-grid {
+    grid-template-columns: 1fr; /* Stack buttons vertically on mobile */
+  }
+  .parser-actions-grid {
+    grid-template-columns: 1fr;
+  }
+  .input-row {
+    grid-template-columns: 1fr;
+  }
+  
+  /* Make sure container fluid has appropriate padding on mobile */
+  .container-fluid {
+    padding: 12px;
+  }
+  
+  .glass-card {
+    padding: 16px; /* Slightly less padding on mobile cards to save space */
+  }
+}
