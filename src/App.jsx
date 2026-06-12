@@ -25,6 +25,7 @@ import UserSettings from './components/UserSettings';
 import NKTCForm from './components/NKTCForm';
 import NKTCHub from './components/NKTCHub';
 import BBPSForm from './components/BBPSForm';
+import BBPSHub from './components/BBPSHub';
 import Dashboard from './components/Dashboard';
 import ProjectDetailModal from './components/ProjectDetailModal';
 import AdminPanel from './components/AdminPanel';
@@ -129,6 +130,7 @@ export default function App() {
   
   const [minutes, setMinutes] = useState([]);
   const [activeMinute, setActiveMinute] = useState(null);
+  const [showBBPSForm, setShowBBPSForm] = useState(false);
 
   const [jobs, setJobs] = useState([]);
   const [tasks, setTasks] = useState([]);
@@ -1002,6 +1004,11 @@ export default function App() {
     } else if (tab === 'nktc') {
       setShowDiaryForm(false);
     }
+    if (tab !== 'bbps') {
+      setShowBBPSForm(false);
+    } else if (tab === 'bbps') {
+      setShowBBPSForm(false);
+    }
   };
 
   // Sync activeProjectId FROM URL only once on initial load (when there's no active project)
@@ -1255,16 +1262,54 @@ export default function App() {
         )}
 
         {currentTab === 'bbps' && (
-          <BBPSForm
-            user={user}
-            project={activeProject}
-            initialData={activeMinute}
-            onSave={handleSaveMinute}
-            onToast={showToast}
-            readOnly={!isSuperAdmin && activeMinute && activeMinute.id ? true : diaryReadOnly}
-            onEnableEdit={() => setDiaryReadOnly(false)}
-            isSuperAdmin={isSuperAdmin}
-          />
+          <div className="container-fluid" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            {!showBBPSForm ? (
+              <BBPSHub
+                projects={projects}
+                minutes={minutes}
+                activeProjectId={urlProjectId || ''}
+                setActiveProjectId={(id) => {
+                  if (id) {
+                    navigate(`/bbps?projectId=${id}`);
+                  } else {
+                    navigate(`/bbps`);
+                  }
+                }}
+                onOpenMinute={(minute) => {
+                  setActiveMinute(minute);
+                  setDiaryReadOnly(false);
+                  setShowBBPSForm(true);
+                }}
+                onNewMinute={() => {
+                  setActiveMinute(null);
+                  setDiaryReadOnly(false);
+                  setShowBBPSForm(true);
+                }}
+              />
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <div>
+                  <button 
+                    onClick={() => setShowBBPSForm(false)}
+                    className="btn btn-secondary btn-sm"
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}
+                  >
+                    ← Quay lại danh sách
+                  </button>
+                </div>
+                <BBPSForm
+                  user={user}
+                  project={projects.find(p => p.id === (urlProjectId || ''))}
+                  initialData={activeMinute}
+                  onSave={handleSaveMinute}
+                  onToast={showToast}
+                  readOnly={!isSuperAdmin && activeMinute && activeMinute.id ? true : diaryReadOnly}
+                  onEnableEdit={() => setDiaryReadOnly(false)}
+                  isSuperAdmin={isSuperAdmin}
+                />
+              </div>
+            )}
+          </div>
         )}
 
         {currentTab === 'settings' && (

@@ -102,8 +102,7 @@ export default function Sidebar({
         <div 
           className={`menu-item ${currentTab === 'bbps' ? 'active' : ''}`}
           onClick={() => { 
-            if (currentTab === 'bbps') setActiveProjectId('');
-            setCurrentTab('bbps'); 
+            setCurrentTab('bbps', true); 
             onCloseMobile && onCloseMobile(); 
           }}
         >
