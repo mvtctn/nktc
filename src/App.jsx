@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation, Routes, Route, Navigate } from 'react-router-dom';
 import { db, auth, isValidConfig } from './firebase';
 import { 
   collection, 
@@ -87,7 +88,17 @@ const processDiaries = (diariesList) => {
 export default function App() {
   const [user, setUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
-  const [currentTab, setCurrentTab] = useState('dashboard'); // 'dashboard', 'nktc', 'bbps', 'settings'
+  
+  const navigate = useNavigate();
+  const location = useLocation();
+  const currentTab = location.pathname.substring(1) || 'dashboard';
+
+  useEffect(() => {
+    if (location.pathname === '/') {
+      navigate('/dashboard', { replace: true });
+    }
+  }, [location, navigate]);
+
   const [settingsSubTab, setSettingsSubTab] = useState('project'); // 'project', 'user'
   const [theme, setTheme] = useState('dark');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -870,7 +881,7 @@ export default function App() {
   };
 
   const handleSetTab = (tab) => {
-    setCurrentTab(tab);
+    navigate(`/${tab}`);
     if (tab !== 'nktc') {
       setDiaryReadOnly(false);
     }
@@ -961,7 +972,7 @@ export default function App() {
             type="button"
             className="user-profile-badge" 
             onClick={() => {
-              setCurrentTab('settings');
+              handleSetTab('settings');
               setSettingsSubTab('user');
             }}
             title="Xem hồ sơ & cấu hình AI"
@@ -998,7 +1009,7 @@ export default function App() {
             onNewDiary={() => {
               setActiveDiary(null);
               setDiaryReadOnly(false);
-              setCurrentTab('nktc');
+              handleSetTab('nktc');
             }}
           />
         )}
@@ -1017,7 +1028,7 @@ export default function App() {
               setActiveProjectId(diary.projectId);
               setDiaryReadOnly(true);
               setViewingProject(null);
-              setCurrentTab('nktc');
+              handleSetTab('nktc');
             }}
             onOpenMinute={(minute) => {
               setActiveMinute(minute);

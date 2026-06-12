@@ -558,9 +558,14 @@ export default function TaskManager({
             Danh sách Task cần làm ({jobTasks.length})
           </h3>
           <button 
+            type="button"
             className="btn btn-primary btn-sm" 
-            onClick={() => handleOpenTaskForm(activeJob.id)}
-            style={{ whiteSpace: 'nowrap' }}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              handleOpenTaskForm(activeJob.id);
+            }}
+            style={{ whiteSpace: 'nowrap', position: 'relative', zIndex: 10, cursor: 'pointer' }}
           >
             <Plus size={14} /> <span className="hide-on-mobile">Thêm Task mới</span>
           </button>
