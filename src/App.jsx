@@ -983,12 +983,19 @@ export default function App() {
     }
   };
 
-  const handleSetTab = (tab) => {
-    if (activeProjectId && (tab === 'nktc' || tab === 'tasks' || tab === 'bbps' || tab === 'materials')) {
-      navigate(`/${tab}?projectId=${activeProjectId}`);
+  const handleSetTab = (tab, clearProject = false) => {
+    const nextProjectId = clearProject ? '' : activeProjectId;
+    
+    if (nextProjectId && (tab === 'nktc' || tab === 'tasks' || tab === 'bbps' || tab === 'materials')) {
+      navigate(`/${tab}?projectId=${nextProjectId}`);
     } else {
       navigate(`/${tab}`);
     }
+    
+    if (clearProject && activeProjectId !== '') {
+      setActiveProjectId('');
+    }
+
     if (tab !== 'nktc') {
       setDiaryReadOnly(false);
       setShowDiaryForm(false);
