@@ -23,7 +23,7 @@ import Login from './components/Login';
 import ProjectSettings from './components/ProjectSettings';
 import UserSettings from './components/UserSettings';
 import NKTCForm from './components/NKTCForm';
-import NKTCParser from './components/NKTCParser';
+import NKTCHub from './components/NKTCHub';
 import BBPSForm from './components/BBPSForm';
 import Dashboard from './components/Dashboard';
 import ProjectDetailModal from './components/ProjectDetailModal';
@@ -125,6 +125,7 @@ export default function App() {
   
   const [diaries, setDiaries] = useState([]);
   const [activeDiary, setActiveDiary] = useState(null);
+  const [showDiaryForm, setShowDiaryForm] = useState(false);
   
   const [minutes, setMinutes] = useState([]);
   const [activeMinute, setActiveMinute] = useState(null);
@@ -990,6 +991,9 @@ export default function App() {
     }
     if (tab !== 'nktc') {
       setDiaryReadOnly(false);
+      setShowDiaryForm(false);
+    } else if (tab === 'nktc') {
+      setShowDiaryForm(false);
     }
   };
 
@@ -1044,6 +1048,7 @@ export default function App() {
         setCurrentTab={handleSetTab}
         theme={theme}
         toggleTheme={toggleTheme}
+        showDiaryForm={showDiaryForm}
         projects={projects}
         activeProjectId={activeProjectId}
         setActiveProjectId={setActiveProjectId}
@@ -1131,6 +1136,7 @@ export default function App() {
             onNewDiary={() => {
               setActiveDiary(null);
               setDiaryReadOnly(false);
+              setShowDiaryForm(true);
               handleSetTab('nktc');
             }}
           />
@@ -1149,7 +1155,7 @@ export default function App() {
               setActiveDiary(diary);
               setActiveProjectId(diary.projectId);
               setDiaryReadOnly(true);
-              setViewingProject(null);
+              setShowDiaryForm(true);
               handleSetTab('nktc');
             }}
             onOpenMinute={(minute) => {
@@ -1194,27 +1200,49 @@ export default function App() {
 
         {currentTab === 'nktc' && (
           <div className="container-fluid" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            {!diaryReadOnly && (!activeDiary || !activeDiary.id || isSuperAdmin) && (
-              <NKTCParser 
-                onParsed={(parsedData) => setActiveDiary(parsedData)} 
-                onToast={showToast} 
-                date={activeDiary ? activeDiary.ngay : ''}
-                page={activeDiary ? activeDiary.trang : ''}
+            {!showDiaryForm ? (
+              <NKTCHub 
+                projects={projects}
+                diaries={diaries}
+                activeProjectId={activeProjectId}
+                setActiveProjectId={setActiveProjectId}
+                onOpenDiary={(diary) => {
+                  setActiveDiary(diary);
+                  setDiaryReadOnly(false);
+                  setShowDiaryForm(true);
+                }}
+                onNewDiary={() => {
+                  setActiveDiary(null);
+                  setDiaryReadOnly(false);
+                  setShowDiaryForm(true);
+                }}
               />
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <div>
+                  <button 
+                    onClick={() => setShowDiaryForm(false)}
+                    className="btn btn-secondary btn-sm"
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}
+                  >
+                    ← Quay lại danh sách
+                  </button>
+                </div>
+                <NKTCForm
+                  user={user}
+                  project={activeProject}
+                  initialData={activeDiary}
+                  onSave={handleSaveDiary}
+                  onToast={showToast}
+                  diaries={diaries}
+                  equipmentMaster={equipmentMaster}
+                  materialMaster={materialMaster}
+                  readOnly={!isSuperAdmin && activeDiary && activeDiary.id ? true : diaryReadOnly}
+                  onEnableEdit={() => setDiaryReadOnly(false)}
+                  isSuperAdmin={isSuperAdmin}
+                />
+              </div>
             )}
-            <NKTCForm
-              user={user}
-              project={activeProject}
-              initialData={activeDiary}
-              onSave={handleSaveDiary}
-              onToast={showToast}
-              diaries={diaries}
-              equipmentMaster={equipmentMaster}
-              materialMaster={materialMaster}
-              readOnly={!isSuperAdmin && activeDiary && activeDiary.id ? true : diaryReadOnly}
-              onEnableEdit={() => setDiaryReadOnly(false)}
-              isSuperAdmin={isSuperAdmin}
-            />
           </div>
         )}
 

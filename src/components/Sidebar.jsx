@@ -22,6 +22,7 @@ export default function Sidebar({
   setCurrentTab,
   theme,
   toggleTheme,
+  showDiaryForm,
   projects,
   activeProjectId,
   setActiveProjectId,
@@ -189,7 +190,7 @@ export default function Sidebar({
         </div>
 
         {/* History List */}
-        {currentTab === 'nktc' && (
+        {currentTab === 'nktc' && showDiaryForm && (
           <div className="history-section">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
               <span className="history-title">Lịch sử Nhật ký</span>
