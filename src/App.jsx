@@ -1212,6 +1212,7 @@ export default function App() {
             jobs={jobs}
             tasks={tasks}
             jobFiles={jobFiles}
+            projectFiles={projectFiles}
             members={members}
             onSaveJob={handleSaveJob}
             onSaveTask={handleSaveTask}

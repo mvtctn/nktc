@@ -23,6 +23,7 @@ export default function TaskManager({
   jobs,
   tasks,
   jobFiles = [],
+  projectFiles = [],
   members,
   onSaveJob,
   onSaveTask,
@@ -442,6 +443,21 @@ export default function TaskManager({
             })
           )}
         </div>
+
+        {/* Tài liệu Dự án Section */}
+        {activeProject && (
+          <div className="glass-card" style={{ padding: '24px', marginTop: '32px' }}>
+            <FileUploader
+              contextType="project"
+              contextId={activeProject.id}
+              projectId={activeProject.id}
+              files={projectFiles.filter(f => f.projectId === activeProject.id)}
+              user={user}
+              isSuperAdmin={isSuperAdmin}
+              onToast={onToast}
+            />
+          </div>
+        )}
       </div>
     );
   }
