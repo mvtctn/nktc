@@ -1206,8 +1206,14 @@ export default function App() {
               <NKTCHub 
                 projects={projects}
                 diaries={diaries}
-                activeProjectId={activeProjectId}
-                setActiveProjectId={setActiveProjectId}
+                activeProjectId={urlProjectId || ''}
+                setActiveProjectId={(id) => {
+                  if (id) {
+                    navigate(`/nktc?projectId=${id}`);
+                  } else {
+                    navigate(`/nktc`);
+                  }
+                }}
                 onOpenDiary={(diary) => {
                   setActiveDiary(diary);
                   setDiaryReadOnly(false);
