@@ -8,6 +8,8 @@ import {
   updateDoc, 
   deleteDoc, 
   doc, 
+  getDoc,
+  setDoc,
   query, 
   where, 
   orderBy,
@@ -241,20 +243,62 @@ export default function App() {
   // Load global master lists when user logs in
   useEffect(() => {
     if (!user) return;
-    const eq = localStorage.getItem('hydrotech_equipment_master');
-    const mat = localStorage.getItem('hydrotech_material_master');
-    if (eq) setEquipmentMaster(JSON.parse(eq));
-    if (mat) setMaterialMaster(JSON.parse(mat));
+    const fetchMasterLists = async () => {
+      if (isOffline || !isValidConfig) {
+        const eq = localStorage.getItem('hydrotech_equipment_master');
+        const mat = localStorage.getItem('hydrotech_material_master');
+        if (eq) setEquipmentMaster(JSON.parse(eq));
+        if (mat) setMaterialMaster(JSON.parse(mat));
+      } else {
+        try {
+          const docRef = doc(db, 'settings', 'master_lists');
+          const docSnap = await getDoc(docRef);
+          if (docSnap.exists()) {
+            const data = docSnap.data();
+            if (data.equipment) setEquipmentMaster(data.equipment);
+            if (data.material) setMaterialMaster(data.material);
+            localStorage.setItem('hydrotech_equipment_master', JSON.stringify(data.equipment || []));
+            localStorage.setItem('hydrotech_material_master', JSON.stringify(data.material || []));
+          } else {
+            const eq = localStorage.getItem('hydrotech_equipment_master');
+            const mat = localStorage.getItem('hydrotech_material_master');
+            if (eq) setEquipmentMaster(JSON.parse(eq));
+            if (mat) setMaterialMaster(JSON.parse(mat));
+          }
+        } catch (e) {
+          console.error('Lỗi khi tải danh mục vật tư:', e);
+          const eq = localStorage.getItem('hydrotech_equipment_master');
+          const mat = localStorage.getItem('hydrotech_material_master');
+          if (eq) setEquipmentMaster(JSON.parse(eq));
+          if (mat) setMaterialMaster(JSON.parse(mat));
+        }
+      }
+    };
+    fetchMasterLists();
   }, [user]);
 
-  const saveEquipmentMaster = (list) => {
+  const saveEquipmentMaster = async (list) => {
     setEquipmentMaster(list);
     localStorage.setItem('hydrotech_equipment_master', JSON.stringify(list));
+    if (!isOffline && isValidConfig) {
+      try {
+        await setDoc(doc(db, 'settings', 'master_lists'), { equipment: list }, { merge: true });
+      } catch (e) {
+        console.error('Lỗi lưu danh mục thiết bị:', e);
+      }
+    }
   };
 
-  const saveMaterialMaster = (list) => {
+  const saveMaterialMaster = async (list) => {
     setMaterialMaster(list);
     localStorage.setItem('hydrotech_material_master', JSON.stringify(list));
+    if (!isOffline && isValidConfig) {
+      try {
+        await setDoc(doc(db, 'settings', 'master_lists'), { material: list }, { merge: true });
+      } catch (e) {
+        console.error('Lỗi lưu danh mục vật liệu:', e);
+      }
+    }
   };
 
   const fetchMembers = async () => {
