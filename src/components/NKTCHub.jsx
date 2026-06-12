@@ -56,25 +56,30 @@ export default function NKTCHub({
                   alignItems: 'center', 
                   gap: '12px', 
                   cursor: 'pointer',
-                  border: '1px solid var(--border)' 
+                  border: '1px solid var(--border)',
+                  boxSizing: 'border-box',
+                  minWidth: 0,
+                  overflow: 'hidden'
                 }}
               >
                 <div style={{ 
                   width: '40px', height: '40px', borderRadius: '8px', 
                   background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.2)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#3b82f6', fontWeight: 'bold' 
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#3b82f6', fontWeight: 'bold',
+                  flexShrink: 0
                 }}>
                   {getInitials(proj.name)}
                 </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
                   <h4 style={{ margin: 0, fontSize: '0.95rem', color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                     {proj.name}
                   </h4>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--text-light)', display: 'flex', alignItems: 'center', gap: '4px', marginTop: '4px' }}>
-                    <Briefcase size={12} /> {proj.investor || 'Không có CĐT'}
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-light)', display: 'flex', alignItems: 'center', gap: '4px', marginTop: '4px', overflow: 'hidden' }}>
+                    <Briefcase size={12} style={{ flexShrink: 0 }} /> 
+                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{proj.investor || 'Không có CĐT'}</span>
                   </div>
                 </div>
-                <ArrowRight size={16} color="var(--text-light)" />
+                <ArrowRight size={16} color="var(--text-light)" style={{ flexShrink: 0 }} />
               </div>
             ))}
             {projects.length === 0 && (

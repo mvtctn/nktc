@@ -49,6 +49,11 @@
   margin: 0;
   padding: 0;
   -webkit-tap-highlight-color: transparent;
+  box-sizing: border-box;
+}
+
+*, *::before, *::after {
+  box-sizing: inherit;
 }
 
 body {
@@ -102,6 +107,8 @@ body {
   width: 100%;
   max-width: 1400px;
   margin: 0 auto;
+  box-sizing: border-box;
+  min-width: 0;
 }
 
 /* Glassmorphism card */
@@ -114,6 +121,9 @@ body {
   padding: 20px;
   box-shadow: var(--shadow-md);
   transition: transform var(--transition-normal), box-shadow var(--transition-normal), background var(--transition-normal), border-color var(--transition-normal);
+  min-width: 0;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
 .glass-card:hover {
@@ -498,6 +508,8 @@ select.form-control option {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
   gap: 24px;
+  width: 100%;
+  min-width: 0;
 }
 
 @media (max-width: 1024px) {
@@ -1700,7 +1712,7 @@ pre code.json-code {
 
 @media (max-width: 576px) {
   .form-actions-grid {
-    grid-template-columns: 1fr; /* Stack buttons vertically on mobile */
+    grid-template-columns: 1fr;
   }
   .parser-actions-grid {
     grid-template-columns: 1fr;
@@ -1709,12 +1721,57 @@ pre code.json-code {
     grid-template-columns: 1fr;
   }
   
-  /* Make sure container fluid has appropriate padding on mobile */
   .container-fluid {
     padding: 12px;
   }
   
   .glass-card {
-    padding: 16px; /* Slightly less padding on mobile cards to save space */
+    padding: 16px;
+  }
+}
+
+/* ============================================
+   GLOBAL OVERFLOW PREVENTION
+   ============================================ */
+
+/* Prevent any direct child of main-content from overflowing */
+.main-content > * {
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* Ensure all flex containers clip their children */
+.app-container,
+.main-content,
+.container-fluid {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+/* Prevent text overflow in flex children */
+.glass-card * {
+  min-width: 0;
+}
+
+/* Hub project list: single column on mobile */
+@media (max-width: 768px) {
+  /* Force single column for project/diary hub grids */
+  .glass-card > .dashboard-grid {
+    grid-template-columns: 1fr !important;
+    gap: 12px;
+  }
+
+  /* Clamp long text inside hub cards */
+  .glass-card h4,
+  .glass-card p,
+  .glass-card span {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* Ensure buttons don't overflow */
+  .btn {
+    max-width: 100%;
   }
 }
