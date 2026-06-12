@@ -14,13 +14,11 @@ import {
 } from 'lucide-react';
 import { exportAllNKTCtoWord } from '../utils/WordExporter';
 import { exportAllNKTCtoPDF } from '../utils/PDFExporter';
-import FileUploader from './FileUploader';
 
 export default function ProjectDetailModal({
   project,
   diaries = [],
   minutes = [],
-  projectFiles = [],
   user,
   isSuperAdmin = false,
   onClose,
@@ -442,40 +440,6 @@ export default function ProjectDetailModal({
               {projectMinutes.length}
             </span>
           </button>
-
-          <button
-            onClick={() => setActiveTab('files')}
-            style={{
-              flex: 1,
-              padding: '11px 8px',
-              background: 'transparent',
-              border: 'none',
-              borderBottom: activeTab === 'files'
-                ? '2px solid #3b82f6'
-                : '2px solid transparent',
-              color: activeTab === 'files' ? '#3b82f6' : 'var(--text-secondary)',
-              cursor: 'pointer',
-              fontSize: '0.85rem',
-              fontWeight: '700',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '6px',
-              transition: 'all 0.15s',
-            }}
-          >
-            📎 Tài liệu
-            <span style={{
-              fontSize: '0.72rem',
-              padding: '1px 6px',
-              borderRadius: '10px',
-              background: activeTab === 'files' ? 'rgba(59,130,246,0.15)' : 'rgba(255,255,255,0.06)',
-              color: activeTab === 'files' ? '#3b82f6' : 'var(--text-light)',
-              fontWeight: '700',
-            }}>
-              {projectFiles.length}
-            </span>
-          </button>
         </div>
 
         {/* ── Tab content ── */}
@@ -516,18 +480,6 @@ export default function ProjectDetailModal({
                 projectMinutes.map((m) => <MinuteCard key={m.id} m={m} />)
               )}
             </>
-          )}
-
-          {activeTab === 'files' && (
-            <FileUploader
-              contextType="project"
-              contextId={project.id}
-              projectId={project.id}
-              files={projectFiles}
-              user={user}
-              isSuperAdmin={isSuperAdmin}
-              onToast={onToast}
-            />
           )}
         </div>
 
