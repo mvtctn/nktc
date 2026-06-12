@@ -1004,27 +1004,16 @@ export default function App() {
     }
   };
 
-  // Sync activeProjectId with URL
+  // Sync activeProjectId FROM URL only once on initial load (when there's no active project)
   useEffect(() => {
-    if (urlProjectId && projects.some(p => p.id === urlProjectId) && urlProjectId !== activeProjectId) {
-      setActiveProjectId(urlProjectId);
-    }
-  }, [urlProjectId, projects, activeProjectId]);
-
-  useEffect(() => {
-    if (currentTab === 'nktc' || currentTab === 'tasks' || currentTab === 'bbps' || currentTab === 'materials') {
-      const currentUrlProjectId = new URLSearchParams(location.search).get('projectId') || '';
-      const newProjectId = activeProjectId || '';
-      
-      if (currentUrlProjectId !== newProjectId) {
-        if (newProjectId) {
-          navigate(`/${currentTab}?projectId=${newProjectId}`, { replace: true });
-        } else {
-          navigate(`/${currentTab}`, { replace: true });
-        }
+    if (urlProjectId && projects.length > 0 && !activeProjectId) {
+      const found = projects.find(p => p.id === urlProjectId);
+      if (found) {
+        setActiveProjectId(urlProjectId);
       }
     }
-  }, [activeProjectId, currentTab, navigate, location.search]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [projects]); // Only run when projects load, not on every activeProjectId change
 
   if (authLoading) {
     return (
