@@ -1005,10 +1005,16 @@ export default function App() {
   }, [urlProjectId, projects, activeProjectId]);
 
   useEffect(() => {
-    if (activeProjectId && (currentTab === 'nktc' || currentTab === 'tasks' || currentTab === 'bbps' || currentTab === 'materials')) {
-      const currentUrlProjectId = new URLSearchParams(location.search).get('projectId');
-      if (currentUrlProjectId !== activeProjectId) {
-        navigate(`/${currentTab}?projectId=${activeProjectId}`, { replace: true });
+    if (currentTab === 'nktc' || currentTab === 'tasks' || currentTab === 'bbps' || currentTab === 'materials') {
+      const currentUrlProjectId = new URLSearchParams(location.search).get('projectId') || '';
+      const newProjectId = activeProjectId || '';
+      
+      if (currentUrlProjectId !== newProjectId) {
+        if (newProjectId) {
+          navigate(`/${currentTab}?projectId=${newProjectId}`, { replace: true });
+        } else {
+          navigate(`/${currentTab}`, { replace: true });
+        }
       }
     }
   }, [activeProjectId, currentTab, navigate, location.search]);
