@@ -511,7 +511,6 @@ export default function TaskManager({
                   <Calendar size={16} /> <strong>Kết thúc:</strong> {activeJob.endDate || 'Chưa định'}
                 </span>
               </div>
-              </div>
               
               {activeJob.description && (
                 <div style={{ marginTop: '16px', color: 'var(--text-secondary)', fontSize: '0.95rem', lineHeight: '1.5', whiteSpace: 'pre-wrap', backgroundColor: 'rgba(255,255,255,0.02)', padding: '12px', borderRadius: '8px', borderLeft: '3px solid var(--accent)' }}>
