@@ -560,7 +560,10 @@ export default function TaskManager({
           <button 
             type="button"
             className="btn btn-primary btn-sm" 
-            onClick={() => handleOpenTaskForm(activeJobId)}
+            onClick={() => {
+              console.log('Opening task form for jobId:', activeJobId);
+              handleOpenTaskForm(activeJobId);
+            }}
             style={{ whiteSpace: 'nowrap', cursor: 'pointer', pointerEvents: 'auto' }}
           >
             <Plus size={14} /> <span className="hide-on-mobile">Thêm Task mới</span>
