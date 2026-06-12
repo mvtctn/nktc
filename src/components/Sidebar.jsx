@@ -91,7 +91,7 @@ export default function Sidebar({
         <div 
           className={`menu-item ${currentTab === 'nktc' ? 'active' : ''}`}
           onClick={() => { 
-            if (currentTab === 'nktc') setActiveProjectId('');
+            setActiveProjectId('');
             setCurrentTab('nktc'); 
             onCloseMobile && onCloseMobile(); 
           }}
