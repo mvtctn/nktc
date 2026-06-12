@@ -57,6 +57,7 @@ export default function BBPSForm({
   const [nguyen_nhan, setNguyenNhan] = useState('');
   const [anh_huong, setAnhHuong] = useState('');
   const [de_xuat, setDeXuat] = useState('');
+  const [ket_luan, setKetLuan] = useState('');
 
   useEffect(() => {
     if (initialData) {
@@ -70,6 +71,7 @@ export default function BBPSForm({
       setNguyenNhan(initialData.nguyen_nhan || '');
       setAnhHuong(initialData.anh_huong || '');
       setDeXuat(initialData.de_xuat || '');
+      setKetLuan(initialData.ket_luan || '');
     } else {
       setNgay(getTodayDateString());
       setDaiDienB(project ? project.supervisor : user.displayName || '');
@@ -79,6 +81,7 @@ export default function BBPSForm({
       setNguyenNhan('');
       setAnhHuong('');
       setDeXuat('');
+      setKetLuan('');
     }
   }, [initialData, project]);
 
@@ -100,7 +103,8 @@ export default function BBPSForm({
       su_viec,
       nguyen_nhan,
       anh_huong,
-      de_xuat
+      de_xuat,
+      ket_luan
     };
     onSave(dataToSave);
   };
@@ -346,6 +350,23 @@ export default function BBPSForm({
             </div>
           </div>
 
+          {/* Conclusion */}
+          <div style={{ padding: '12px', background: 'rgba(100,116,139,0.05)', border: '1px solid var(--border)', borderRadius: '6px' }}>
+            <h4 style={{ fontSize: '0.85rem', fontWeight: '700', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text-secondary)' }}>
+              <FileText size={14} /> Kết luận
+            </h4>
+            <div className="form-group" style={{ marginBottom: '0' }}>
+              <textarea
+                className="form-control"
+                rows={3}
+                placeholder="Ví dụ: Căn cứ vào diễn biến thực tế, hai bên thống nhất xử lý theo phương án đề xuất. Khối lượng phát sinh (nếu có) sẽ được tính toán sau..."
+                value={ket_luan}
+                onChange={(e) => setKetLuan(e.value || e.target.value)}
+                disabled={readOnly}
+              />
+            </div>
+          </div>
+
           {/* Action Buttons */}
           <div style={{ display: 'flex', gap: '10px', marginTop: '16px', position: 'relative' }}>
             {!readOnly ? (
@@ -462,8 +483,8 @@ export default function BBPSForm({
 
               <div className="avoid-break">
                 <h4 style={{ fontSize: '0.9rem', fontWeight: 'bold', color: '#0f2b48', borderBottom: '1px solid #cbd5e1', paddingBottom: '2px', marginBottom: '4px' }}>III. KẾT LUẬN</h4>
-                <div style={{ paddingLeft: '8px', textAlign: 'justify' }}>
-                  Căn cứ vào diễn biến thực tế, hai bên thống nhất xử lý theo phương án đã đề xuất nêu trên. Khối lượng phát sinh (nếu có) sẽ được tính toán và xác nhận vào hồ sơ hoàn công / quyết toán sau này. Biên bản được lập thành 04 bản, mỗi bên giữ 02 bản có giá trị pháp lý như nhau.
+                <div style={{ paddingLeft: '8px', textAlign: 'justify', fontStyle: !ket_luan ? 'italic' : 'normal' }}>
+                  {ket_luan || 'Căn cứ vào diễn biến thực tế, hai bên thống nhất xử lý theo phương án đã đề xuất nêu trên. Khối lượng phát sinh (nếu có) sẽ được tính toán và xác nhận vào hồ sơ hoàn công / quyết toán sau này. Biên bản được lập thành 04 bản, mỗi bên giữ 02 bản có giá trị pháp lý như nhau.'}
                 </div>
               </div>
             </div>
